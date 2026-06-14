@@ -37,7 +37,8 @@ for (const diff of difficulties) {
     const { map, characters, clues, solution, killer, roomLookup } = puzzle
 
     // Invariante: cada sospechoso tiene al menos una pista (agrupadas en la UI
-    // como una única "pista" por personaje), la víctima 0.
+    // como una única "pista" por personaje). La víctima también tiene pistas
+    // propias (solo unarias) para poder ubicarla sin que nadie la referencie.
     for (const s of characters.suspects) {
       assert(
         clues.some((c) => c.subject === s),
@@ -45,9 +46,16 @@ for (const diff of difficulties) {
       )
     }
     assert(
-      clues.every((c) => c.subject !== characters.victim),
-      `seed ${seed}: la víctima no tiene pista`,
+      clues.some((c) => c.subject === characters.victim),
+      `seed ${seed}: la víctima tiene pista propia`,
     )
+
+    // Invariante (núcleo de la petición): ninguna pista referencia a la víctima.
+    const refsVictim = clues.some((c) => {
+      const p = c.params || {}
+      return [p.other, p.x, p.y].includes(characters.victim)
+    })
+    assert(!refsVictim, `seed ${seed}: ninguna pista referencia a la víctima`)
 
     // Invariante: ningún personaje en celda no ocupable, sin solapes.
     const seen = new Set()
