@@ -1,6 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --color-ink-900: #0b0d12;
+  --color-ink-800: #12151c;
+  --color-ink-700: #1a1f29;
+  --color-ink-600: #252b38;
+  --color-ink-500: #333b4d;
+  --color-blood: #c0392b;
+}
 
 @layer base {
   html,
