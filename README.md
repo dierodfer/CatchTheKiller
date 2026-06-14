@@ -34,6 +34,18 @@ npm run preview    # sirve el build
 npm run test:logic # smoke test de la lógica de generación (sin UI)
 ```
 
+## Despliegue a GitHub Pages
+
+El workflow `.github/workflows/deploy.yml` construye el proyecto y lo publica
+en GitHub Pages automáticamente con cada push a `main` (o manualmente desde la
+pestaña *Actions*).
+
+Para activarlo, en el repositorio: **Settings → Pages → Build and deployment →
+Source: "GitHub Actions"**. La app quedará disponible en
+`https://<usuario>.github.io/<repositorio>/`. El `base: './'` en
+`vite.config.js` hace que las rutas de los assets sean relativas, por lo que
+funciona en cualquier subruta sin tocar configuración adicional.
+
 ## Arquitectura
 
 La lógica del juego vive en `src/game/` y es independiente de la UI:
