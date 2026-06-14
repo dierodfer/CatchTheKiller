@@ -1,12 +1,27 @@
 // Regla del asesino — basada en habitaciones.
 //
 // El asesino es el ÚNICO sospechoso que se queda A SOLAS con la víctima en una
-// misma habitación (solo ellos dos en esa sala). Además, ni el asesino ni la
-// víctima comparten fila o columna con ningún otro personaje: sus líneas quedan
-// despejadas. Así el asesino "emerge" al reconstruir la escena.
+// misma habitación (solo ellos dos en esa sala). Además, NINGÚN personaje
+// comparte fila ni columna con otro: todas las líneas quedan despejadas para
+// todos los actores (no solo el asesino y la víctima). Así el asesino "emerge"
+// al reconstruir la escena.
 
 // placements: { nombre: { row, col } }; ctx aporta `roomAt(r, c)`.
 const roomOf = (ctx, p) => ctx.roomAt(p.row, p.col)
+
+// ¿Todos los personajes ocupan fila y columna distintas entre sí?
+function allLinesClear(placements, names) {
+  const rows = new Set()
+  const cols = new Set()
+  for (const name of names) {
+    const p = placements[name]
+    if (!p) return false
+    if (rows.has(p.row) || cols.has(p.col)) return false
+    rows.add(p.row)
+    cols.add(p.col)
+  }
+  return true
+}
 
 // ¿El sospechoso `suspect` es el asesino dado el reparto completo?
 export function isKiller(suspect, placements, suspects, victim, ctx) {
@@ -23,20 +38,14 @@ export function isKiller(suspect, placements, suspects, victim, ctx) {
     const p = placements[name]
     if (p && roomOf(ctx, p) === roomOf(ctx, v)) return false
   }
-
-  // Líneas despejadas: ni el asesino ni la víctima comparten fila o columna
-  // con ningún otro actor (tampoco entre ellos dos).
-  for (const name of [...suspects, victim]) {
-    const p = placements[name]
-    if (!p) continue
-    if (name !== suspect && (p.row === a.row || p.col === a.col)) return false
-    if (name !== victim && (p.row === v.row || p.col === v.col)) return false
-  }
   return true
 }
 
 // Devuelve la lista de sospechosos que cumplen la condición de asesinato.
+// Si algún personaje comparte fila o columna con otro, nadie puede ser el
+// asesino: la escena no está despejada.
 export function findKillers(placements, suspects, victim, ctx) {
+  if (!allLinesClear(placements, [...suspects, victim])) return []
   return suspects.filter((s) => isKiller(s, placements, suspects, victim, ctx))
 }
 

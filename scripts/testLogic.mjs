@@ -74,7 +74,7 @@ for (const diff of difficulties) {
     assert(killers.length === 1 && killers[0] === killer, `seed ${seed}: exactamente 1 asesino`)
 
     // Invariante (nueva regla): el asesino está a solas con la víctima en su
-    // habitación y ni asesino ni víctima comparten fila/columna con nadie más.
+    // habitación, y NINGÚN personaje comparte fila ni columna con otro.
     const vp = solution[characters.victim]
     const kp = solution[killer]
     const vRoom = roomLookup[`${vp.row},${vp.col}`]
@@ -86,18 +86,22 @@ for (const diff of difficulties) {
       (s) => roomLookup[`${solution[s].row},${solution[s].col}`] === vRoom,
     )
     assert(inVictimRoom.length === 1, `seed ${seed}: asesino a solas con la víctima`)
-    for (const name of [...characters.suspects, characters.victim]) {
-      if (name === killer || name === characters.victim) continue
-      const p = solution[name]
-      assert(
-        p.row !== vp.row && p.col !== vp.col && p.row !== kp.row && p.col !== kp.col,
-        `seed ${seed}: líneas de asesino/víctima despejadas (${name})`,
-      )
-    }
+    const allNames = [...characters.suspects, characters.victim]
+    const rowSet = new Set(allNames.map((n) => solution[n].row))
+    const colSet = new Set(allNames.map((n) => solution[n].col))
+    assert(rowSet.size === allNames.length, `seed ${seed}: filas distintas para todos`)
+    assert(colSet.size === allNames.length, `seed ${seed}: columnas distintas para todos`)
 
-    // Invariante: iniciales distintas en todos los personajes (incl. víctima).
-    const initials = [...characters.suspects, characters.victim].map((n) => n[0].toLowerCase())
+    // Invariante: iniciales distintas en todos los personajes (incl. víctima),
+    // y la víctima tiene siempre la inicial alfabéticamente mayor.
+    const initials = allNames.map((n) => n[0].toLowerCase())
     assert(new Set(initials).size === initials.length, `seed ${seed}: iniciales distintas`)
+    const victimInitial = characters.victim[0].toLowerCase()
+    const suspectInitials = characters.suspects.map((s) => s[0].toLowerCase())
+    assert(
+      suspectInitials.every((i) => victimInitial.localeCompare(i, 'es') > 0),
+      `seed ${seed}: la víctima tiene la inicial alfabéticamente mayor`,
+    )
 
     // Invariante: sospechosos y pistas ordenados alfabéticamente.
     const sortedSuspects = [...characters.suspects].sort((a, b) => a.localeCompare(b, 'es'))

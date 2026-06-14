@@ -53,15 +53,12 @@ export function solve(map, characters, clues, opts = {}) {
     domains[name] = cells.filter((cell) => unary.every((c) => isUnarySatisfiable(c, cell, ctx)))
   }
 
-  // Orden de asignación: por dominio creciente, pero con la víctima PRIMERO
-  // cuando aplica la regla del asesino. En toda solución válida su fila y
-  // columna están despejadas, así que fijarla pronto permite podar de inmediato
-  // a cualquier otro actor que caiga en su línea (clave para el rendimiento).
-  const victimName = characters.victim
+  // Orden de asignación: por dominio creciente. En toda solución válida nadie
+  // comparte fila ni columna con otro personaje, así que cada asignación poda
+  // de inmediato a cualquier actor pendiente que caiga en esa línea (clave
+  // para el rendimiento).
   const byDomain = (a, b) => domains[a].length - domains[b].length
-  const order = requireSingleKiller
-    ? [victimName, ...names.filter((n) => n !== victimName).sort(byDomain)]
-    : [...names].sort(byDomain)
+  const order = [...names].sort(byDomain)
 
   // Pistas que se completan al asignar cada personaje (su último participante).
   const cluesByLastParticipant = {}
@@ -98,10 +95,15 @@ export function solve(map, characters, clues, opts = {}) {
       assigned[name] = { row: r, col: c }
       used.add(key)
       let ok = true
-      // Poda: la línea (fila/columna) de la víctima debe quedar despejada.
-      if (requireSingleKiller && name !== victimName) {
-        const vp = assigned[victimName]
-        if (vp && (r === vp.row || c === vp.col)) ok = false
+      // Poda: ningún personaje comparte fila ni columna con otro ya colocado.
+      if (requireSingleKiller) {
+        for (let j = 0; j < i; j++) {
+          const pp = assigned[order[j]]
+          if (pp.row === r || pp.col === c) {
+            ok = false
+            break
+          }
+        }
       }
       if (ok) {
         for (const clue of cluesByLastParticipant[name]) {

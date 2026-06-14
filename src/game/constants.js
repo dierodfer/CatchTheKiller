@@ -47,7 +47,7 @@ export const DIFFICULTIES = {
     gridSize: 6,
     numCharacters: 6, // 5 sospechosos + 1 víctima
     blockingRange: [8, 10],
-    clueTiers: ['absolute', 'room', 'relative', 'advanced'],
+    clueTiers: ['absolute', 'room', 'relative'],
   },
   experto: {
     id: 'experto',
@@ -55,7 +55,7 @@ export const DIFFICULTIES = {
     gridSize: 7,
     numCharacters: 7, // 6 sospechosos + 1 víctima
     blockingRange: [11, 14],
-    clueTiers: ['absolute', 'room', 'relative', 'advanced'],
+    clueTiers: ['absolute', 'room', 'relative'],
   },
 }
 

@@ -1,57 +1,58 @@
 // Generación local de la solución (sección 6.2 del documento).
 //
-// Asigna cada personaje a una celda libre garantizando que EXACTAMENTE un
-// sospechoso queda a solas con la víctima en su habitación (el asesino), con
-// las líneas del asesino y la víctima despejadas. Sin IA.
+// Coloca cada personaje en su propia fila y columna (nadie comparte línea con
+// nadie), garantizando que EXACTAMENTE un sospechoso queda a solas con la
+// víctima en su habitación (el asesino). Sin IA.
 
-import { freeCells } from './mapGenerator.js'
+import { isOccupiable } from './mapGenerator.js'
 import { findKillers } from './killerRule.js'
 import { buildClueContext } from './clues.js'
-import { shuffle, pick } from './random.js'
+import { shuffle } from './random.js'
 
 // characters: { suspects: string[], victim: string }
 // Devuelve { placements, killer } o null si no se encontró configuración válida.
 export function generateSolution(rng, map, characters, roomLookup) {
-  const cells = freeCells(map)
   const { suspects, victim } = characters
+  const size = map.gridSize
   const ctx = buildClueContext(map, roomLookup, characters)
   const roomAt = (r, c) => roomLookup[`${r},${c}`]
+  const rows = Array.from({ length: size }, (_, i) => i)
 
-  // El asesino es uno cualquiera de los sospechosos (los nombres son simétricos;
-  // la selección aleatoria viene del orden ya barajado de `suspects`).
-  const killer = suspects[0]
-  const otherSuspects = suspects.slice(1)
+  for (let attempt = 0; attempt < 3000; attempt++) {
+    // Permutación fila -> columna: cada personaje en fila y columna propias.
+    const colOrder = shuffle(rng, rows)
+    if (!rows.every((r) => isOccupiable(map, r, colOrder[r]))) continue
+    const positions = rows.map((r) => [r, colOrder[r]])
 
-  for (let attempt = 0; attempt < 800; attempt++) {
-    const shuffled = shuffle(rng, cells)
-    const [vr, vc] = shuffled[0]
-    const vRoom = roomAt(vr, vc)
+    // Agrupar posiciones por habitación; el asesino emerge de la única
+    // habitación que acaba con exactamente 2 personajes (víctima + asesino).
+    const byRoom = new Map()
+    positions.forEach(([r, c], i) => {
+      const room = roomAt(r, c)
+      if (!byRoom.has(room)) byRoom.set(room, [])
+      byRoom.get(room).push(i)
+    })
+    const pairRooms = shuffle(rng, [...byRoom.values()].filter((idxs) => idxs.length === 2))
+    if (pairRooms.length === 0) continue
 
-    // Asesino: en la habitación de la víctima, en distinta fila y columna.
-    const killerCandidates = shuffled.filter(
-      ([r, c]) => roomAt(r, c) === vRoom && r !== vr && c !== vc,
+    const [victimIdx, killerIdx] = shuffle(rng, pairRooms[0])
+    const remaining = shuffle(
+      rng,
+      positions.map((_, i) => i).filter((i) => i !== victimIdx && i !== killerIdx),
     )
-    if (killerCandidates.length === 0) continue
-    const [kr, kc] = pick(rng, killerCandidates)
 
-    // Resto de sospechosos: fuera de la habitación de la víctima y fuera de las
-    // filas/columnas tanto del asesino como de la víctima (pueden compartir
-    // línea entre ellos, pero nunca con el asesino o la víctima).
-    const otherCells = shuffled.filter(
-      ([r, c]) =>
-        roomAt(r, c) !== vRoom && r !== vr && c !== vc && r !== kr && c !== kc,
-    )
-    if (otherCells.length < otherSuspects.length) continue
+    const shuffledSuspects = shuffle(rng, suspects)
+    const killer = shuffledSuspects[0]
+    const otherSuspects = shuffledSuspects.slice(1)
 
     const placements = {}
-    placements[victim] = { row: vr, col: vc }
-    placements[killer] = { row: kr, col: kc }
-    const chosen = shuffle(rng, otherCells).slice(0, otherSuspects.length)
+    placements[victim] = { row: positions[victimIdx][0], col: positions[victimIdx][1] }
+    placements[killer] = { row: positions[killerIdx][0], col: positions[killerIdx][1] }
     otherSuspects.forEach((name, i) => {
-      placements[name] = { row: chosen[i][0], col: chosen[i][1] }
+      const [r, c] = positions[remaining[i]]
+      placements[name] = { row: r, col: c }
     })
 
-    // Validar: exactamente un asesino, y que sea el esperado.
     const killers = findKillers(placements, suspects, victim, ctx)
     if (killers.length === 1 && killers[0] === killer) {
       return { placements, killer }
