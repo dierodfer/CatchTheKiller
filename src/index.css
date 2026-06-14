@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-ink-900 text-slate-100 antialiased;
+    background-image:
+      radial-gradient(800px 400px at 80% -10%, rgba(192, 57, 43, 0.12), transparent),
+      radial-gradient(600px 300px at 0% 110%, rgba(59, 130, 246, 0.08), transparent);
+  }
+}
+
+/* Evita la selección de texto al arrastrar fichas. */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
