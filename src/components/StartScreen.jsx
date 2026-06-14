@@ -1,7 +1,7 @@
 // Pantalla inicial: selección de dificultad y previsualización (estado IDLE).
 
 import { motion } from 'framer-motion'
-import { Skull, Loader2, Grid3x3, Users } from 'lucide-react'
+import { Loader2, Grid3x3, Users } from 'lucide-react'
 import { DIFFICULTIES } from '@/game/constants.js'
 import MapPreview from './MapPreview.jsx'
 
@@ -15,9 +15,7 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-3xl text-center"
       >
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blood/20 ring-1 ring-blood/40">
-          <Skull size={36} className="text-blood" />
-        </div>
+        <img src="/logo.png" alt="" className="mx-auto mb-4 h-24 w-auto drop-shadow-lg" />
         <h1 className="text-4xl font-black tracking-tight text-white">Catch the Killer</h1>
         <p className="mx-auto mt-2 max-w-md text-slate-400">
           Reconstruye la escena del crimen con pura deducción espacial. El asesino emerge al

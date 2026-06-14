@@ -9,21 +9,33 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core'
-import { Skull, Map as MapIcon } from 'lucide-react'
+import { Map as MapIcon } from 'lucide-react'
 import Board from './Board.jsx'
 import CharacterTray from './CharacterTray.jsx'
 import CluePanel from './CluePanel.jsx'
 import Toolbar from './Toolbar.jsx'
 import ResultBanner from './ResultBanner.jsx'
+import RevealConfirmModal from './RevealConfirmModal.jsx'
 import { TokenChip } from './CharacterToken.jsx'
 import { DIFFICULTIES } from '@/game/constants.js'
 
 export default function GameScreen({ game }) {
-  const { state, place, unplace, toggleClue, check, requestHint, dismissHint, backToPlay, newGame } =
-    game
+  const {
+    state,
+    place,
+    unplace,
+    toggleClue,
+    check,
+    requestHint,
+    dismissHint,
+    reveal,
+    backToPlay,
+    newGame,
+  } = game
   const { puzzle, placements, usedClues, status, result, hint } = state
   const [selectedToken, setSelectedToken] = useState(null)
   const [activeId, setActiveId] = useState(null)
+  const [confirmReveal, setConfirmReveal] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const revealMode = status === 'win'
@@ -84,7 +96,7 @@ export default function GameScreen({ game }) {
       {/* Cabecera del caso. */}
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Skull className="text-blood" size={22} />
+          <img src="/logo.png" alt="" className="h-8 w-auto" />
           <h1 className="text-xl font-bold text-white">Catch the Killer</h1>
           <span className="rounded-full bg-ink-700 px-2 py-0.5 text-xs font-medium text-slate-300">
             {diff.label} · {puzzle.map.gridSize}×{puzzle.map.gridSize}
@@ -134,6 +146,7 @@ export default function GameScreen({ game }) {
               onCheck={check}
               onHint={requestHint}
               onDismissHint={dismissHint}
+              onReveal={() => setConfirmReveal(true)}
               onNewGame={newGame}
             />
           </div>
@@ -150,6 +163,15 @@ export default function GameScreen({ game }) {
         characters={puzzle.characters}
         onBackToPlay={backToPlay}
         onNewGame={newGame}
+      />
+
+      <RevealConfirmModal
+        open={confirmReveal}
+        onCancel={() => setConfirmReveal(false)}
+        onConfirm={() => {
+          setConfirmReveal(false)
+          reveal()
+        }}
       />
     </div>
   )

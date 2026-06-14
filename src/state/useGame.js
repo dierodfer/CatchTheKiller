@@ -81,6 +81,20 @@ function reducer(state, action) {
         result: action.result,
       }
 
+    case 'REVEAL':
+      return {
+        ...state,
+        placements: { ...state.puzzle.solution },
+        status: STATUS.WIN,
+        result: {
+          solved: true,
+          complete: true,
+          killer: state.puzzle.killer,
+          errorCount: 0,
+          revealed: true,
+        },
+      }
+
     case 'BACK_TO_PLAY':
       return { ...state, status: STATUS.PLAYING, result: null }
 
@@ -142,6 +156,7 @@ export function useGame() {
   }, [state.puzzle, state.placements])
 
   const dismissHint = useCallback(() => dispatch({ type: 'DISMISS_HINT' }), [])
+  const reveal = useCallback(() => dispatch({ type: 'REVEAL' }), [])
   const backToPlay = useCallback(() => dispatch({ type: 'BACK_TO_PLAY' }), [])
   const newGame = useCallback(() => dispatch({ type: 'NEW_GAME' }), [])
 
@@ -155,6 +170,7 @@ export function useGame() {
     check,
     requestHint,
     dismissHint,
+    reveal,
     backToPlay,
     newGame,
   }

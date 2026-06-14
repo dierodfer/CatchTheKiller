@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/icon-512.png" width="120" alt="Catch the Killer" />
+</p>
+
 # Catch the Killer
 
 🔗 **Demo en GitHub Pages:** https://dierodfer.github.io/CatchTheKiller/

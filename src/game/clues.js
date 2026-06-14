@@ -168,52 +168,6 @@ export const CLUE_TYPES = {
     },
     text: (p) => `Estaba en una fila inferior a ${p.other}`,
   },
-  sharesRow: {
-    tier: 'relative',
-    unary: false,
-    evaluate: (pos, p, all) => {
-      const op = all[p.other]
-      return !!op && pos.row === op.row
-    },
-    text: (p) => `Compartía fila con ${p.other}`,
-  },
-  notSharesRow: {
-    tier: 'relative',
-    unary: false,
-    evaluate: (pos, p, all) => {
-      const op = all[p.other]
-      return !!op && pos.row !== op.row
-    },
-    text: (p) => `No compartía fila con ${p.other}`,
-  },
-  sharesColumn: {
-    tier: 'relative',
-    unary: false,
-    evaluate: (pos, p, all) => {
-      const op = all[p.other]
-      return !!op && pos.col === op.col
-    },
-    text: (p) => `Compartía columna con ${p.other}`,
-  },
-  notSharesColumn: {
-    tier: 'relative',
-    unary: false,
-    evaluate: (pos, p, all) => {
-      const op = all[p.other]
-      return !!op && pos.col !== op.col
-    },
-    text: (p) => `No compartía columna con ${p.other}`,
-  },
-  notSharesRowNorColumn: {
-    tier: 'relative',
-    unary: false,
-    evaluate: (pos, p, all) => {
-      const op = all[p.other]
-      return !!op && pos.row !== op.row && pos.col !== op.col
-    },
-    text: (p) => `No compartía fila ni columna con ${p.other}`,
-  },
-
   // ───────── Proximidad a mobiliario ─────────
   nextToFurniture: {
     tier: 'room',
