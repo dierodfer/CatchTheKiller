@@ -53,10 +53,19 @@ export function solve(map, characters, clues, opts = {}) {
     domains[name] = cells.filter((cell) => unary.every((c) => isUnarySatisfiable(c, cell, ctx)))
   }
 
+  // Orden de asignación: por dominio creciente, pero con la víctima PRIMERO
+  // cuando aplica la regla del asesino. En toda solución válida su fila y
+  // columna están despejadas, así que fijarla pronto permite podar de inmediato
+  // a cualquier otro actor que caiga en su línea (clave para el rendimiento).
+  const victimName = characters.victim
+  const byDomain = (a, b) => domains[a].length - domains[b].length
+  const order = requireSingleKiller
+    ? [victimName, ...names.filter((n) => n !== victimName).sort(byDomain)]
+    : [...names].sort(byDomain)
+
   // Pistas que se completan al asignar cada personaje (su último participante).
   const cluesByLastParticipant = {}
   for (const name of names) cluesByLastParticipant[name] = []
-  const order = [...names].sort((a, b) => domains[a].length - domains[b].length)
   const orderIndex = {}
   order.forEach((n, i) => (orderIndex[n] = i))
   for (const clue of clues) {
@@ -75,7 +84,7 @@ export function solve(map, characters, clues, opts = {}) {
     if (i === order.length) {
       if (
         requireSingleKiller &&
-        findKillers(assigned, characters.suspects, characters.victim).length !== 1
+        findKillers(assigned, characters.suspects, characters.victim, ctx).length !== 1
       ) {
         return
       }
@@ -89,10 +98,17 @@ export function solve(map, characters, clues, opts = {}) {
       assigned[name] = { row: r, col: c }
       used.add(key)
       let ok = true
-      for (const clue of cluesByLastParticipant[name]) {
-        if (!evalClue(clue, assigned, ctx)) {
-          ok = false
-          break
+      // Poda: la línea (fila/columna) de la víctima debe quedar despejada.
+      if (requireSingleKiller && name !== victimName) {
+        const vp = assigned[victimName]
+        if (vp && (r === vp.row || c === vp.col)) ok = false
+      }
+      if (ok) {
+        for (const clue of cluesByLastParticipant[name]) {
+          if (!evalClue(clue, assigned, ctx)) {
+            ok = false
+            break
+          }
         }
       }
       if (ok) recurse(i + 1)
@@ -127,13 +143,15 @@ export function validatePlayerSolution(map, characters, clues, placements, roomL
   }
 
   const failedClues = clues.filter((c) => !evalClue(c, placements, ctx))
-  const killers = findKillers(placements, characters.suspects, characters.victim)
+  const killers = findKillers(placements, characters.suspects, characters.victim, ctx)
   const solved = failedClues.length === 0 && killers.length === 1
+  const v = placements[characters.victim]
 
   return {
     solved,
     complete: true,
     killer: solved ? killers[0] : null,
+    room: solved ? ctx.roomAt(v.row, v.col) : null,
     // Se expone solo el número de errores, nunca su localización.
     errorCount: failedClues.length,
   }

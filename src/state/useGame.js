@@ -3,7 +3,6 @@
 import { useCallback, useReducer } from 'react'
 import { generatePuzzle } from '@/game/puzzleGenerator.js'
 import { validatePlayerSolution } from '@/game/solver.js'
-import { getNextHint } from '@/game/hints.js'
 
 export const STATUS = {
   IDLE: 'idle',
@@ -21,8 +20,6 @@ const initialState = {
   placements: {}, // { nombre: { row, col } } colocados por el jugador
   usedClues: {}, // { clueIndex: true } marcadas como usadas
   result: null,
-  hint: null,
-  hintsUsed: 0,
   error: null,
 }
 
@@ -68,12 +65,6 @@ function reducer(state, action) {
       return { ...state, usedClues }
     }
 
-    case 'HINT':
-      return { ...state, hint: action.hint, hintsUsed: state.hintsUsed + 1 }
-
-    case 'DISMISS_HINT':
-      return { ...state, hint: null }
-
     case 'CHECK':
       return {
         ...state,
@@ -81,19 +72,23 @@ function reducer(state, action) {
         result: action.result,
       }
 
-    case 'REVEAL':
+    case 'REVEAL': {
+      const { puzzle } = state
+      const v = puzzle.solution[puzzle.characters.victim]
       return {
         ...state,
-        placements: { ...state.puzzle.solution },
+        placements: { ...puzzle.solution },
         status: STATUS.WIN,
         result: {
           solved: true,
           complete: true,
-          killer: state.puzzle.killer,
+          killer: puzzle.killer,
+          room: puzzle.roomLookup[`${v.row},${v.col}`],
           errorCount: 0,
           revealed: true,
         },
       }
+    }
 
     case 'BACK_TO_PLAY':
       return { ...state, status: STATUS.PLAYING, result: null }
@@ -147,15 +142,6 @@ export function useGame() {
     dispatch({ type: 'CHECK', result })
   }, [state])
 
-  // Ayuda progresiva: el Solver revela la posición correcta de un personaje
-  // aún mal colocado o sin colocar (penaliza la puntuación).
-  const requestHint = useCallback(() => {
-    const hint = getNextHint(state.puzzle, state.placements)
-    if (!hint) return
-    dispatch({ type: 'HINT', hint })
-  }, [state.puzzle, state.placements])
-
-  const dismissHint = useCallback(() => dispatch({ type: 'DISMISS_HINT' }), [])
   const reveal = useCallback(() => dispatch({ type: 'REVEAL' }), [])
   const backToPlay = useCallback(() => dispatch({ type: 'BACK_TO_PLAY' }), [])
   const newGame = useCallback(() => dispatch({ type: 'NEW_GAME' }), [])
@@ -168,8 +154,6 @@ export function useGame() {
     unplace,
     toggleClue,
     check,
-    requestHint,
-    dismissHint,
     reveal,
     backToPlay,
     newGame,

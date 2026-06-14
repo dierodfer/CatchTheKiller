@@ -6,7 +6,8 @@ import { DraggableToken } from './CharacterToken.jsx'
 
 export default function CharacterTray({ characters, placements, selectedToken, onTokenClick }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'tray' })
-  const all = [...characters.suspects, characters.victim]
+  // Sospechosos y víctima, en orden alfabético.
+  const all = [...characters.suspects, characters.victim].sort((a, b) => a.localeCompare(b, 'es'))
   const unplaced = all.filter((name) => !placements[name])
 
   return (

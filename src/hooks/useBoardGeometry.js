@@ -15,7 +15,15 @@ const CELL_SIZE = { 4: 80, 5: 68, 6: 58, 7: 50 }
 const BORDER_ROOM = '2px solid rgba(148,163,184,0.55)'
 const BORDER_THIN = '1px solid rgba(148,163,184,0.12)'
 
-export function useBoardGeometry({ map, roomLookup, placements, revealMode, killer, solution }) {
+export function useBoardGeometry({
+  map,
+  roomLookup,
+  placements,
+  revealMode,
+  killer,
+  victim,
+  solution,
+}) {
   const size = map.gridSize
   const cellSize = CELL_SIZE[size] || 64
 
@@ -91,13 +99,18 @@ export function useBoardGeometry({ map, roomLookup, placements, revealMode, kill
     return set
   }, [placements, size])
 
-  // En victoria, la línea de control del asesino.
-  const killerLine = useMemo(() => {
+  // En la revelación, la habitación donde el asesino estaba a solas con la
+  // víctima (resaltada para explicar visualmente la regla).
+  const revealRoom = useMemo(() => {
     if (!revealMode || !killer) return new Set()
+    const v = solution[victim]
+    const room = roomLookup[`${v.row},${v.col}`]
     const set = new Set()
-    for (const [r, c] of controlLineCells(solution[killer], size)) set.add(`${r},${c}`)
+    for (const key of Object.keys(roomLookup)) {
+      if (roomLookup[key] === room) set.add(key)
+    }
     return set
-  }, [revealMode, killer, solution, size])
+  }, [revealMode, killer, victim, solution, roomLookup])
 
   const occupantAt = useMemo(() => {
     const m = {}
@@ -108,5 +121,5 @@ export function useBoardGeometry({ map, roomLookup, placements, revealMode, kill
     return m
   }, [placements])
 
-  return { size, cellSize, cellGeometry, controlled, killerLine, occupantAt }
+  return { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt }
 }

@@ -28,8 +28,7 @@ function Cell({
   characters,
   occupantName,
   controlled,
-  killerLine,
-  hintTarget,
+  revealCell,
   selectedToken,
   onCellClick,
   onTokenClick,
@@ -55,7 +54,7 @@ function Cell({
       style={{
         width: size,
         height: size,
-        background: killerLine ? 'rgba(192,57,43,0.22)' : tint,
+        background: revealCell ? 'rgba(192,57,43,0.22)' : tint,
         borderTop: borders.top,
         borderRight: borders.right,
         borderBottom: borders.bottom,
@@ -114,11 +113,6 @@ function Cell({
         />
       )}
 
-      {/* Resalte de la celda revelada por una pista de ayuda. */}
-      {hintTarget && !occupantName && (
-        <span className="pointer-events-none absolute inset-1 animate-pulse rounded-md ring-2 ring-amber-300/80" />
-      )}
-
       {/* Ficha colocada. */}
       {occupantName && (
         <motion.div layoutId={`token-${occupantName}`} className="absolute">
@@ -127,7 +121,7 @@ function Cell({
               name={occupantName}
               characters={characters}
               size={tokenSize}
-              highlight={killerLine ? '#f59e0b' : undefined}
+              highlight={revealCell ? '#f59e0b' : undefined}
             />
           ) : (
             <DraggableToken
