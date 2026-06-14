@@ -84,7 +84,7 @@ function partitionRooms(rng, size, numRooms) {
 
 export function generateMap(rng, config) {
   const { gridSize: size, numCharacters, blockingRange } = config
-  const numRooms = Math.max(3, Math.min(ROOM_NAMES.length, size + 1))
+  const numRooms = randInt(rng, size - 2, size - 1)
 
   let attempt = 0
   while (attempt++ < 200) {
@@ -120,8 +120,9 @@ export function generateMap(rng, config) {
       grid[r][c] = 'silla'
     }
 
-    // Alfombra: una región rectangular contigua de 2 a 6 celdas.
-    placeRug(rng, grid, size)
+    // Alfombra: una región rectangular contigua de 2 a 6 celdas, sin cruzar
+    // entre habitaciones.
+    placeRug(rng, grid, size, rooms)
 
     // Ventanas sobre celdas de borde libres (ahora son ocupables).
     const wallOf = WALL_BY_BORDER(size)
@@ -162,9 +163,15 @@ export function isOccupiable(map, r, c) {
   return v === null || v === 'silla' || v === 'alfombra'
 }
 
-// Coloca una alfombra rectangular (2 a 6 celdas) sobre celdas libres,
-// probando formas y posiciones al azar hasta encontrar un hueco que encaje.
-function placeRug(rng, grid, size) {
+// Coloca una alfombra rectangular (2 a 6 celdas) sobre celdas libres de una
+// misma habitación, probando formas y posiciones al azar hasta encontrar un
+// hueco que encaje sin cruzar entre habitaciones.
+function placeRug(rng, grid, size, rooms) {
+  const roomOf = {}
+  rooms.forEach((room, i) => {
+    for (const [r, c] of room.cells) roomOf[`${r},${c}`] = i
+  })
+
   const shapes = shuffle(rng, [
     [1, 2], [2, 1],
     [1, 3], [3, 1],
@@ -182,9 +189,13 @@ function placeRug(rng, grid, size) {
     }
     for (const [r0, c0] of shuffle(rng, positions)) {
       let fits = true
+      const room0 = roomOf[`${r0},${c0}`]
       for (let dr = 0; dr < h && fits; dr++) {
         for (let dc = 0; dc < w && fits; dc++) {
-          if (grid[r0 + dr][c0 + dc] !== null) fits = false
+          const r = r0 + dr
+          const c = c0 + dc
+          if (grid[r][c] !== null) fits = false
+          if (roomOf[`${r},${c}`] !== room0) fits = false
         }
       }
       if (!fits) continue

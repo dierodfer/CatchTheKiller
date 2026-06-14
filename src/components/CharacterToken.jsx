@@ -16,7 +16,7 @@ export function TokenChip({ name, characters, size = 40, dimmed = false, highlig
       title={name}
     >
       <div
-        className="flex items-center justify-center rounded-full shadow-md transition-transform"
+        className="flex items-center justify-center rounded-lg shadow-md transition-transform"
         style={{
           width: size,
           height: size,
@@ -48,8 +48,8 @@ export function DraggableToken({ name, characters, size, onClick, selected }) {
       {...listeners}
       {...attributes}
       onClick={onClick}
-      className={`rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${
-        selected ? 'ring-2 ring-white/80 rounded-xl' : ''
+      className={`rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${
+        selected ? 'ring-2 ring-white/80' : ''
       }`}
       style={{ touchAction: 'none', cursor: 'grab', opacity: isDragging ? 0 : 1 }}
     >
