@@ -97,28 +97,30 @@ export default function GameScreen({ game }) {
         onDragEnd={handleDragEnd}
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-          {/* Tablero. */}
+          {/* Personajes + tablero. */}
           <div className="flex justify-center lg:justify-start">
-            <Board
-              puzzle={puzzle}
-              placements={placements}
-              selectedToken={selectedToken}
-              onCellClick={handleCellClick}
-              onTokenClick={handleTokenClick}
-              revealMode={revealMode}
-              hint={hint}
-            />
+            <div className="flex flex-col gap-3">
+              <CharacterTray
+                characters={puzzle.characters}
+                placements={placements}
+                selectedToken={selectedToken}
+                onTokenClick={handleTokenClick}
+              />
+              <Board
+                puzzle={puzzle}
+                placements={placements}
+                selectedToken={selectedToken}
+                onCellClick={handleCellClick}
+                onTokenClick={handleTokenClick}
+                revealMode={revealMode}
+                hint={hint}
+              />
+            </div>
           </div>
 
           {/* Panel lateral. */}
           <div className="flex w-full flex-col gap-4 lg:max-w-sm">
             <CluePanel puzzle={puzzle} usedClues={usedClues} onToggleClue={toggleClue} />
-            <CharacterTray
-              characters={puzzle.characters}
-              placements={placements}
-              selectedToken={selectedToken}
-              onTokenClick={handleTokenClick}
-            />
             <Toolbar
               allPlaced={allPlaced}
               hintsUsed={state.hintsUsed}

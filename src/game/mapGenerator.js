@@ -109,32 +109,27 @@ export function generateMap(rng, config) {
       grid[r][c] = pick(rng, BLOCKING_FURNITURE)
     }
 
-    // Mobiliario libre (silla, alfombra) sobre celdas aún libres.
+    // Mobiliario libre (silla) sobre celdas aún libres.
     const stillFree = []
     for (let r = 0; r < size; r++)
       for (let c = 0; c < size; c++) if (grid[r][c] === null) stillFree.push([r, c])
     const shuffledFree = shuffle(rng, stillFree)
     const numChairs = randInt(rng, 1, 2)
-    const numRugs = randInt(rng, 1, 2)
-    let fi = 0
-    for (let i = 0; i < numChairs && fi < shuffledFree.length; i++, fi++) {
-      const [r, c] = shuffledFree[fi]
+    for (let i = 0; i < numChairs && i < shuffledFree.length; i++) {
+      const [r, c] = shuffledFree[i]
       grid[r][c] = 'silla'
     }
-    for (let i = 0; i < numRugs && fi < shuffledFree.length; i++, fi++) {
-      const [r, c] = shuffledFree[fi]
-      grid[r][c] = 'alfombra'
-    }
 
-    // Ventanas sobre celdas de borde libres (las vuelve no ocupables).
+    // Alfombra: una región rectangular contigua de 2 a 6 celdas.
+    placeRug(rng, grid, size)
+
+    // Ventanas sobre celdas de borde libres (ahora son ocupables).
     const wallOf = WALL_BY_BORDER(size)
     const freeBorder = shuffle(rng, borderCells).filter(([r, c]) => grid[r][c] === null)
     const numWindows = randInt(rng, 1, 2)
-    const windowSet = new Set()
     for (let i = 0; i < numWindows && i < freeBorder.length; i++) {
       const [r, c] = freeBorder[i]
       windows.push({ row: r, col: c, wall: wallOf(r, c) })
-      windowSet.add(`${r},${c}`)
     }
 
     const map = { gridSize: size, rooms, grid, windows }
@@ -151,21 +146,54 @@ export function generateMap(rng, config) {
 
 // Devuelve la lista de celdas ocupables [r, c] de un mapa.
 export function freeCells(map) {
-  const windowSet = new Set(map.windows.map((w) => `${w.row},${w.col}`))
   const cells = []
   for (let r = 0; r < map.gridSize; r++) {
     for (let c = 0; c < map.gridSize; c++) {
-      if (isOccupiable(map, r, c, windowSet)) cells.push([r, c])
+      if (isOccupiable(map, r, c)) cells.push([r, c])
     }
   }
   return cells
 }
 
-export function isOccupiable(map, r, c, windowSet) {
-  const ws = windowSet || new Set(map.windows.map((w) => `${w.row},${w.col}`))
-  if (ws.has(`${r},${c}`)) return false
+// Las ventanas son ocupables: un personaje (incluido el asesino) puede estar
+// junto a la pared, frente a la ventana.
+export function isOccupiable(map, r, c) {
   const v = map.grid[r][c]
   return v === null || v === 'silla' || v === 'alfombra'
+}
+
+// Coloca una alfombra rectangular (2 a 6 celdas) sobre celdas libres,
+// probando formas y posiciones al azar hasta encontrar un hueco que encaje.
+function placeRug(rng, grid, size) {
+  const shapes = shuffle(rng, [
+    [1, 2], [2, 1],
+    [1, 3], [3, 1],
+    [1, 4], [4, 1],
+    [1, 5], [5, 1],
+    [1, 6], [6, 1],
+    [2, 2], [2, 3], [3, 2],
+  ])
+
+  for (const [h, w] of shapes) {
+    if (h > size || w > size) continue
+    const positions = []
+    for (let r = 0; r <= size - h; r++) {
+      for (let c = 0; c <= size - w; c++) positions.push([r, c])
+    }
+    for (const [r0, c0] of shuffle(rng, positions)) {
+      let fits = true
+      for (let dr = 0; dr < h && fits; dr++) {
+        for (let dc = 0; dc < w && fits; dc++) {
+          if (grid[r0 + dr][c0 + dc] !== null) fits = false
+        }
+      }
+      if (!fits) continue
+      for (let dr = 0; dr < h; dr++) {
+        for (let dc = 0; dc < w; dc++) grid[r0 + dr][c0 + dc] = 'alfombra'
+      }
+      return
+    }
+  }
 }
 
 // Mapa auxiliar celda -> nombre de habitación.

@@ -78,23 +78,30 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
 
 - `Board` / `Cell` — cuadrícula con habitaciones, mobiliario, ventanas y la
   **línea de control** (cruces `×` en fila y columna de cada ficha colocada, en
-  tiempo real).
-- `CharacterTray` — fichas sin colocar; zona para descolocar.
-- `CluePanel` — pistas por sospechoso, marcables como usadas.
+  tiempo real). Las ventanas se dibujan sobre la pared de la celda (no en el
+  suelo) y son ocupables: cualquier personaje, incluido el asesino, puede
+  situarse junto a ellas. Las alfombras pueden ocupar entre 2 y 6 celdas
+  formando una región rectangular.
+- `CharacterTray` — fichas sin colocar, situada justo encima del tablero; zona
+  para descolocar.
+- `CluePanel` — una pista por sospechoso (puede combinar varios datos en una
+  sola tarjeta), marcable como usada.
 - `Toolbar` — Resolver, Ayuda progresiva (penaliza), Nuevo.
 - `ResultBanner` — WIN revela al asesino, la víctima y la línea de control;
   FAIL indica que hay errores **sin revelar la solución**.
+- `MapPreview` — previsualización de solo lectura del tipo de mapa que generará
+  la dificultad seleccionada, visible en la pantalla de inicio.
 
 Colocación por **arrastre** (dnd-kit) o **click-to-place** (seleccionar ficha y
 pulsar la celda).
 
 ## Estado del proyecto
 
-Primer hito jugable de extremo a extremo para las tres dificultades
-(4×4 / 5×5 / 6×6). La capa de generación es local; si en el futuro se quiere
-delegar la generación de solución/pistas a un modelo, basta con sustituir
-`solutionGenerator` + `clueGenerator` respetando el contrato de datos
-(sección 10 del diseño), manteniendo el Solver como autoridad final.
+Primer hito jugable de extremo a extremo para las cuatro dificultades
+(4×4 / 5×5 / 6×6 / 7×7). La capa de generación es local; si en el futuro se
+quiere delegar la generación de solución/pistas a un modelo, basta con
+sustituir `solutionGenerator` + `clueGenerator` respetando el contrato de
+datos (sección 10 del diseño), manteniendo el Solver como autoridad final.
 
 Cuestiones aún abiertas del diseño (sección 15): revelado progresivo de pistas,
 sistema de puntuación, multijugador y persistencia entre sesiones.

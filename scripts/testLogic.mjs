@@ -6,7 +6,7 @@ import { solve, validatePlayerSolution } from '../src/game/solver.js'
 import { freeCells, isOccupiable } from '../src/game/mapGenerator.js'
 import { findKillers } from '../src/game/killerRule.js'
 
-const difficulties = ['facil', 'media', 'dificil']
+const difficulties = ['facil', 'media', 'dificil', 'experto']
 const perDifficulty = 8
 let failures = 0
 
@@ -36,8 +36,8 @@ for (const diff of difficulties) {
 
     const { map, characters, clues, solution, killer, roomLookup } = puzzle
 
-    // Invariante: cada sospechoso ≥1 pista (§6.4 permite añadir pistas a los
-    // sospechosos ambiguos), la víctima 0 pistas.
+    // Invariante: cada sospechoso tiene al menos una pista (agrupadas en la UI
+    // como una única "pista" por personaje), la víctima 0.
     for (const s of characters.suspects) {
       assert(
         clues.some((c) => c.subject === s),

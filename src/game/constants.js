@@ -49,6 +49,14 @@ export const DIFFICULTIES = {
     blockingRange: [8, 10],
     clueTiers: ['absolute', 'room', 'relative', 'advanced'],
   },
+  experto: {
+    id: 'experto',
+    label: 'Experto',
+    gridSize: 7,
+    numCharacters: 7, // 6 sospechosos + 1 víctima
+    blockingRange: [11, 14],
+    clueTiers: ['absolute', 'room', 'relative', 'advanced'],
+  },
 }
 
 // Tipos de celda según su ocupabilidad.
