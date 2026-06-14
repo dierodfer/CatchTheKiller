@@ -22,7 +22,6 @@ const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'planta', 'ventana']
 const SEED_PREFERENCE = [
   'inRoom',
   'withInRoom',
-  'directionOf',
   'inRow',
   'inColumn',
   'nextToFurniture',
@@ -100,23 +99,11 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('inBorder', {})
   add('notInBorder', {})
 
-  // Relativas. Las negativas "no compartía fila/columna con X" son obvias (el
-  // asesino nunca comparte línea con otro sospechoso). Las positivas genéricas
-  // "compartía fila/columna con X" tampoco se generan: por la regla del
-  // asesino implicarían que NINGUNO de los dos puede serlo, lo que no aporta
-  // como pista de posición; "al norte/sur/este/oeste de X" sí se mantiene
-  // porque, aunque también implica línea compartida, precisa además el lado.
+  // Relativas. Nadie comparte fila ni columna con nadie (regla del asesino),
+  // así que solo tienen sentido las comparaciones de orden entre filas.
   for (const o of others) {
-    for (const dir of ['norte', 'sur', 'este', 'oeste']) add('directionOf', { other: o, dir })
     add('rowAbove', { other: o })
     add('rowBelow', { other: o })
-  }
-
-  // Avanzadas
-  for (let i = 0; i < others.length; i++) {
-    for (let j = i + 1; j < others.length; j++) {
-      add('betweenSharesRow', { x: others[i], y: others[j] })
-    }
   }
 
   return out

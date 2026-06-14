@@ -27,6 +27,7 @@ function pickDistinctNames(rng, count) {
 }
 
 const byName = (a, b) => a.localeCompare(b, 'es')
+const byInitial = (a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase(), 'es')
 
 export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
   const difficulty = DIFFICULTIES[difficultyId]
@@ -41,11 +42,13 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
     const roomLookup = buildRoomLookup(map)
 
     // Personajes: N−1 sospechosos + 1 víctima, todos con inicial distinta.
+    // La víctima es siempre quien tiene la inicial alfabéticamente mayor.
     const names = pickDistinctNames(rng, difficulty.numCharacters)
     if (names.length < difficulty.numCharacters) continue
+    const sortedByInitial = [...names].sort(byInitial)
     const characters = {
-      suspects: names.slice(0, difficulty.numCharacters - 1),
-      victim: names[difficulty.numCharacters - 1],
+      suspects: sortedByInitial.slice(0, -1),
+      victim: sortedByInitial[sortedByInitial.length - 1],
     }
     const ctx = buildClueContext(map, roomLookup, characters)
 

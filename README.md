@@ -11,8 +11,9 @@ escena colocando a cada personaje en un mapa cuadriculado (con filas y columnas
 numeradas) a partir de pistas espaciales. **El asesino emerge automáticamente**
 como consecuencia de una reconstrucción correcta del tablero: es el único
 sospechoso que se queda **a solas con la víctima en una misma habitación**;
-además, ni el asesino ni la víctima comparten fila o columna con ningún otro
-personaje.
+además, **ningún personaje comparte fila ni columna con otro**: cada uno ocupa
+una fila y una columna propias. La víctima es siempre el personaje cuyo nombre
+empieza por la letra alfabéticamente más alta de todos los presentes.
 
 > Implementación **100% local**: la generación del mapa, la solución, las pistas
 > y el Solver son lógica interna en JavaScript puro. No se llama a ninguna IA ni
@@ -71,8 +72,8 @@ src/game/
   constants.js          Mobiliario, dificultades, habitaciones
   random.js             PRNG determinista (semilla reproducible)
   mapGenerator.js       Cuadrícula + habitaciones irregulares + mobiliario + ventanas
-  solutionGenerator.js  Coloca personajes garantizando exactamente 1 asesino
-  killerRule.js         Regla del asesino (a solas con la víctima en su sala)
+  solutionGenerator.js  Coloca personajes (filas/columnas propias) garantizando 1 asesino
+  killerRule.js         Regla del asesino (a solas con la víctima en su sala, líneas despejadas)
   clues.js              Catálogo de tipos de pista + evaluador verificable
   clueGenerator.js      Deriva pistas de la solución y busca solución única
   solver.js             Autoridad final: unicidad, validación, identifica al asesino
@@ -94,10 +95,10 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
 
 - `Board` / `Cell` — cuadrícula con **filas y columnas numeradas**, habitaciones,
   mobiliario, ventanas y la **línea de control** (cruces `×` en fila y columna de
-  cada ficha colocada, en tiempo real; útil para comprobar que las líneas del
-  asesino y la víctima quedan despejadas). Las ventanas se dibujan sobre la pared
-  de la celda (no en el suelo) y son ocupables. Las alfombras pueden ocupar entre
-  2 y 6 celdas formando una región rectangular.
+  cada ficha colocada, en tiempo real; útil para comprobar que ningún personaje
+  comparte fila ni columna con otro). Las ventanas se dibujan sobre la pared de
+  la celda (no en el suelo) y son ocupables. Las alfombras pueden ocupar entre 2
+  y 6 celdas formando una región rectangular.
 - `CharacterTray` — fichas sin colocar (orden alfabético), situada justo encima
   del tablero; zona para descolocar.
 - `CluePanel` — pistas agrupadas por personaje (orden alfabético), marcables como

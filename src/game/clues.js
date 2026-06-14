@@ -129,27 +129,6 @@ export const CLUE_TYPES = {
   },
 
   // ───────── Posición relativa entre personajes ─────────
-  directionOf: {
-    tier: 'relative',
-    unary: false,
-    evaluate: (pos, p, all) => {
-      const op = all[p.other]
-      if (!op) return false
-      switch (p.dir) {
-        case 'norte':
-          return pos.col === op.col && pos.row < op.row
-        case 'sur':
-          return pos.col === op.col && pos.row > op.row
-        case 'este':
-          return pos.row === op.row && pos.col > op.col
-        case 'oeste':
-          return pos.row === op.row && pos.col < op.col
-        default:
-          return false
-      }
-    },
-    text: (p) => `Estaba al ${p.dir} de ${p.other}`,
-  },
   rowAbove: {
     tier: 'relative',
     unary: false,
@@ -168,6 +147,7 @@ export const CLUE_TYPES = {
     },
     text: (p) => `Estaba en una fila inferior a ${p.other}`,
   },
+
   // ───────── Proximidad a mobiliario ─────────
   nextToFurniture: {
     tier: 'room',
@@ -201,18 +181,6 @@ export const CLUE_TYPES = {
     unary: true,
     evaluate: (pos, _p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === 'alfombra',
     text: () => `Estaba sobre la alfombra`,
-  },
-
-  // ───────── Restricciones avanzadas (solo difícil) ─────────
-  betweenSharesRow: {
-    tier: 'advanced',
-    unary: false,
-    evaluate: (pos, p, all) => {
-      const x = all[p.x]
-      const y = all[p.y]
-      return !!x && !!y && (pos.row === x.row || pos.row === y.row)
-    },
-    text: (p) => `Entre ${p.x} e ${p.y}, compartía fila con uno de ellos`,
   },
 }
 
