@@ -1,6 +1,6 @@
 // Pantalla de juego (estado PLAYING/WIN/FAIL): tablero + paneles + drag & drop.
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -16,7 +16,7 @@ import CluePanel from './CluePanel.jsx'
 import Toolbar from './Toolbar.jsx'
 import ResultBanner from './ResultBanner.jsx'
 import { TokenChip } from './CharacterToken.jsx'
-import { DIFFICULTIES } from '../game/constants.js'
+import { DIFFICULTIES } from '@/game/constants.js'
 
 export default function GameScreen({ game }) {
   const { state, place, unplace, toggleClue, check, requestHint, dismissHint, backToPlay, newGame } =
@@ -35,23 +35,29 @@ export default function GameScreen({ game }) {
     [puzzle.characters, placements],
   )
 
-  const handleTokenClick = (name) => {
-    if (revealMode) return
-    dismissHint()
-    if (placements[name]) {
-      unplace(name)
-      setSelectedToken(null)
-    } else {
-      setSelectedToken((cur) => (cur === name ? null : name))
-    }
-  }
+  const handleTokenClick = useCallback(
+    (name) => {
+      if (revealMode) return
+      dismissHint()
+      if (placements[name]) {
+        unplace(name)
+        setSelectedToken(null)
+      } else {
+        setSelectedToken((cur) => (cur === name ? null : name))
+      }
+    },
+    [revealMode, placements, dismissHint, unplace],
+  )
 
-  const handleCellClick = (r, c) => {
-    if (revealMode || !selectedToken) return
-    place(selectedToken, r, c)
-    setSelectedToken(null)
-    dismissHint()
-  }
+  const handleCellClick = useCallback(
+    (r, c) => {
+      if (revealMode || !selectedToken) return
+      place(selectedToken, r, c)
+      setSelectedToken(null)
+      dismissHint()
+    },
+    [revealMode, selectedToken, place, dismissHint],
+  )
 
   const handleDragStart = (e) => {
     setActiveId(e.active.id)

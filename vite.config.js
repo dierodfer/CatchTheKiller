@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -8,4 +9,9 @@ export default defineConfig({
   // Base relativo: permite servir el build desde un subdirectorio
   // (p. ej. https://usuario.github.io/CatchTheKiller/) sin fijar el nombre del repo.
   base: './',
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
 })
