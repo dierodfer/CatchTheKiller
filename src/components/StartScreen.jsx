@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Skull, Loader2, Grid3x3, Users } from 'lucide-react'
-import { DIFFICULTIES } from '../game/constants.js'
+import { DIFFICULTIES } from '@/game/constants.js'
 import MapPreview from './MapPreview.jsx'
 
 export default function StartScreen({ difficulty, onSelect, onStart, generating, error }) {

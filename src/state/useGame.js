@@ -1,8 +1,9 @@
 // Máquina de estados de la aplicación (sección 13 del documento), con useReducer.
 
 import { useCallback, useReducer } from 'react'
-import { generatePuzzle } from '../game/puzzleGenerator.js'
-import { validatePlayerSolution } from '../game/solver.js'
+import { generatePuzzle } from '@/game/puzzleGenerator.js'
+import { validatePlayerSolution } from '@/game/solver.js'
+import { getNextHint } from '@/game/hints.js'
 
 export const STATUS = {
   IDLE: 'idle',
@@ -135,25 +136,10 @@ export function useGame() {
   // Ayuda progresiva: el Solver revela la posición correcta de un personaje
   // aún mal colocado o sin colocar (penaliza la puntuación).
   const requestHint = useCallback(() => {
-    const { puzzle, placements } = state
-    const all = [...puzzle.characters.suspects, puzzle.characters.victim]
-    const target = all.find((name) => {
-      const p = placements[name]
-      const s = puzzle.solution[name]
-      return !p || p.row !== s.row || p.col !== s.col
-    })
-    if (!target) return
-    const s = puzzle.solution[target]
-    dispatch({
-      type: 'HINT',
-      hint: {
-        name: target,
-        row: s.row,
-        col: s.col,
-        text: `${target} estaba en la fila ${s.row + 1}, columna ${s.col + 1}.`,
-      },
-    })
-  }, [state])
+    const hint = getNextHint(state.puzzle, state.placements)
+    if (!hint) return
+    dispatch({ type: 'HINT', hint })
+  }, [state.puzzle, state.placements])
 
   const dismissHint = useCallback(() => dispatch({ type: 'DISMISS_HINT' }), [])
   const backToPlay = useCallback(() => dispatch({ type: 'BACK_TO_PLAY' }), [])

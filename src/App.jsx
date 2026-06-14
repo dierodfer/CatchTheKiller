@@ -1,8 +1,8 @@
 // Raíz de la aplicación: enruta entre pantalla de inicio y de juego según estado.
 
-import { useGame, STATUS } from './state/useGame.js'
-import StartScreen from './components/StartScreen.jsx'
-import GameScreen from './components/GameScreen.jsx'
+import { useGame, STATUS } from '@/state/useGame.js'
+import StartScreen from '@/components/StartScreen.jsx'
+import GameScreen from '@/components/GameScreen.jsx'
 
 export default function App() {
   const game = useGame()

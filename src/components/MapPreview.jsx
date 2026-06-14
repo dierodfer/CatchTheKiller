@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import { Shuffle } from 'lucide-react'
-import { generateMap, buildRoomLookup } from '../game/mapGenerator.js'
-import { makeRng, randomSeed } from '../game/random.js'
+import { generateMap, buildRoomLookup } from '@/game/mapGenerator.js'
+import { makeRng, randomSeed } from '@/game/random.js'
 import { ROOM_TINTS } from './palette.js'
 import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
 

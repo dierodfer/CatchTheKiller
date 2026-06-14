@@ -5,6 +5,7 @@ import { generatePuzzle } from '../src/game/puzzleGenerator.js'
 import { solve, validatePlayerSolution } from '../src/game/solver.js'
 import { freeCells, isOccupiable } from '../src/game/mapGenerator.js'
 import { findKillers } from '../src/game/killerRule.js'
+import { getNextHint } from '../src/game/hints.js'
 
 const difficulties = ['facil', 'media', 'dificil', 'experto']
 const perDifficulty = 8
@@ -81,6 +82,22 @@ for (const diff of difficulties) {
 
     // Holgura: celdas libres >= nº personajes.
     assert(freeCells(map).length >= characters.suspects.length + 1, `seed ${seed}: celdas libres`)
+
+    // Ayuda progresiva: sin colocaciones, sugiere a un personaje real y su
+    // celda de la solución; con la solución completa, no queda nada que sugerir.
+    const hint = getNextHint(puzzle, {})
+    assert(
+      hint && [...characters.suspects, characters.victim].includes(hint.name),
+      `seed ${seed}: getNextHint sugiere un personaje válido`,
+    )
+    assert(
+      hint && solution[hint.name].row === hint.row && solution[hint.name].col === hint.col,
+      `seed ${seed}: getNextHint apunta a la celda de la solución`,
+    )
+    assert(
+      getNextHint(puzzle, solution) === null,
+      `seed ${seed}: getNextHint no sugiere nada con la solución completa`,
+    )
 
     console.log(
       `  ✓ seed ${seed}: ${map.gridSize}×${map.gridSize}, ${map.rooms.length} hab., ` +

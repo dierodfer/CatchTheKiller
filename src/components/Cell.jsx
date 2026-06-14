@@ -1,5 +1,11 @@
 // Una celda del tablero: tinte de habitación, mobiliario, ficha y línea de control.
+//
+// `geometry` agrupa los datos estáticos de la celda (calculados una vez por
+// puzzle en useBoardGeometry); el resto de props son estado dinámico de la
+// partida. Memoizado: con `geometry`/`characters` de referencia estable, una
+// celda solo se vuelve a renderizar si cambia su propio estado.
 
+import { memo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
@@ -17,20 +23,10 @@ const WALL_POSITION = {
 const RUG_PATTERN =
   'repeating-linear-gradient(45deg, rgba(217,119,6,0.45) 0 6px, rgba(120,53,15,0.45) 6px 12px)'
 
-export default function Cell({
-  r,
-  c,
-  size,
-  tint,
-  borders,
-  label,
-  furniture,
-  isWindow,
-  wall,
-  rugEdges,
-  occupiable,
-  occupantName,
+function Cell({
+  geometry,
   characters,
+  occupantName,
   controlled,
   killerLine,
   hintTarget,
@@ -39,6 +35,9 @@ export default function Cell({
   onTokenClick,
   revealMode,
 }) {
+  const { r, c, size, tint, borders, label, furniture, isWindow, wall, rugEdges, occupiable } =
+    geometry
+
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${r}-${c}`,
     disabled: !occupiable,
@@ -146,3 +145,5 @@ export default function Cell({
     </div>
   )
 }
+
+export default memo(Cell)
