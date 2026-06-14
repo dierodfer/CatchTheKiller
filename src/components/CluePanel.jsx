@@ -24,7 +24,7 @@ export default function CluePanel({ puzzle, usedClues, onToggleClue }) {
   return (
     <div className="rounded-xl bg-ink-800/70 p-3 ring-1 ring-white/5">
       <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        <Quote size={14} /> Pistas de los sospechosos
+        <Quote size={14} /> Pistas del caso
       </h3>
       <ul className="space-y-1.5">
         {groups.map((group) => {

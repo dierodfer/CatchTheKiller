@@ -13,6 +13,7 @@
 
 import { CLUE_TYPES, evalClue, buildClueContext } from './clues.js'
 import { solve } from './solver.js'
+import { freeCells } from './mapGenerator.js'
 import { shuffle, pick } from './random.js'
 
 const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'planta', 'ventana']
@@ -41,19 +42,37 @@ function makeClue(subject, kind, params, ctx) {
   return { subject, kind, params, text: CLUE_TYPES[kind].text(params, ctx) }
 }
 
+// Una pista unaria es "obvia" si se cumple en TODA celda ocupable: no aporta
+// información (p. ej. "no estaba en una estantería", donde nadie puede estar).
+function isObviousClue(clue, ctx) {
+  if (!CLUE_TYPES[clue.kind].unary) return false
+  for (const [r, c] of ctx.occupiable) {
+    const placements = { [clue.subject]: { row: r, col: c } }
+    if (!evalClue(clue, placements, ctx)) return false
+  }
+  return true
+}
+
 // Todas las pistas verdaderas para un sospechoso, según la solución.
 function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   const pos = solution[subject]
   const out = []
   const allowed = (kind) => allowedTiers.includes(CLUE_TYPES[kind].tier)
-  const others = [...characters.suspects, characters.victim].filter((n) => n !== subject)
+  // Las pistas de un sospechoso NUNCA referencian a la víctima: la relación
+  // espacial con la víctima es justo lo que define al asesino, así que nombrarla
+  // sería un spoiler de la solución. La víctima, a su vez, solo recibe pistas
+  // unarias (sobre su propia celda): no se relaciona con ningún sospechoso.
+  const isVictim = subject === characters.victim
+  const others = isVictim ? [] : characters.suspects.filter((n) => n !== subject)
   const myRoom = ctx.roomAt(pos.row, pos.col)
   const size = ctx.gridSize
 
   const add = (kind, params) => {
     if (!allowed(kind)) return
     const clue = makeClue(subject, kind, params, ctx)
-    if (evalClue(clue, solution, ctx)) out.push(clue)
+    if (!evalClue(clue, solution, ctx)) return
+    if (isObviousClue(clue, ctx)) return
+    out.push(clue)
   }
 
   // Habitación
@@ -83,16 +102,15 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('inBorder', {})
   add('notInBorder', {})
 
-  // Relativas
+  // Relativas. Solo afirmaciones positivas de posición: las negativas del tipo
+  // "no compartía fila/columna con X" son obvias (el asesino, por la regla, no
+  // comparte línea con ningún otro sospechoso), así que no se generan.
   for (const o of others) {
     for (const dir of ['norte', 'sur', 'este', 'oeste']) add('directionOf', { other: o, dir })
     add('rowAbove', { other: o })
     add('rowBelow', { other: o })
     add('sharesRow', { other: o })
-    add('notSharesRow', { other: o })
     add('sharesColumn', { other: o })
-    add('notSharesColumn', { other: o })
-    add('notSharesRowNorColumn', { other: o })
   }
 
   // Avanzadas
@@ -108,11 +126,16 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
 export function generateClues(rng, map, characters, solution, roomLookup, difficulty) {
   const ctx = buildClueContext(map, roomLookup, characters)
   ctx.rooms = map.rooms.map((r) => r.name)
+  ctx.occupiable = freeCells(map)
   const tiers = difficulty.clueTiers
+
+  // Sujetos con pista propia: todos los sospechosos y también la víctima (con
+  // pistas unarias), para que su celda sea deducible sin que nadie la referencie.
+  const subjects = [...characters.suspects, characters.victim]
 
   const pools = {}
   const all = []
-  for (const s of characters.suspects) {
+  for (const s of subjects) {
     const pool = candidatesFor(s, solution, characters, ctx, tiers, rng)
     if (pool.length === 0) return null
     pools[s] = pool
@@ -121,10 +144,10 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
 
   const count = (clues, limit) => solve(map, characters, clues, { limit, roomLookup }).length
 
-  // 2. Sembrar una pista por sospechoso (preferentemente específica).
+  // 2. Sembrar una pista por sujeto (preferentemente específica).
   const chosen = []
   const chosenIds = new Set()
-  for (const s of characters.suspects) {
+  for (const s of subjects) {
     let seed = null
     for (const kind of SEED_PREFERENCE) {
       const opts = pools[s].filter((c) => c.kind === kind)
@@ -163,11 +186,14 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
 
   if (count(chosen, 2) !== 1) return null
 
-  // 4. Minimizar: eliminar redundantes manteniendo ≥1 pista por sospechoso.
+  // 4. Minimizar: eliminar redundantes manteniendo ≥1 pista por sujeto.
   const minimized = minimize(map, characters, chosen, roomLookup, count)
 
-  // Orden de presentación: por orden de sospechosos, varias pistas agrupadas.
-  return characters.suspects.flatMap((s) => minimized.filter((c) => c.subject === s))
+  // Orden de presentación: la víctima primero (el dato de la escena), luego los
+  // sospechosos; varias pistas del mismo sujeto se agrupan en la UI.
+  return [characters.victim, ...characters.suspects].flatMap((s) =>
+    minimized.filter((c) => c.subject === s),
+  )
 }
 
 function minimize(map, characters, clues, roomLookup, count) {
