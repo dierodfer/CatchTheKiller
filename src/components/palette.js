@@ -1,29 +1,35 @@
 // Paletas de color para personajes y habitaciones.
+//
+// Tonos "joya en penumbra" dentro del sistema Botanica at Dusk: pastel
+// desaturados que conviven sobre el fondo ciruela y se leen bien sobre los
+// tintes suaves de las habitaciones.
 
 // Colores distintos por sospechoso (índice estable dentro de la partida).
 export const SUSPECT_COLORS = [
-  { bg: '#2563eb', ring: '#60a5fa', name: 'azul' },
-  { bg: '#16a34a', ring: '#4ade80', name: 'verde' },
-  { bg: '#d97706', ring: '#fbbf24', name: 'ámbar' },
-  { bg: '#7c3aed', ring: '#a78bfa', name: 'violeta' },
-  { bg: '#db2777', ring: '#f472b6', name: 'rosa' },
-  { bg: '#0891b2', ring: '#22d3ee', name: 'cian' },
+  { bg: '#cf93ab', ring: '#e6b6c8', name: 'rosa malva' },
+  { bg: '#a98bc9', ring: '#c8b1e2', name: 'amatista' },
+  { bg: '#8bb0c9', ring: '#b1d0e2', name: 'azul niebla' },
+  { bg: '#9fc08a', ring: '#c1dcae', name: 'sage' },
+  { bg: '#cbb487', ring: '#e2d0a9', name: 'arena' },
+  { bg: '#cf9d87', ring: '#e6c0ae', name: 'terracota' },
 ]
 
-export const VICTIM_COLOR = { bg: '#475569', ring: '#94a3b8', name: 'gris' }
+// La víctima destaca en dorado cálido (cremoso), no como un color "más".
+export const VICTIM_COLOR = { bg: '#e6d2a0', ring: '#f2e4c2', name: 'dorado' }
 
-// Tintes suaves para habitaciones (se ciclan).
+// Tintes suaves para habitaciones (se ciclan). Lavados translúcidos en la
+// familia ciruela/dorado/sage/rosa para mantener la cohesión.
 export const ROOM_TINTS = [
-  'rgba(59,130,246,0.10)',
-  'rgba(16,185,129,0.10)',
-  'rgba(217,119,6,0.10)',
-  'rgba(124,58,237,0.10)',
-  'rgba(219,39,119,0.10)',
-  'rgba(8,145,178,0.10)',
-  'rgba(132,204,22,0.10)',
-  'rgba(244,63,94,0.10)',
-  'rgba(234,179,8,0.10)',
-  'rgba(99,102,241,0.10)',
+  'rgba(203, 163, 92, 0.09)',
+  'rgba(164, 182, 130, 0.09)',
+  'rgba(207, 147, 171, 0.09)',
+  'rgba(169, 139, 201, 0.08)',
+  'rgba(139, 176, 201, 0.08)',
+  'rgba(216, 166, 115, 0.09)',
+  'rgba(210, 160, 164, 0.08)',
+  'rgba(159, 192, 138, 0.08)',
+  'rgba(226, 201, 143, 0.08)',
+  'rgba(116, 82, 122, 0.14)',
 ]
 
 export function colorForCharacter(name, characters) {

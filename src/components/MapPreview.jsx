@@ -5,6 +5,7 @@ import { Shuffle } from 'lucide-react'
 import { generateMap, buildRoomLookup } from '@/game/mapGenerator.js'
 import { makeRng, randomSeed } from '@/game/random.js'
 import { ROOM_TINTS } from './palette.js'
+import { zoneForSeed } from './zones.js'
 import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
 
 const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
@@ -23,6 +24,7 @@ export default function MapPreview({ difficulty }) {
   const roomLookup = useMemo(() => buildRoomLookup(map), [map])
   const size = map.gridSize
   const cellSize = PREVIEW_CELL_SIZE[size] || 32
+  const zone = zoneForSeed(seed)
 
   const roomIndex = useMemo(() => {
     const idx = {}
@@ -61,7 +63,7 @@ export default function MapPreview({ difficulty }) {
             width: cellSize,
             height: cellSize,
             background: ROOM_TINTS[roomIndex[roomLookup[key]] % ROOM_TINTS.length],
-            border: '1px solid rgba(148,163,184,0.12)',
+            border: '1px solid rgba(244,235,220,0.07)',
           }}
         >
           {furniture === 'alfombra' && (
@@ -74,7 +76,7 @@ export default function MapPreview({ difficulty }) {
                 left: edges.left ? margin : 0,
                 borderRadius: 6,
                 background:
-                  'repeating-linear-gradient(45deg, rgba(217,119,6,0.45) 0 5px, rgba(120,53,15,0.45) 5px 10px)',
+                  'repeating-linear-gradient(45deg, rgba(203,163,92,0.42) 0 5px, rgba(116,82,122,0.42) 5px 10px)',
                 opacity: 0.85,
               }}
             />
@@ -84,13 +86,16 @@ export default function MapPreview({ difficulty }) {
               <FurnitureIcon
                 type={furniture}
                 size={Math.round(cellSize * 0.5)}
-                className="text-slate-300/80"
+                className="text-cream-soft/80"
               />
             </div>
           )}
           {wall && (
-            <div className={`pointer-events-none absolute ${WALL_POSITION[wall] || ''}`}>
-              <WindowIcon size={Math.round(cellSize * 0.36)} className="text-sky-300/80" />
+            <div
+              className={`pointer-events-none absolute ${WALL_POSITION[wall] || ''}`}
+              style={{ color: zone.accent }}
+            >
+              <WindowIcon size={Math.round(cellSize * 0.36)} className="opacity-80" />
             </div>
           )}
         </div>,
@@ -104,14 +109,27 @@ export default function MapPreview({ difficulty }) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="inline-block rounded-xl bg-ink-800/70 p-2 shadow-xl ring-1 ring-white/5">
-        {rows}
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative inline-block overflow-hidden rounded-2xl border border-gold/15 bg-plum-850/70 p-2.5 shadow-2xl ring-botanica">
+        {/* Textura sutil propia de la zona. */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-70"
+          style={{ backgroundImage: zone.texture }}
+          aria-hidden
+        />
+        <div className="relative">{rows}</div>
+        <span
+          className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-plum-950/70 px-2 py-0.5 text-[10px] font-medium text-cream-soft backdrop-blur-sm"
+          style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
+        >
+          <zone.icon size={11} style={{ color: zone.accent }} />
+          {zone.short}
+        </span>
       </div>
       <button
         type="button"
         onClick={() => setSeed(randomSeed())}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-ink-700/60 px-3 py-1.5 text-xs font-medium text-slate-300 ring-1 ring-white/5 transition hover:bg-ink-600/70"
+        className="inline-flex items-center gap-1.5 rounded-full border border-gold/15 bg-plum-800/50 px-3.5 py-1.5 text-xs font-medium text-cream-soft transition hover:bg-plum-700/60 hover:text-cream"
       >
         <Shuffle size={13} /> Otro mapa de ejemplo
       </button>

@@ -32,6 +32,28 @@ empieza por la letra alfabéticamente más alta de todos los presentes.
 
 Sin toasts (decisión de diseño): el feedback se da en paneles y overlays.
 
+## Dirección visual — "Botanica at Dusk"
+
+Sistema de diseño cohesivo, premium y cálido (apps de _wellness_/_journaling_,
+nunca casino): fondos profundos en **ciruela/plum**, **cremas y dorados** como
+acento principal, **verde sage** para el éxito y **rosa polvoriento** para el
+error. Tipografía con carácter: serif editorial **Cormorant Garamond** para los
+títulos + **Inter** para la interfaz. Los tokens de color y tipografía viven en
+`src/index.css` (`@theme` de Tailwind v4).
+
+- **Dos ambientaciones** (`src/components/zones.js`): cada caso se sitúa en un
+  **Apartamento en la ciudad** (frío-neutro, textura tipo lino/mármol) o una
+  **Casa de montaña** (cálido-terroso, veta de madera). La zona se deriva de la
+  semilla del puzzle, así que es **puramente visual**: no altera el mapa, las
+  pistas ni la regla del asesino, solo la atmósfera (acento, textura y
+  distintivo). Son distinguibles a golpe de vista pero cohesivas en el sistema.
+- **Celebración al resolver**: al cerrar el caso de verdad, la escena se
+  ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
+  overlay editorial con pétalos dorados presenta el desenlace.
+- **Accesibilidad**: contraste cuidado sobre el fondo oscuro, foco visible en
+  dorado y respeto de `prefers-reduced-motion` (global en CSS + `useReducedMotion`
+  en los componentes animados). Diseño _mobile-first_ y responsive.
+
 ### ¿Se usa TypeScript?
 
 **No.** El proyecto está en JavaScript puro (`.js` / `.jsx`), sin `tsconfig.json`

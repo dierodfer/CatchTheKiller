@@ -34,7 +34,7 @@ export function TokenChip({ name, characters, size = 40, dimmed = false, highlig
           />
         )}
       </div>
-      <span className="max-w-[72px] truncate text-[11px] font-medium text-slate-200">
+      <span className="max-w-[72px] truncate text-[11px] font-medium text-cream-soft">
         {name}
       </span>
     </div>
@@ -51,7 +51,7 @@ export function DraggableToken({ name, characters, size, onClick, selected }) {
       {...listeners}
       {...attributes}
       onClick={onClick}
-      className="outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      className="rounded-lg outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-gold-soft"
       style={{ touchAction: 'none', cursor: 'grab', opacity: isDragging ? 0 : 1 }}
     >
       <TokenChip

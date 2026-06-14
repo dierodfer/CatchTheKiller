@@ -19,27 +19,29 @@ export default function RevealConfirmModal({ open, onCancel, onConfirm }) {
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.85, y: 20, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-            className="w-full max-w-md rounded-2xl bg-ink-800 p-6 text-center shadow-2xl ring-1 ring-amber-400/30"
+            role="alertdialog"
+            aria-modal="true"
+            className="w-full max-w-md rounded-3xl border border-gold/20 bg-plum-850 p-7 text-center shadow-2xl ring-botanica"
           >
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-400/15">
-              <AlertTriangle size={30} className="text-amber-300" />
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose/15">
+              <AlertTriangle size={28} className="text-rose" />
             </div>
-            <h2 className="text-2xl font-bold text-white">¿Ver la solución?</h2>
-            <p className="mt-2 text-slate-300">
+            <h2 className="font-serif text-3xl font-semibold text-cream">¿Ver la solución?</h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-cream-soft">
               Se revelará el asesino y la posición de todos los personajes. La partida terminará y
               no podrás seguir intentando resolver este caso.
             </p>
 
-            <div className="mt-5 flex justify-center gap-2">
+            <div className="mt-6 flex justify-center gap-2">
               <button
                 onClick={onCancel}
-                className="flex items-center gap-2 rounded-lg bg-ink-600 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-ink-500"
+                className="flex items-center gap-2 rounded-full border border-gold/20 bg-plum-700/60 px-5 py-2.5 text-sm font-medium text-cream hover:bg-plum-600/70"
               >
                 <X size={16} /> Cancelar
               </button>
               <button
                 onClick={onConfirm}
-                className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-ink-900 hover:brightness-110"
+                className="flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-plum-950 transition hover:bg-gold-soft"
               >
                 <Eye size={16} /> Ver solución
               </button>

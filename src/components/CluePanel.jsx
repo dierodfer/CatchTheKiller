@@ -22,11 +22,11 @@ export default function CluePanel({ puzzle, usedClues, onToggleClue }) {
   })
 
   return (
-    <div className="rounded-xl bg-ink-800/70 p-3 ring-1 ring-white/5">
-      <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        <Quote size={14} /> Pistas del caso
+    <div className="rounded-2xl border border-gold/12 bg-plum-850/60 p-4 ring-botanica">
+      <h3 className="mb-3 flex items-center gap-2 font-serif text-xl font-semibold text-cream">
+        <Quote size={16} className="text-gold" /> Pistas del caso
       </h3>
-      <ul className="space-y-1.5">
+      <ul className="space-y-1">
         {groups.map((group) => {
           const color = colorForCharacter(group.subject, characters)
           const used = group.indices.every((i) => usedClues[i])
@@ -34,17 +34,18 @@ export default function CluePanel({ puzzle, usedClues, onToggleClue }) {
             <li key={group.subject}>
               <button
                 onClick={() => group.indices.forEach((i) => onToggleClue(i))}
-                className={`flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/5 ${
-                  used ? 'opacity-50' : ''
+                aria-pressed={used}
+                className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-plum-700/40 ${
+                  used ? 'opacity-45' : ''
                 }`}
               >
                 <span
-                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ring-2 ring-inset ring-plum-950/30"
                   style={{ background: color.bg }}
                 >
-                  {used && <Check size={11} color="#fff" />}
+                  {used && <Check size={11} color="#160d18" strokeWidth={3} />}
                 </span>
-                <span className="text-sm leading-snug">
+                <span className="text-[15px] leading-snug text-cream-soft">
                   <span className="font-semibold" style={{ color: color.ring }}>
                     {group.subject}:
                   </span>{' '}

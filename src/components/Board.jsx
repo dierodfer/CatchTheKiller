@@ -1,6 +1,7 @@
 // El tablero: renderiza la cuadrícula de celdas (con numeración de filas y
 // columnas) a partir de la geometría calculada por useBoardGeometry.
 
+import { motion, useReducedMotion } from 'framer-motion'
 import Cell from './Cell.jsx'
 import { useBoardGeometry } from '@/hooks/useBoardGeometry.js'
 
@@ -13,6 +14,8 @@ export default function Board({
   onCellClick,
   onTokenClick,
   revealMode,
+  zone,
+  celebrating = false,
 }) {
   const { map, roomLookup, characters, solution, killer } = puzzle
   const { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt } = useBoardGeometry({
@@ -24,8 +27,9 @@ export default function Board({
     victim: characters.victim,
     solution,
   })
+  const reduce = useReducedMotion()
 
-  const axisLabel = 'flex items-center justify-center text-[10px] font-semibold text-slate-500'
+  const axisLabel = 'flex items-center justify-center text-[10px] font-semibold text-cream-dim/70'
 
   // Cabecera: esquina vacía + número de cada columna.
   const header = (
@@ -56,6 +60,7 @@ export default function Board({
           onCellClick={onCellClick}
           onTokenClick={onTokenClick}
           revealMode={revealMode}
+          windowColor={zone?.accent}
         />,
       )
     }
@@ -70,10 +75,49 @@ export default function Board({
     )
   }
 
+  // Celebración: la escena se ilumina habitación por habitación, trazando la
+  // forma real de cada sala con un resplandor dorado escalonado.
+  const glowGold = zone?.glow || 'rgba(203, 163, 92, 0.32)'
+  const celebrationLayer =
+    celebrating && !reduce ? (
+      <div className="pointer-events-none absolute inset-0" style={{ top: GUTTER }} aria-hidden>
+        {map.rooms.map((room, ri) =>
+          room.cells.map(([r, c]) => (
+            <motion.div
+              key={`${ri}-${r}-${c}`}
+              className="absolute rounded-[3px]"
+              style={{
+                top: r * cellSize,
+                left: GUTTER + c * cellSize,
+                width: cellSize,
+                height: cellSize,
+                background: `radial-gradient(circle at 50% 50%, ${glowGold}, transparent 75%)`,
+                mixBlendMode: 'screen',
+              }}
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: [0, 1, 0.55], scale: [0.6, 1.12, 1] }}
+              transition={{ delay: 0.15 + ri * 0.36, duration: 1.2, ease: 'easeOut' }}
+            />
+          )),
+        )}
+      </div>
+    ) : null
+
   return (
-    <div className="inline-block rounded-xl bg-ink-800/70 p-2 shadow-2xl ring-1 ring-white/5">
-      {header}
-      {rows}
+    <div className="relative inline-block overflow-hidden rounded-2xl border border-gold/15 bg-plum-850/75 p-2.5 shadow-2xl ring-botanica">
+      {/* Textura ambiental propia de la zona. */}
+      {zone && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{ backgroundImage: zone.texture }}
+          aria-hidden
+        />
+      )}
+      <div className="relative">
+        {header}
+        {rows}
+        {celebrationLayer}
+      </div>
     </div>
   )
 }

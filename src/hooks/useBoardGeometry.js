@@ -12,8 +12,9 @@ import { controlLineCells } from '@/game/killerRule.js'
 import { isOccupiable } from '@/game/mapGenerator.js'
 
 const CELL_SIZE = { 4: 80, 5: 68, 6: 58, 7: 50 }
-const BORDER_ROOM = '2px solid rgba(148,163,184,0.55)'
-const BORDER_THIN = '1px solid rgba(148,163,184,0.12)'
+// Muros de habitación en dorado tenue; divisiones interiores apenas visibles.
+const BORDER_ROOM = '2px solid rgba(203,163,92,0.38)'
+const BORDER_THIN = '1px solid rgba(244,235,220,0.08)'
 
 export function useBoardGeometry({
   map,

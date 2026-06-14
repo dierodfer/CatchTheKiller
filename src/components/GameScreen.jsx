@@ -9,7 +9,7 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core'
-import { Map as MapIcon } from 'lucide-react'
+import { Skull } from 'lucide-react'
 import Board from './Board.jsx'
 import CharacterTray from './CharacterTray.jsx'
 import CluePanel from './CluePanel.jsx'
@@ -17,6 +17,7 @@ import Toolbar from './Toolbar.jsx'
 import ResultBanner from './ResultBanner.jsx'
 import RevealConfirmModal from './RevealConfirmModal.jsx'
 import { TokenChip } from './CharacterToken.jsx'
+import { zoneForSeed } from './zones.js'
 import { DIFFICULTIES } from '@/game/constants.js'
 
 export default function GameScreen({ game }) {
@@ -32,7 +33,11 @@ export default function GameScreen({ game }) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const revealMode = status === 'win'
   const diff = DIFFICULTIES[puzzle.difficulty]
+  const zone = useMemo(() => zoneForSeed(puzzle.seed), [puzzle.seed])
   const showBanner = (status === 'win' || status === 'fail') && result && dismissedResult !== result
+  // Celebración solo cuando se resuelve de verdad (no al revelar la solución).
+  const celebrating = status === 'win' && result?.solved && !result?.revealed
+  const bannerDelay = celebrating ? Math.min(puzzle.map.rooms.length * 0.32 + 0.4, 2.2) : 0
 
   const allPlaced = useMemo(
     () =>
@@ -82,19 +87,32 @@ export default function GameScreen({ game }) {
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-4">
+    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-6">
       {/* Cabecera del caso. */}
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="" className="h-8 w-auto" />
-          <h1 className="text-xl font-bold text-white">Catch the Killer</h1>
-          <span className="rounded-full bg-ink-700 px-2 py-0.5 text-xs font-medium text-slate-300">
-            {diff.label} · {puzzle.map.gridSize}×{puzzle.map.gridSize}
-          </span>
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="" className="h-9 w-auto drop-shadow" />
+          <div>
+            <h1 className="font-serif text-2xl font-semibold leading-none text-cream">
+              Catch the Killer
+            </h1>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <span className="rounded-full border border-gold/15 bg-plum-800/70 px-2 py-0.5 text-[11px] font-medium text-cream-soft">
+                {diff.label} · {puzzle.map.gridSize}×{puzzle.map.gridSize}
+              </span>
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-plum-800/70 px-2 py-0.5 text-[11px] font-medium text-cream-soft"
+                style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
+              >
+                <zone.icon size={11} style={{ color: zone.accent }} />
+                {zone.label}
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <MapIcon size={15} />
-          Víctima: <span className="font-semibold text-slate-200">{puzzle.characters.victim}</span>
+        <div className="flex items-center gap-1.5 rounded-full border border-gold/15 bg-plum-850/60 px-3 py-1.5 text-sm text-cream-soft">
+          <Skull size={15} className="text-cream-dim" />
+          Víctima: <span className="font-semibold text-cream">{puzzle.characters.victim}</span>
         </div>
       </header>
 
@@ -104,10 +122,10 @@ export default function GameScreen({ game }) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
           {/* Personajes + tablero. */}
           <div className="flex justify-center lg:justify-start">
-            <div className="flex flex-col gap-3">
+            <div className="flex max-w-full flex-col gap-3 overflow-x-auto">
               <CharacterTray
                 characters={puzzle.characters}
                 placements={placements}
@@ -121,6 +139,8 @@ export default function GameScreen({ game }) {
                 onCellClick={handleCellClick}
                 onTokenClick={handleTokenClick}
                 revealMode={revealMode}
+                zone={zone}
+                celebrating={celebrating}
               />
             </div>
           </div>
@@ -147,6 +167,7 @@ export default function GameScreen({ game }) {
           status={status}
           result={result}
           characters={puzzle.characters}
+          bannerDelay={bannerDelay}
           onClose={() => setDismissedResult(result)}
           onBackToPlay={backToPlay}
           onNewGame={newGame}
