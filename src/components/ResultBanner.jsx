@@ -2,9 +2,16 @@
 // indica que hay errores, sin revelar la solución.
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Skull, AlertTriangle, RotateCcw, ArrowLeft } from 'lucide-react'
+import { Skull, AlertTriangle, RotateCcw, ArrowLeft, X } from 'lucide-react'
 
-export default function ResultBanner({ status, result, characters, onBackToPlay, onNewGame }) {
+export default function ResultBanner({
+  status,
+  result,
+  characters,
+  onClose,
+  onBackToPlay,
+  onNewGame,
+}) {
   const win = status === 'win'
   const fail = status === 'fail'
   if (!win && !fail) return null
@@ -21,10 +28,17 @@ export default function ResultBanner({ status, result, characters, onBackToPlay,
           initial={{ scale: 0.85, y: 20, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-          className={`w-full max-w-md rounded-2xl p-6 text-center shadow-2xl ring-1 ${
+          className={`relative w-full max-w-md rounded-2xl p-6 text-center shadow-2xl ring-1 ${
             win ? 'bg-ink-800 ring-blood/40' : 'bg-ink-800 ring-amber-400/30'
           }`}
         >
+          <button
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="absolute right-3 top-3 rounded-md p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-200"
+          >
+            <X size={18} />
+          </button>
           {win ? (
             <>
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blood/20">
@@ -34,10 +48,15 @@ export default function ResultBanner({ status, result, characters, onBackToPlay,
                 {result.revealed ? 'Solución revelada' : '¡Caso resuelto!'}
               </h2>
               <p className="mt-2 text-slate-300">
-                El asesino es{' '}
-                <span className="font-bold text-blood">{result.killer}</span>. Controlaba la fila y
-                la columna de la víctima,{' '}
-                <span className="font-semibold text-slate-200">{characters.victim}</span>.
+                El asesino es <span className="font-bold text-blood">{result.killer}</span>: era el
+                único que estaba a solas con la víctima,{' '}
+                <span className="font-semibold text-slate-200">{characters.victim}</span>
+                {result.room ? (
+                  <>
+                    , en <span className="font-semibold text-slate-200">{result.room}</span>
+                  </>
+                ) : null}
+                .
               </p>
             </>
           ) : (

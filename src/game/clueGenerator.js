@@ -203,11 +203,12 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   // 4. Minimizar: eliminar redundantes manteniendo ≥1 pista por sujeto.
   const minimized = minimize(map, characters, chosen, roomLookup, count)
 
-  // Orden de presentación: la víctima primero (el dato de la escena), luego los
-  // sospechosos; varias pistas del mismo sujeto se agrupan en la UI.
-  return [characters.victim, ...characters.suspects].flatMap((s) =>
-    minimized.filter((c) => c.subject === s),
+  // Orden de presentación: sujetos alfabéticamente; varias pistas del mismo
+  // sujeto se agrupan (consecutivas) en la UI.
+  const subjectsAlpha = [...new Set(minimized.map((c) => c.subject))].sort((a, b) =>
+    a.localeCompare(b, 'es'),
   )
+  return subjectsAlpha.flatMap((s) => minimized.filter((c) => c.subject === s))
 }
 
 function minimize(map, characters, clues, roomLookup, count) {

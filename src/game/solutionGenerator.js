@@ -1,55 +1,60 @@
 // Generación local de la solución (sección 6.2 del documento).
 //
-// Asigna cada personaje a una celda libre, designa la víctima y garantiza que
-// EXACTAMENTE un sospechoso cumple la condición de asesinato. Sin IA.
+// Asigna cada personaje a una celda libre garantizando que EXACTAMENTE un
+// sospechoso queda a solas con la víctima en su habitación (el asesino), con
+// las líneas del asesino y la víctima despejadas. Sin IA.
 
 import { freeCells } from './mapGenerator.js'
 import { findKillers } from './killerRule.js'
+import { buildClueContext } from './clues.js'
 import { shuffle, pick } from './random.js'
 
 // characters: { suspects: string[], victim: string }
 // Devuelve { placements, killer } o null si no se encontró configuración válida.
-export function generateSolution(rng, map, characters) {
+export function generateSolution(rng, map, characters, roomLookup) {
   const cells = freeCells(map)
   const { suspects, victim } = characters
+  const ctx = buildClueContext(map, roomLookup, characters)
+  const roomAt = (r, c) => roomLookup[`${r},${c}`]
 
-  for (let attempt = 0; attempt < 600; attempt++) {
+  // El asesino es uno cualquiera de los sospechosos (los nombres son simétricos;
+  // la selección aleatoria viene del orden ya barajado de `suspects`).
+  const killer = suspects[0]
+  const otherSuspects = suspects.slice(1)
+
+  for (let attempt = 0; attempt < 800; attempt++) {
     const shuffled = shuffle(rng, cells)
-    const victimCell = shuffled[0]
+    const [vr, vc] = shuffled[0]
+    const vRoom = roomAt(vr, vc)
 
-    // El asesino debe compartir fila o columna con la víctima.
+    // Asesino: en la habitación de la víctima, en distinta fila y columna.
     const killerCandidates = shuffled.filter(
-      ([r, c]) =>
-        (r === victimCell[0] || c === victimCell[1]) &&
-        !(r === victimCell[0] && c === victimCell[1]),
+      ([r, c]) => roomAt(r, c) === vRoom && r !== vr && c !== vc,
     )
     if (killerCandidates.length === 0) continue
-    const killerCell = pick(rng, killerCandidates)
+    const [kr, kc] = pick(rng, killerCandidates)
 
-    // El resto de sospechosos fuera de la fila y columna del asesino,
-    // para no romper su línea de control.
+    // Resto de sospechosos: fuera de la habitación de la víctima y fuera de las
+    // filas/columnas tanto del asesino como de la víctima (pueden compartir
+    // línea entre ellos, pero nunca con el asesino o la víctima).
     const otherCells = shuffled.filter(
       ([r, c]) =>
-        r !== killerCell[0] &&
-        c !== killerCell[1] &&
-        !(r === victimCell[0] && c === victimCell[1]),
+        roomAt(r, c) !== vRoom && r !== vr && c !== vc && r !== kr && c !== kc,
     )
-
-    const otherSuspects = suspects.filter((_, i) => i !== 0)
     if (otherCells.length < otherSuspects.length) continue
 
     const placements = {}
-    placements[victim] = { row: victimCell[0], col: victimCell[1] }
-    placements[suspects[0]] = { row: killerCell[0], col: killerCell[1] }
+    placements[victim] = { row: vr, col: vc }
+    placements[killer] = { row: kr, col: kc }
     const chosen = shuffle(rng, otherCells).slice(0, otherSuspects.length)
     otherSuspects.forEach((name, i) => {
       placements[name] = { row: chosen[i][0], col: chosen[i][1] }
     })
 
-    // Validar: exactamente un asesino.
-    const killers = findKillers(placements, suspects, victim)
-    if (killers.length === 1) {
-      return { placements, killer: killers[0] }
+    // Validar: exactamente un asesino, y que sea el esperado.
+    const killers = findKillers(placements, suspects, victim, ctx)
+    if (killers.length === 1 && killers[0] === killer) {
+      return { placements, killer }
     }
   }
 

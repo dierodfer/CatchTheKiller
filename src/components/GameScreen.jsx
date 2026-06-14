@@ -20,26 +20,19 @@ import { TokenChip } from './CharacterToken.jsx'
 import { DIFFICULTIES } from '@/game/constants.js'
 
 export default function GameScreen({ game }) {
-  const {
-    state,
-    place,
-    unplace,
-    toggleClue,
-    check,
-    requestHint,
-    dismissHint,
-    reveal,
-    backToPlay,
-    newGame,
-  } = game
-  const { puzzle, placements, usedClues, status, result, hint } = state
+  const { state, place, unplace, toggleClue, check, reveal, backToPlay, newGame } = game
+  const { puzzle, placements, usedClues, status, result } = state
   const [selectedToken, setSelectedToken] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
+  // Resultado cuyo aviso se cerró. Cada desenlace nuevo genera un `result`
+  // distinto, así que el aviso vuelve a mostrarse sin necesidad de efectos.
+  const [dismissedResult, setDismissedResult] = useState(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const revealMode = status === 'win'
   const diff = DIFFICULTIES[puzzle.difficulty]
+  const showBanner = (status === 'win' || status === 'fail') && result && dismissedResult !== result
 
   const allPlaced = useMemo(
     () =>
@@ -50,7 +43,6 @@ export default function GameScreen({ game }) {
   const handleTokenClick = useCallback(
     (name) => {
       if (revealMode) return
-      dismissHint()
       if (placements[name]) {
         unplace(name)
         setSelectedToken(null)
@@ -58,7 +50,7 @@ export default function GameScreen({ game }) {
         setSelectedToken((cur) => (cur === name ? null : name))
       }
     },
-    [revealMode, placements, dismissHint, unplace],
+    [revealMode, placements, unplace],
   )
 
   const handleCellClick = useCallback(
@@ -66,9 +58,8 @@ export default function GameScreen({ game }) {
       if (revealMode || !selectedToken) return
       place(selectedToken, r, c)
       setSelectedToken(null)
-      dismissHint()
     },
-    [revealMode, selectedToken, place, dismissHint],
+    [revealMode, selectedToken, place],
   )
 
   const handleDragStart = (e) => {
@@ -87,7 +78,6 @@ export default function GameScreen({ game }) {
     if (typeof over.id === 'string' && over.id.startsWith('cell-')) {
       const [, r, c] = over.id.split('-')
       place(active.id, Number(r), Number(c))
-      dismissHint()
     }
   }
 
@@ -131,7 +121,6 @@ export default function GameScreen({ game }) {
                 onCellClick={handleCellClick}
                 onTokenClick={handleTokenClick}
                 revealMode={revealMode}
-                hint={hint}
               />
             </div>
           </div>
@@ -141,11 +130,7 @@ export default function GameScreen({ game }) {
             <CluePanel puzzle={puzzle} usedClues={usedClues} onToggleClue={toggleClue} />
             <Toolbar
               allPlaced={allPlaced}
-              hintsUsed={state.hintsUsed}
-              hint={hint}
               onCheck={check}
-              onHint={requestHint}
-              onDismissHint={dismissHint}
               onReveal={() => setConfirmReveal(true)}
               onNewGame={newGame}
             />
@@ -157,13 +142,16 @@ export default function GameScreen({ game }) {
         </DragOverlay>
       </DndContext>
 
-      <ResultBanner
-        status={status}
-        result={result}
-        characters={puzzle.characters}
-        onBackToPlay={backToPlay}
-        onNewGame={newGame}
-      />
+      {showBanner && (
+        <ResultBanner
+          status={status}
+          result={result}
+          characters={puzzle.characters}
+          onClose={() => setDismissedResult(result)}
+          onBackToPlay={backToPlay}
+          onNewGame={newGame}
+        />
+      )}
 
       <RevealConfirmModal
         open={confirmReveal}

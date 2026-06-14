@@ -5,7 +5,7 @@ import { generatePuzzle } from '../src/game/puzzleGenerator.js'
 import { solve, validatePlayerSolution } from '../src/game/solver.js'
 import { freeCells, isOccupiable } from '../src/game/mapGenerator.js'
 import { findKillers } from '../src/game/killerRule.js'
-import { getNextHint } from '../src/game/hints.js'
+import { buildClueContext } from '../src/game/clues.js'
 
 const difficulties = ['facil', 'media', 'dificil', 'experto']
 const perDifficulty = 8
@@ -68,9 +68,50 @@ for (const diff of difficulties) {
       seen.add(key)
     }
 
-    // Invariante: exactamente un asesino.
-    const killers = findKillers(solution, characters.suspects, characters.victim)
+    // Invariante: exactamente un asesino (regla basada en habitaciones).
+    const ctx = buildClueContext(map, roomLookup, characters)
+    const killers = findKillers(solution, characters.suspects, characters.victim, ctx)
     assert(killers.length === 1 && killers[0] === killer, `seed ${seed}: exactamente 1 asesino`)
+
+    // Invariante (nueva regla): el asesino está a solas con la víctima en su
+    // habitación y ni asesino ni víctima comparten fila/columna con nadie más.
+    const vp = solution[characters.victim]
+    const kp = solution[killer]
+    const vRoom = roomLookup[`${vp.row},${vp.col}`]
+    assert(
+      roomLookup[`${kp.row},${kp.col}`] === vRoom,
+      `seed ${seed}: asesino en la habitación de la víctima`,
+    )
+    const inVictimRoom = characters.suspects.filter(
+      (s) => roomLookup[`${solution[s].row},${solution[s].col}`] === vRoom,
+    )
+    assert(inVictimRoom.length === 1, `seed ${seed}: asesino a solas con la víctima`)
+    for (const name of [...characters.suspects, characters.victim]) {
+      if (name === killer || name === characters.victim) continue
+      const p = solution[name]
+      assert(
+        p.row !== vp.row && p.col !== vp.col && p.row !== kp.row && p.col !== kp.col,
+        `seed ${seed}: líneas de asesino/víctima despejadas (${name})`,
+      )
+    }
+
+    // Invariante: iniciales distintas en todos los personajes (incl. víctima).
+    const initials = [...characters.suspects, characters.victim].map((n) => n[0].toLowerCase())
+    assert(new Set(initials).size === initials.length, `seed ${seed}: iniciales distintas`)
+
+    // Invariante: sospechosos y pistas ordenados alfabéticamente.
+    const sortedSuspects = [...characters.suspects].sort((a, b) => a.localeCompare(b, 'es'))
+    assert(
+      characters.suspects.every((s, i) => s === sortedSuspects[i]),
+      `seed ${seed}: sospechosos en orden alfabético`,
+    )
+    const clueSubjects = clues.map((c) => c.subject)
+    const distinctInOrder = clueSubjects.filter((s, i) => clueSubjects.indexOf(s) === i)
+    const sortedSubjects = [...distinctInOrder].sort((a, b) => a.localeCompare(b, 'es'))
+    assert(
+      distinctInOrder.every((s, i) => s === sortedSubjects[i]),
+      `seed ${seed}: pistas en orden alfabético por sujeto`,
+    )
 
     // Invariante: solución única.
     const sols = solve(map, characters, clues, { limit: 2, roomLookup })
@@ -82,22 +123,6 @@ for (const diff of difficulties) {
 
     // Holgura: celdas libres >= nº personajes.
     assert(freeCells(map).length >= characters.suspects.length + 1, `seed ${seed}: celdas libres`)
-
-    // Ayuda progresiva: sin colocaciones, sugiere a un personaje real y su
-    // celda de la solución; con la solución completa, no queda nada que sugerir.
-    const hint = getNextHint(puzzle, {})
-    assert(
-      hint && [...characters.suspects, characters.victim].includes(hint.name),
-      `seed ${seed}: getNextHint sugiere un personaje válido`,
-    )
-    assert(
-      hint && solution[hint.name].row === hint.row && solution[hint.name].col === hint.col,
-      `seed ${seed}: getNextHint apunta a la celda de la solución`,
-    )
-    assert(
-      getNextHint(puzzle, solution) === null,
-      `seed ${seed}: getNextHint no sugiere nada con la solución completa`,
-    )
 
     console.log(
       `  ✓ seed ${seed}: ${map.gridSize}×${map.gridSize}, ${map.rooms.length} hab., ` +

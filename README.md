@@ -7,11 +7,12 @@
 🔗 **Demo en GitHub Pages:** https://dierodfer.github.io/CatchTheKiller/
 
 Puzzle de deducción espacial con temática de crimen. El jugador reconstruye la
-escena colocando a cada personaje en un mapa cuadriculado a partir de pistas
-espaciales. **El asesino emerge automáticamente** como consecuencia de una
-reconstrucción correcta del tablero (regla tipo torre de ajedrez: controla toda
-su fila y su columna, con la víctima en su línea y ningún otro personaje en
-ella).
+escena colocando a cada personaje en un mapa cuadriculado (con filas y columnas
+numeradas) a partir de pistas espaciales. **El asesino emerge automáticamente**
+como consecuencia de una reconstrucción correcta del tablero: es el único
+sospechoso que se queda **a solas con la víctima en una misma habitación**;
+además, ni el asesino ni la víctima comparten fila o columna con ningún otro
+personaje.
 
 > Implementación **100% local**: la generación del mapa, la solución, las pistas
 > y el Solver son lógica interna en JavaScript puro. No se llama a ninguna IA ni
@@ -71,7 +72,7 @@ src/game/
   random.js             PRNG determinista (semilla reproducible)
   mapGenerator.js       Cuadrícula + habitaciones irregulares + mobiliario + ventanas
   solutionGenerator.js  Coloca personajes garantizando exactamente 1 asesino
-  killerRule.js         Regla del asesino (fila + columna, mobiliario no corta)
+  killerRule.js         Regla del asesino (a solas con la víctima en su sala)
   clues.js              Catálogo de tipos de pista + evaluador verificable
   clueGenerator.js      Deriva pistas de la solución y busca solución única
   solver.js             Autoridad final: unicidad, validación, identifica al asesino
@@ -91,19 +92,20 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
 
 ### UI (`src/components/`)
 
-- `Board` / `Cell` — cuadrícula con habitaciones, mobiliario, ventanas y la
-  **línea de control** (cruces `×` en fila y columna de cada ficha colocada, en
-  tiempo real). Las ventanas se dibujan sobre la pared de la celda (no en el
-  suelo) y son ocupables: cualquier personaje, incluido el asesino, puede
-  situarse junto a ellas. Las alfombras pueden ocupar entre 2 y 6 celdas
-  formando una región rectangular.
-- `CharacterTray` — fichas sin colocar, situada justo encima del tablero; zona
-  para descolocar.
-- `CluePanel` — una pista por sospechoso (puede combinar varios datos en una
-  sola tarjeta), marcable como usada.
-- `Toolbar` — Resolver, Ayuda progresiva (penaliza), Nuevo.
-- `ResultBanner` — WIN revela al asesino, la víctima y la línea de control;
-  FAIL indica que hay errores **sin revelar la solución**.
+- `Board` / `Cell` — cuadrícula con **filas y columnas numeradas**, habitaciones,
+  mobiliario, ventanas y la **línea de control** (cruces `×` en fila y columna de
+  cada ficha colocada, en tiempo real; útil para comprobar que las líneas del
+  asesino y la víctima quedan despejadas). Las ventanas se dibujan sobre la pared
+  de la celda (no en el suelo) y son ocupables. Las alfombras pueden ocupar entre
+  2 y 6 celdas formando una región rectangular.
+- `CharacterTray` — fichas sin colocar (orden alfabético), situada justo encima
+  del tablero; zona para descolocar.
+- `CluePanel` — pistas agrupadas por personaje (orden alfabético), marcables como
+  usadas. Ninguna pista referencia a la víctima.
+- `Toolbar` — Resolver, Resolución (revela la solución tras un aviso), Nuevo.
+- `ResultBanner` — WIN revela al asesino y la habitación del crimen (se puede
+  cerrar para inspeccionar el tablero); FAIL indica que hay errores **sin revelar
+  la solución**.
 - `MapPreview` — previsualización de solo lectura del tipo de mapa que generará
   la dificultad seleccionada, visible en la pantalla de inicio.
 
