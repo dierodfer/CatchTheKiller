@@ -9,7 +9,7 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core'
-import { Skull, Map as MapIcon } from 'lucide-react'
+import { Map as MapIcon } from 'lucide-react'
 import Board from './Board.jsx'
 import CharacterTray from './CharacterTray.jsx'
 import CluePanel from './CluePanel.jsx'
@@ -96,7 +96,7 @@ export default function GameScreen({ game }) {
       {/* Cabecera del caso. */}
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Skull className="text-blood" size={22} />
+          <img src="/logo.png" alt="" className="h-8 w-auto" />
           <h1 className="text-xl font-bold text-white">Catch the Killer</h1>
           <span className="rounded-full bg-ink-700 px-2 py-0.5 text-xs font-medium text-slate-300">
             {diff.label} · {puzzle.map.gridSize}×{puzzle.map.gridSize}
