@@ -15,15 +15,27 @@ import CharacterTray from './CharacterTray.jsx'
 import CluePanel from './CluePanel.jsx'
 import Toolbar from './Toolbar.jsx'
 import ResultBanner from './ResultBanner.jsx'
+import RevealConfirmModal from './RevealConfirmModal.jsx'
 import { TokenChip } from './CharacterToken.jsx'
 import { DIFFICULTIES } from '@/game/constants.js'
 
 export default function GameScreen({ game }) {
-  const { state, place, unplace, toggleClue, check, requestHint, dismissHint, backToPlay, newGame } =
-    game
+  const {
+    state,
+    place,
+    unplace,
+    toggleClue,
+    check,
+    requestHint,
+    dismissHint,
+    reveal,
+    backToPlay,
+    newGame,
+  } = game
   const { puzzle, placements, usedClues, status, result, hint } = state
   const [selectedToken, setSelectedToken] = useState(null)
   const [activeId, setActiveId] = useState(null)
+  const [confirmReveal, setConfirmReveal] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const revealMode = status === 'win'
@@ -134,6 +146,7 @@ export default function GameScreen({ game }) {
               onCheck={check}
               onHint={requestHint}
               onDismissHint={dismissHint}
+              onReveal={() => setConfirmReveal(true)}
               onNewGame={newGame}
             />
           </div>
@@ -150,6 +163,15 @@ export default function GameScreen({ game }) {
         characters={puzzle.characters}
         onBackToPlay={backToPlay}
         onNewGame={newGame}
+      />
+
+      <RevealConfirmModal
+        open={confirmReveal}
+        onCancel={() => setConfirmReveal(false)}
+        onConfirm={() => {
+          setConfirmReveal(false)
+          reveal()
+        }}
       />
     </div>
   )

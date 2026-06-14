@@ -1,7 +1,7 @@
 // Controles de partida: resolver, pedir ayuda, nuevo puzzle.
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Gavel, Lightbulb, RotateCcw, X } from 'lucide-react'
+import { Eye, Gavel, Lightbulb, RotateCcw, X } from 'lucide-react'
 
 export default function Toolbar({
   allPlaced,
@@ -10,6 +10,7 @@ export default function Toolbar({
   onCheck,
   onHint,
   onDismissHint,
+  onReveal,
   onNewGame,
 }) {
   return (
@@ -27,6 +28,12 @@ export default function Toolbar({
           className="flex items-center justify-center gap-2 rounded-lg bg-ink-600 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-ink-500"
         >
           <Lightbulb size={16} /> Ayuda{hintsUsed > 0 ? ` (${hintsUsed})` : ''}
+        </button>
+        <button
+          onClick={onReveal}
+          className="flex items-center justify-center gap-2 rounded-lg bg-ink-600 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-ink-500"
+        >
+          <Eye size={16} /> Resolución
         </button>
         <button
           onClick={onNewGame}

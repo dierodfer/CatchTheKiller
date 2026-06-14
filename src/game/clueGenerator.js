@@ -23,8 +23,6 @@ const SEED_PREFERENCE = [
   'inRoom',
   'withInRoom',
   'directionOf',
-  'sharesRow',
-  'sharesColumn',
   'inRow',
   'inColumn',
   'nextToFurniture',
@@ -102,15 +100,16 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('inBorder', {})
   add('notInBorder', {})
 
-  // Relativas. Solo afirmaciones positivas de posición: las negativas del tipo
-  // "no compartía fila/columna con X" son obvias (el asesino, por la regla, no
-  // comparte línea con ningún otro sospechoso), así que no se generan.
+  // Relativas. Las negativas "no compartía fila/columna con X" son obvias (el
+  // asesino nunca comparte línea con otro sospechoso). Las positivas genéricas
+  // "compartía fila/columna con X" tampoco se generan: por la regla del
+  // asesino implicarían que NINGUNO de los dos puede serlo, lo que no aporta
+  // como pista de posición; "al norte/sur/este/oeste de X" sí se mantiene
+  // porque, aunque también implica línea compartida, precisa además el lado.
   for (const o of others) {
     for (const dir of ['norte', 'sur', 'este', 'oeste']) add('directionOf', { other: o, dir })
     add('rowAbove', { other: o })
     add('rowBelow', { other: o })
-    add('sharesRow', { other: o })
-    add('sharesColumn', { other: o })
   }
 
   // Avanzadas
@@ -161,28 +160,43 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
     chosenIds.add(clueId(seed))
   }
 
-  // 3. Añadir pistas hasta lograr unicidad.
+  // 3. Añadir pistas hasta lograr unicidad. Lo normal es 1-2 pistas por
+  // sujeto; una 3ª solo se permite como caso especial si no basta con 2, y
+  // sin límite como último recurso para no descartar un mapa/solución válidos.
   const CAP = 14
+  const MAX_PER_SUBJECT = 2
+  const MAX_PER_SUBJECT_SPECIAL = 3
+  const countForSubject = (subject) => chosen.filter((c) => c.subject === subject).length
   const maxAdds = characters.suspects.length * 3 + 6
-  let guard = 0
-  while (count(chosen, 2) !== 1 && guard++ < maxAdds) {
-    let best = null
-    let bestCount = Infinity
-    for (const cand of shuffle(rng, all).slice(0, 48)) {
-      if (chosenIds.has(clueId(cand))) continue
-      chosen.push(cand)
-      const c = count(chosen, CAP)
-      chosen.pop()
-      if (c >= 1 && c < bestCount) {
-        bestCount = c
-        best = cand
-        if (c === 1) break
+
+  const addUntilUnique = (limits) => {
+    let guard = 0
+    while (count(chosen, 2) !== 1 && guard++ < maxAdds) {
+      let best = null
+      let bestCount = Infinity
+      for (const limit of limits) {
+        for (const cand of shuffle(rng, all).slice(0, 48)) {
+          if (chosenIds.has(clueId(cand))) continue
+          if (countForSubject(cand.subject) >= limit) continue
+          chosen.push(cand)
+          const c = count(chosen, CAP)
+          chosen.pop()
+          if (c >= 1 && c < bestCount) {
+            bestCount = c
+            best = cand
+            if (c === 1) break
+          }
+        }
+        if (best) break
       }
+      if (!best) break
+      chosen.push(best)
+      chosenIds.add(clueId(best))
     }
-    if (!best) break
-    chosen.push(best)
-    chosenIds.add(clueId(best))
   }
+
+  addUntilUnique([MAX_PER_SUBJECT, MAX_PER_SUBJECT_SPECIAL])
+  if (count(chosen, 2) !== 1) addUntilUnique([Infinity])
 
   if (count(chosen, 2) !== 1) return null
 

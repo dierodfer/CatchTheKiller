@@ -30,7 +30,9 @@ export default function ResultBanner({ status, result, characters, onBackToPlay,
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blood/20">
                 <Skull size={30} className="text-blood" />
               </div>
-              <h2 className="text-2xl font-bold text-white">¡Caso resuelto!</h2>
+              <h2 className="text-2xl font-bold text-white">
+                {result.revealed ? 'Solución revelada' : '¡Caso resuelto!'}
+              </h2>
               <p className="mt-2 text-slate-300">
                 El asesino es{' '}
                 <span className="font-bold text-blood">{result.killer}</span>. Controlaba la fila y
