@@ -1,5 +1,7 @@
 # Catch the Killer
 
+🔗 **Demo en GitHub Pages:** https://dierodfer.github.io/CatchTheKiller/
+
 Puzzle de deducción espacial con temática de crimen. El jugador reconstruye la
 escena colocando a cada personaje en un mapa cuadriculado a partir de pistas
 espaciales. **El asesino emerge automáticamente** como consecuencia de una
@@ -23,6 +25,15 @@ ella).
 | Estado            | **useReducer**        | Máquina de estados de la app (sección 13 del diseño) |
 
 Sin toasts (decisión de diseño): el feedback se da en paneles y overlays.
+
+### ¿Se usa TypeScript?
+
+**No.** El proyecto está en JavaScript puro (`.js` / `.jsx`), sin `tsconfig.json`
+ni archivos `.ts`/`.tsx`. Las dependencias `@types/react` y `@types/react-dom`
+solo se incluyen para que el editor ofrezca autocompletado y tipado de las
+props de React sobre los `.jsx`, pero no hay comprobación de tipos en el build
+ni en el lint. Si se quisiera migrar a TypeScript más adelante, el código de
+`src/game/` (sin JSX, lógica pura) sería el más sencillo de tipar primero.
 
 ## Cómo ejecutar
 
