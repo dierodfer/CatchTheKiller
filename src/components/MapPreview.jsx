@@ -6,17 +6,28 @@ import { generateMap, buildRoomLookup } from '@/game/mapGenerator.js'
 import { makeRng, randomSeed } from '@/game/random.js'
 import { ROOM_TINTS } from './palette.js'
 import { zoneForSeed } from './zones.js'
-import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
+import { FurnitureIcon } from './Furniture.jsx'
 import { RUG_PATTERN, RUG_NOISE, RUG_NOISE_SIZE } from './rugPattern.js'
 import { PIXEL_FLOOR_PATTERN } from './pixelSprites.js'
 
 const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
 
-const WALL_POSITION = {
-  norte: 'top-0.5 left-1/2 -translate-x-1/2',
-  sur: 'bottom-0.5 left-1/2 -translate-x-1/2',
-  oeste: 'left-0.5 top-1/2 -translate-y-1/2',
-  este: 'right-0.5 top-1/2 -translate-y-1/2',
+// Ventana integrada en la pared: el lado correspondiente del marco se marca en
+// azul (estilo plano técnico) y se añade un cristal claro junto a él.
+const WINDOW_BORDER_SIDE = {
+  norte: 'borderTop',
+  sur: 'borderBottom',
+  oeste: 'borderLeft',
+  este: 'borderRight',
+}
+
+const WINDOW_BORDER = '3px solid #6f9bc9'
+
+const WINDOW_GLASS_POSITION = {
+  norte: 'left-1.5 right-1.5 top-0.5 h-0.5',
+  sur: 'left-1.5 right-1.5 bottom-0.5 h-0.5',
+  oeste: 'top-1.5 bottom-1.5 left-0.5 w-0.5',
+  este: 'top-1.5 bottom-1.5 right-0.5 w-0.5',
 }
 
 export default function MapPreview({ difficulty }) {
@@ -66,6 +77,7 @@ export default function MapPreview({ difficulty }) {
             height: cellSize,
             background: ROOM_TINTS[roomIndex[roomLookup[key]] % ROOM_TINTS.length],
             border: '1px solid rgba(39,24,41,0.16)',
+            ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: WINDOW_BORDER } : null),
           }}
         >
           {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
@@ -119,11 +131,8 @@ export default function MapPreview({ difficulty }) {
           )}
           {wall && (
             <div
-              className={`pointer-events-none absolute ${WALL_POSITION[wall] || ''}`}
-              style={{ color: zone.accent }}
-            >
-              <WindowIcon size={Math.round(cellSize * 0.36)} className="opacity-80" />
-            </div>
+              className={`pointer-events-none absolute rounded-full bg-[#eaf3fb] ${WINDOW_GLASS_POSITION[wall]}`}
+            />
           )}
         </div>,
       )

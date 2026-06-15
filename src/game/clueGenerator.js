@@ -27,6 +27,7 @@ const SEED_PREFERENCE = [
   'nextToFurniture',
   'onChair',
   'onRug',
+  'onBed',
   'rowAbove',
   'rowBelow',
   'inCorner',
@@ -88,6 +89,7 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('notNextToFurniture', {})
   add('onChair', {})
   add('onRug', {})
+  add('onBed', {})
 
   // Absolutas
   add('inRow', { row: pos.row })

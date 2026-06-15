@@ -182,6 +182,12 @@ export const CLUE_TYPES = {
     evaluate: (pos, _p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === 'alfombra',
     text: () => `Estaba sobre la alfombra`,
   },
+  onBed: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, _p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === 'cama',
+    text: () => `Estaba acostado en la cama`,
+  },
 }
 
 // Evalúa una pista concreta sobre un conjunto de posiciones.

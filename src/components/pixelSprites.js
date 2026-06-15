@@ -14,15 +14,16 @@ export const FACE_GRID = [
   [0, 0, 1, 1, 1, 1, 0, 0],
 ]
 
-// Retrato de la víctima: calavera (mismo contorno, cuencas y dientes oscuros).
+// Retrato de la víctima: calavera con cuencas oculares amplias, cavidad nasal
+// y dentadura marcada, para distinguirla con claridad de un sospechoso.
 export const SKULL_GRID = [
   [0, 0, 1, 1, 1, 1, 0, 0],
   [0, 1, 2, 2, 2, 2, 1, 0],
   [1, 2, 2, 2, 2, 2, 2, 1],
-  [1, 2, 3, 2, 2, 3, 2, 1],
+  [1, 2, 3, 3, 2, 3, 3, 1],
   [1, 2, 2, 3, 3, 2, 2, 1],
-  [1, 2, 2, 2, 2, 2, 2, 1],
-  [0, 1, 3, 1, 1, 3, 1, 0],
+  [1, 2, 3, 2, 3, 2, 3, 1],
+  [0, 1, 1, 1, 1, 1, 1, 0],
   [0, 0, 1, 1, 1, 1, 0, 0],
 ]
 
@@ -73,26 +74,25 @@ const SILLA_GRID = [
   [0, 2, 0, 0, 0, 0, 2, 0],
 ]
 
+// Cama: cabecero, almohada y colcha — un personaje puede acostarse encima.
+const CAMA_GRID = [
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 2, 2, 0, 0, 2, 2, 1],
+  [1, 2, 2, 0, 0, 2, 2, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 3, 3, 3, 3, 3, 3, 1],
+  [1, 3, 3, 3, 3, 3, 3, 1],
+  [1, 3, 3, 3, 3, 3, 3, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+]
+
 export const FURNITURE_SPRITES = {
   mesa: { grid: MESA_GRID, palette: { 1: '#cba35c', 2: '#432c48' } },
   TV: { grid: TV_GRID, palette: { 1: '#321f37', 2: '#5a3d5f', 3: '#8bb0c9' } },
   planta: { grid: PLANTA_GRID, palette: { 1: '#7d9162', 2: '#a4b682', 3: '#cf9d87' } },
   silla: { grid: SILLA_GRID, palette: { 1: '#a07d3c', 2: '#432c48' } },
+  cama: { grid: CAMA_GRID, palette: { 1: '#a07d3c', 2: '#fbf6ee', 3: '#cf93ab' } },
 }
-
-// Ventana: 4 cristales con marco en `currentColor` (heredado del acento de zona).
-export const WINDOW_GRID = [
-  [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 2, 2, 1, 1, 2, 2, 1],
-  [1, 2, 2, 1, 1, 2, 2, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 2, 2, 1, 1, 2, 2, 1],
-  [1, 2, 2, 1, 1, 2, 2, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-]
-
-export const WINDOW_PALETTE = { 1: 'currentColor', 2: '#fbf6ee' }
 
 // Marca de línea de control: aspa de píxeles muy tenue.
 export const PIXEL_X_GRID = [

@@ -8,18 +8,28 @@
 import { memo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
-import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
+import { FurnitureIcon } from './Furniture.jsx'
 import { DraggableToken, TokenChip } from './CharacterToken.jsx'
 import { RUG_PATTERN, RUG_NOISE, RUG_NOISE_SIZE } from './rugPattern.js'
 import { PixelGrid } from './pixelArt.jsx'
 import { PIXEL_X_GRID, PIXEL_X_PALETTE, PIXEL_FLOOR_PATTERN } from './pixelSprites.js'
 
-// Posición del icono de ventana, anclado a la pared correspondiente.
-const WALL_POSITION = {
-  norte: 'top-0.5 left-1/2 -translate-x-1/2',
-  sur: 'bottom-0.5 left-1/2 -translate-x-1/2',
-  oeste: 'left-0.5 top-1/2 -translate-y-1/2',
-  este: 'right-0.5 top-1/2 -translate-y-1/2',
+// Ventana integrada en la pared: el lado correspondiente del marco se marca en
+// azul (estilo plano técnico) y se añade un cristal claro junto a él.
+const WINDOW_BORDER_SIDE = {
+  norte: 'borderTop',
+  sur: 'borderBottom',
+  oeste: 'borderLeft',
+  este: 'borderRight',
+}
+
+const WINDOW_BORDER = '5px solid #6f9bc9'
+
+const WINDOW_GLASS_POSITION = {
+  norte: 'left-2 right-2 top-0.5 h-0.5',
+  sur: 'left-2 right-2 bottom-0.5 h-0.5',
+  oeste: 'top-2 bottom-2 left-0.5 w-0.5',
+  este: 'top-2 bottom-2 right-0.5 w-0.5',
 }
 
 function Cell({
@@ -32,7 +42,6 @@ function Cell({
   onCellClick,
   onTokenClick,
   revealMode,
-  windowColor = '#b9c2d6',
 }) {
   const { r, c, size, tint, borders, label, furniture, isWindow, wall, rugEdges, occupiable } =
     geometry
@@ -60,6 +69,7 @@ function Cell({
         borderRight: borders.right,
         borderBottom: borders.bottom,
         borderLeft: borders.left,
+        ...(isWindow && wall ? { [WINDOW_BORDER_SIDE[wall]]: WINDOW_BORDER } : null),
         cursor: occupiable && selectedToken && !occupantName ? 'pointer' : 'default',
         outline: canDrop ? '2px solid rgba(255,255,255,0.7)' : 'none',
         outlineOffset: -2,
@@ -128,14 +138,11 @@ function Cell({
         </div>
       )}
 
-      {/* Ventana: icono anclado a la pared, visible aunque haya una ficha. */}
-      {isWindow && (
+      {/* Ventana: cristal claro junto al tramo de pared marcado en azul. */}
+      {isWindow && wall && (
         <div
-          className={`pointer-events-none absolute ${WALL_POSITION[wall] || ''}`}
-          style={{ color: windowColor }}
-        >
-          <WindowIcon size={Math.round(size * 0.34)} className="opacity-85" />
-        </div>
+          className={`pointer-events-none absolute rounded-full bg-[#eaf3fb] ${WINDOW_GLASS_POSITION[wall]}`}
+        />
       )}
 
       {/* Marca × de línea de control. */}

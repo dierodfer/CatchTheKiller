@@ -4,7 +4,7 @@
 export const BLOCKING_FURNITURE = ['mesa', 'TV', 'planta']
 
 // Mobiliario "libre": un personaje puede ocupar la celda igualmente.
-export const FREE_FURNITURE = ['silla', 'alfombra']
+export const FREE_FURNITURE = ['silla', 'alfombra', 'cama']
 
 // Conjunto completo de mobiliario interior.
 export const FURNITURE = [...BLOCKING_FURNITURE, ...FREE_FURNITURE]

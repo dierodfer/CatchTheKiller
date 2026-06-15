@@ -60,7 +60,6 @@ export default function Board({
           onCellClick={onCellClick}
           onTokenClick={onTokenClick}
           revealMode={revealMode}
-          windowColor={zone?.accent}
         />,
       )
     }
