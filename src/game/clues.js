@@ -153,15 +153,16 @@ export const CLUE_TYPES = {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) =>
-      adjacentHas(ctx, pos, (r, c) =>
-        p.furniture === 'ventana'
-          ? ctx.isWindow(r, c)
-          : ctx.furnitureAt(r, c) === p.furniture,
-      ),
-    text: (p) =>
-      p.furniture === 'ventana'
-        ? `Estaba junto a una ventana`
-        : `Estaba junto a una ${p.furniture === 'TV' ? 'TV' : p.furniture}`,
+      adjacentHas(ctx, pos, (r, c) => ctx.furnitureAt(r, c) === p.furniture),
+    text: (p) => `Estaba junto a una ${p.furniture === 'TV' ? 'TV' : p.furniture}`,
+  },
+  // La ventana forma parte de la pared de su celda: estar "junto a la ventana"
+  // significa ocupar esa misma celda (no una contigua).
+  nextToWindow: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, _p, _all, ctx) => ctx.isWindow(pos.row, pos.col),
+    text: () => `Estaba junto a una ventana`,
   },
   notNextToFurniture: {
     tier: 'room',
