@@ -9,7 +9,10 @@
 // El evaluador es la base tanto del generador de pistas como del Solver:
 // "la IA propone, el Solver decide" — aquí no hay IA, la lógica es la autoridad.
 
-import { FURNITURE, ADJACENT } from './constants.js'
+import { FURNITURE, ADJACENT, ROOM_ARTICLE, cellKey } from './constants.js'
+
+// Frase "el/la <habitación>" con el artículo correcto (concordancia de género).
+const roomPhrase = (room) => `${ROOM_ARTICLE[room] ?? 'el'} ${room}`
 
 function isCorner(pos, size) {
   return (pos.row === 0 || pos.row === size - 1) && (pos.col === 0 || pos.col === size - 1)
@@ -35,13 +38,13 @@ export const CLUE_TYPES = {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) => ctx.roomAt(pos.row, pos.col) === p.room,
-    text: (p) => `Estaba en el ${p.room}`,
+    text: (p) => `Estaba en ${roomPhrase(p.room)}`,
   },
   notInRoom: {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) => ctx.roomAt(pos.row, pos.col) !== p.room,
-    text: (p) => `No estaba en el ${p.room}`,
+    text: (p) => `No estaba en ${roomPhrase(p.room)}`,
   },
   aloneInRoom: {
     tier: 'room',
@@ -129,6 +132,8 @@ export const CLUE_TYPES = {
   },
 
   // ───────── Posición relativa entre personajes ─────────
+  // Nadie comparte fila ni columna con nadie (regla del asesino), así que las
+  // cuatro direcciones cardinales (fila y columna) son siempre comparables.
   rowAbove: {
     tier: 'relative',
     unary: false,
@@ -136,7 +141,7 @@ export const CLUE_TYPES = {
       const op = all[p.other]
       return !!op && pos.row < op.row
     },
-    text: (p) => `Estaba en una fila superior a ${p.other}`,
+    text: (p) => `Estaba al norte de ${p.other}`,
   },
   rowBelow: {
     tier: 'relative',
@@ -145,7 +150,25 @@ export const CLUE_TYPES = {
       const op = all[p.other]
       return !!op && pos.row > op.row
     },
-    text: (p) => `Estaba en una fila inferior a ${p.other}`,
+    text: (p) => `Estaba al sur de ${p.other}`,
+  },
+  colLeft: {
+    tier: 'relative',
+    unary: false,
+    evaluate: (pos, p, all) => {
+      const op = all[p.other]
+      return !!op && pos.col < op.col
+    },
+    text: (p) => `Estaba a la izquierda de ${p.other}`,
+  },
+  colRight: {
+    tier: 'relative',
+    unary: false,
+    evaluate: (pos, p, all) => {
+      const op = all[p.other]
+      return !!op && pos.col > op.col
+    },
+    text: (p) => `Estaba a la derecha de ${p.other}`,
   },
 
   // ───────── Proximidad a mobiliario ─────────
@@ -170,7 +193,9 @@ export const CLUE_TYPES = {
           ctx.furnitureAt(r, c) === p.furniture &&
           ctx.roomAt(r, c) === ctx.roomAt(pos.row, pos.col),
       ),
-    text: (p) => `Estaba junto a una ${p.furniture === 'TV' ? 'TV' : p.furniture}`,
+    // Todo el mobiliario es femenino en español (mesa, TV, planta, estantería,
+    // silla, alfombra, cama), así que "una" concuerda en todos los casos.
+    text: (p) => `Estaba junto a una ${p.furniture}`,
   },
   // La ventana forma parte de la pared de su celda: estar "junto a la ventana"
   // significa ocupar esa misma celda (no una contigua).
@@ -224,15 +249,15 @@ export function evalClue(clue, placements, ctx) {
 
 // Construye el contexto compartido por evaluador, generador y Solver.
 export function buildClueContext(map, roomLookup, characters) {
-  const windowSet = new Set(map.windows.map((w) => `${w.row},${w.col}`))
+  const windowSet = new Set(map.windows.map((w) => cellKey(w.row, w.col)))
   const everyone = [...characters.suspects, characters.victim]
   // Índice inverso posición -> nombre, recalculado por evaluación de aloneInRoom.
   return {
     gridSize: map.gridSize,
     everyone,
-    roomAt: (r, c) => roomLookup[`${r},${c}`],
+    roomAt: (r, c) => roomLookup[cellKey(r, c)],
     furnitureAt: (r, c) =>
       r >= 0 && c >= 0 && r < map.gridSize && c < map.gridSize ? map.grid[r][c] : null,
-    isWindow: (r, c) => windowSet.has(`${r},${c}`),
+    isWindow: (r, c) => windowSet.has(cellKey(r, c)),
   }
 }

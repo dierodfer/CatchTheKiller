@@ -9,6 +9,10 @@ export const FREE_FURNITURE = ['silla', 'alfombra', 'cama']
 // Conjunto completo de mobiliario interior.
 export const FURNITURE = [...BLOCKING_FURNITURE, ...FREE_FURNITURE]
 
+// Mobiliario candidato para pistas de proximidad ("Estaba junto a una X"): todo
+// el mobiliario interior. Es la misma lista que FURNITURE (fuente única).
+export const FURNITURE_FOR_PROXIMITY = FURNITURE
+
 // Nombres de habitaciones disponibles (sección 11 del documento).
 export const ROOM_NAMES = [
   'Salón',
@@ -22,6 +26,21 @@ export const ROOM_NAMES = [
   'Bodega',
   'Galería',
 ]
+
+// Artículo definido de cada habitación, para la concordancia de género en las
+// pistas ("Estaba en la Cocina", no "en el Cocina").
+export const ROOM_ARTICLE = {
+  Salón: 'el',
+  Cocina: 'la',
+  Dormitorio: 'el',
+  Estudio: 'el',
+  Pasillo: 'el',
+  Biblioteca: 'la',
+  Comedor: 'el',
+  Terraza: 'la',
+  Bodega: 'la',
+  Galería: 'la',
+}
 
 // Configuración por dificultad (sección 8 del documento).
 export const DIFFICULTIES = {
@@ -73,3 +92,18 @@ export const ADJACENT = [
   [0, -1],
   [0, 1],
 ]
+
+// Clave de celda "fila,columna" para índices y conjuntos por posición.
+export const cellKey = (r, c) => `${r},${c}`
+
+// Límites de los bucles de generación (reintentos y muestreos). Agrupados aquí
+// para poder ajustar el rendimiento/calidad desde un único sitio.
+export const GENERATION = {
+  PUZZLE_ATTEMPTS: 60, // orquestación completa (puzzleGenerator)
+  MAP_ATTEMPTS: 200, // layout válido de mapa (mapGenerator)
+  SOLUTION_ATTEMPTS: 3000, // colocación válida de personajes (solutionGenerator)
+  SOLUTION_PROBE_CAP: 14, // tope de soluciones al comparar candidatas (clueGenerator)
+  MAX_CLUES_PER_SUBJECT: 2, // pistas máximas por sujeto
+  CANDIDATE_SAMPLE: 48, // candidatas muestreadas por iteración de refuerzo
+  MAX_ROWCOL_CLUES: 1, // pistas absolutas de fila/columna por puzzle
+}

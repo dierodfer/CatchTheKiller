@@ -3,31 +3,24 @@
 import { useMemo, useState } from 'react'
 import { generateMap, buildRoomLookup } from '@/game/mapGenerator.js'
 import { makeRng, randomSeed } from '@/game/random.js'
+import { cellKey } from '@/game/constants.js'
 import { ROOM_TINTS } from './palette.js'
 import { zoneForSeed } from './zones.js'
 import { FurnitureIcon } from './Furniture.jsx'
-import { RUG_PATTERN, RUG_NOISE, RUG_NOISE_SIZE } from './rugPattern.js'
-import { PIXEL_FLOOR_PATTERN } from './pixelSprites.js'
+import {
+  WINDOW_BORDER_SIDE,
+  WINDOW_GLASS_COLOR,
+  windowBorder,
+  windowGlassStyle,
+  floorPatternStyle,
+  rugLayerStyles,
+} from './boardCell.js'
 
 const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
 
-// Ventana integrada en la pared: el lado correspondiente del marco se marca en
-// azul (estilo plano técnico) y se añade un cristal claro junto a él.
-const WINDOW_BORDER_SIDE = {
-  norte: 'borderTop',
-  sur: 'borderBottom',
-  oeste: 'borderLeft',
-  este: 'borderRight',
-}
-
-const WINDOW_BORDER = '3px solid #6f9bc9'
-
-const WINDOW_GLASS_POSITION = {
-  norte: 'left-1.5 right-1.5 top-0.5 h-0.5',
-  sur: 'left-1.5 right-1.5 bottom-0.5 h-0.5',
-  oeste: 'top-1.5 bottom-1.5 left-0.5 w-0.5',
-  este: 'top-1.5 bottom-1.5 right-0.5 w-0.5',
-}
+// Grosor del marco de ventana (px) e inset del cristal en la miniatura.
+const WINDOW_FRAME_PX = 3
+const GLASS_INSET = 6
 
 export default function MapPreview({ difficulty }) {
   const [seed] = useState(() => randomSeed())
@@ -46,7 +39,7 @@ export default function MapPreview({ difficulty }) {
 
   const windowByCell = useMemo(() => {
     const m = {}
-    for (const w of map.windows) m[`${w.row},${w.col}`] = w.wall
+    for (const w of map.windows) m[cellKey(w.row, w.col)] = w.wall
     return m
   }, [map])
 
@@ -57,7 +50,7 @@ export default function MapPreview({ difficulty }) {
   for (let r = 0; r < size; r++) {
     const cells = []
     for (let c = 0; c < size; c++) {
-      const key = `${r},${c}`
+      const key = cellKey(r, c)
       const furniture = map.grid[r][c]
       const wall = windowByCell[key]
       const margin = Math.max(2, Math.round(cellSize * 0.05))
@@ -76,49 +69,15 @@ export default function MapPreview({ difficulty }) {
             height: cellSize,
             background: ROOM_TINTS[roomIndex[roomLookup[key]] % ROOM_TINTS.length],
             border: '1px solid rgba(39,24,41,0.16)',
-            ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: WINDOW_BORDER } : null),
+            ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(WINDOW_FRAME_PX) } : null),
           }}
         >
           {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              backgroundImage: PIXEL_FLOOR_PATTERN,
-              backgroundSize: `${Math.max(4, Math.round(cellSize / 4))}px ${Math.max(4, Math.round(cellSize / 4))}px`,
-              mixBlendMode: 'soft-light',
-              opacity: 0.55,
-            }}
-          />
-          {furniture === 'alfombra' && (
-            <>
-              <div
-                className="pointer-events-none absolute"
-                style={{
-                  top: edges.top ? margin : 0,
-                  right: edges.right ? margin : 0,
-                  bottom: edges.bottom ? margin : 0,
-                  left: edges.left ? margin : 0,
-                  borderRadius: 6,
-                  background: RUG_PATTERN,
-                  opacity: 0.85,
-                }}
-              />
-              <div
-                className="pointer-events-none absolute"
-                style={{
-                  top: edges.top ? margin : 0,
-                  right: edges.right ? margin : 0,
-                  bottom: edges.bottom ? margin : 0,
-                  left: edges.left ? margin : 0,
-                  borderRadius: 6,
-                  backgroundImage: RUG_NOISE,
-                  backgroundSize: RUG_NOISE_SIZE,
-                  mixBlendMode: 'soft-light',
-                  opacity: 0.25,
-                }}
-              />
-            </>
-          )}
+          <div className="pointer-events-none absolute inset-0" style={floorPatternStyle(cellSize)} />
+          {furniture === 'alfombra' &&
+            rugLayerStyles(edges, margin, 6).map((style, i) => (
+              <div key={i} className="pointer-events-none absolute" style={style} />
+            ))}
           {furniture && furniture !== 'alfombra' && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-70">
               <FurnitureIcon
@@ -130,7 +89,8 @@ export default function MapPreview({ difficulty }) {
           )}
           {wall && (
             <div
-              className={`pointer-events-none absolute rounded-full bg-[#eaf3fb] ${WINDOW_GLASS_POSITION[wall]}`}
+              className="pointer-events-none absolute rounded-full"
+              style={{ background: WINDOW_GLASS_COLOR, ...windowGlassStyle(wall, GLASS_INSET) }}
             />
           )}
         </div>,
