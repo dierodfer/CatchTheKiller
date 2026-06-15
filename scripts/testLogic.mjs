@@ -117,6 +117,18 @@ for (const diff of difficulties) {
       `seed ${seed}: pistas en orden alfabético por sujeto`,
     )
 
+    // Invariante: una pista "junto a un mueble" nunca se emite si el sujeto está
+    // de hecho ENCIMA de ese mismo tipo de mueble (alfombra/silla/cama) — sería
+    // engañosa ("estaba sobre la alfombra" ≠ "junto a una alfombra").
+    for (const c of clues) {
+      if (c.kind !== 'nextToFurniture') continue
+      const p = solution[c.subject]
+      assert(
+        map.grid[p.row][p.col] !== c.params.furniture,
+        `seed ${seed}: "${c.subject} junto a ${c.params.furniture}" pero está encima de una`,
+      )
+    }
+
     // Invariante: solución única.
     const sols = solve(map, characters, clues, { limit: 2, roomLookup })
     assert(sols.length === 1, `seed ${seed}: solución única (encontradas ${sols.length})`)
