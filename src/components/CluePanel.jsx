@@ -3,6 +3,7 @@
 // se agrupan en la misma nota (no se reparten en notas distintas). Es una
 // vista estática de consulta (no se marcan como "usadas").
 
+import { useMemo } from 'react'
 import { Pin, Quote, Skull } from 'lucide-react'
 import { colorForCharacter } from './palette.js'
 import { PixelAvatar } from './pixelArt.jsx'
@@ -28,7 +29,7 @@ function groupBySubject(clues) {
 
 export default function CluePanel({ puzzle }) {
   const { clues, characters } = puzzle
-  const groups = groupBySubject(clues)
+  const groups = useMemo(() => groupBySubject(clues), [clues])
 
   return (
     <div className="rounded-2xl border border-gold/12 bg-cream-100/80 p-4 ring-botanica">

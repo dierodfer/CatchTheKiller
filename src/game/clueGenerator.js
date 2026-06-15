@@ -12,11 +12,10 @@
 // verificación de unicidad.
 
 import { CLUE_TYPES, evalClue, buildClueContext } from './clues.js'
+import { FURNITURE_FOR_PROXIMITY, GENERATION } from './constants.js'
 import { solve } from './solver.js'
 import { freeCells } from './mapGenerator.js'
 import { shuffle, pick, weightedPick } from './random.js'
-
-const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'planta', 'estantería', 'silla', 'alfombra', 'cama']
 
 // Peso de cada tipo de pista al SEMBRAR la pista inicial de un sujeto. La
 // siembra elige primero un *tipo* (al azar ponderado entre los disponibles) y
@@ -65,11 +64,10 @@ const SEED_WEIGHT = {
 }
 
 // Pistas de posición absoluta en fila/columna ("Estaba en la fila 2", "No
-// estaba en la columna 3"): se permite como máximo una en todo el puzzle para
-// no saturarlo de coordenadas — las pistas de habitación, mobiliario y
-// dirección relativa deben llevar el peso del razonamiento.
+// estaba en la columna 3"): se permite como máximo una en todo el puzzle
+// (GENERATION.MAX_ROWCOL_CLUES) para no saturarlo de coordenadas — las pistas
+// de habitación, mobiliario y dirección relativa llevan el peso del razonamiento.
 const ROWCOL_KINDS = new Set(['inRow', 'notInRow', 'inColumn', 'notInColumn'])
-const MAX_ROWCOL_CLUES = 1
 
 const clueId = (c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`
 
@@ -195,7 +193,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   const chosenIds = new Set()
   const rowColCount = () => chosen.filter((c) => ROWCOL_KINDS.has(c.kind)).length
   for (const s of shuffle(rng, subjects)) {
-    const seed = pickSeed(rng, pools[s], rowColCount() >= MAX_ROWCOL_CLUES)
+    const seed = pickSeed(rng, pools[s], rowColCount() >= GENERATION.MAX_ROWCOL_CLUES)
     chosen.push(seed)
     chosenIds.add(clueId(seed))
   }
@@ -203,32 +201,50 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   // 3. Añadir pistas hasta lograr unicidad. El máximo es de 2 pistas por
   // sujeto: si no se logra unicidad dentro de ese límite, se descarta este
   // mapa/solución y el orquestador reintenta con otro.
-  const CAP = 14
-  const MAX_PER_SUBJECT = 2
+  const { SOLUTION_PROBE_CAP: CAP, MAX_CLUES_PER_SUBJECT, CANDIDATE_SAMPLE } = GENERATION
   const countForSubject = (subject) => chosen.filter((c) => c.subject === subject).length
   const maxAdds = characters.suspects.length * 2 + 4
+
+  // Cuántas pistas de cada tipo se han elegido ya (para diversificar el refuerzo).
+  const kindUsage = (cand) => chosen.reduce((n, c) => n + (c.kind === cand.kind ? 1 : 0), 0)
 
   const addUntilUnique = (limits) => {
     let guard = 0
     while (count(chosen, 2) !== 1 && guard++ < maxAdds) {
       let best = null
       let bestCount = Infinity
-      const rowColCapped = rowColCount() >= MAX_ROWCOL_CLUES
+      let ties = [] // candidatas que empatan en bestCount (no unicidad inmediata)
+      const rowColCapped = rowColCount() >= GENERATION.MAX_ROWCOL_CLUES
       for (const limit of limits) {
-        for (const cand of shuffle(rng, all).slice(0, 48)) {
+        for (const cand of shuffle(rng, all).slice(0, CANDIDATE_SAMPLE)) {
           if (chosenIds.has(clueId(cand))) continue
           if (countForSubject(cand.subject) >= limit) continue
           if (rowColCapped && ROWCOL_KINDS.has(cand.kind)) continue
           chosen.push(cand)
           const c = count(chosen, CAP)
           chosen.pop()
-          if (c >= 1 && c < bestCount) {
-            bestCount = c
+          if (c < 1) continue
+          if (c === 1) {
+            // Esta candidata cierra la unicidad: úsala de inmediato.
             best = cand
-            if (c === 1) break
+            ties = []
+            break
+          }
+          if (c < bestCount) {
+            bestCount = c
+            ties = [cand]
+          } else if (c === bestCount) {
+            ties.push(cand)
           }
         }
         if (best) break
+        // Entre las candidatas igual de constriñentes, prefiere el tipo de pista
+        // menos usado hasta ahora: así el refuerzo aporta variedad, no más
+        // `inRoom`/`nextToFurniture`.
+        if (ties.length) {
+          best = ties.reduce((a, b) => (kindUsage(b) < kindUsage(a) ? b : a))
+          break
+        }
       }
       if (!best) break
       chosen.push(best)
@@ -236,7 +252,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
     }
   }
 
-  addUntilUnique([MAX_PER_SUBJECT])
+  addUntilUnique([MAX_CLUES_PER_SUBJECT])
 
   if (count(chosen, 2) !== 1) return null
 

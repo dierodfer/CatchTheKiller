@@ -1,7 +1,14 @@
 // Generación local del mapa (sección 11 del documento).
 // Orden: cuadrícula -> habitaciones irregulares -> mobiliario -> ventanas -> validación.
 
-import { BLOCKING_FURNITURE, FREE_FURNITURE, ROOM_NAMES, ADJACENT } from './constants.js'
+import {
+  BLOCKING_FURNITURE,
+  FREE_FURNITURE,
+  ROOM_NAMES,
+  ADJACENT,
+  GENERATION,
+  cellKey,
+} from './constants.js'
 import { randInt, pick, shuffle } from './random.js'
 
 const WALL_BY_BORDER = (size) => (r, c) => {
@@ -87,7 +94,7 @@ export function generateMap(rng, config) {
   const numRooms = randInt(rng, size - 2, size - 1)
 
   let attempt = 0
-  while (attempt++ < 200) {
+  while (attempt++ < GENERATION.MAP_ATTEMPTS) {
     const rooms = partitionRooms(rng, size, numRooms)
     const grid = Array.from({ length: size }, () => new Array(size).fill(null))
     const windows = []
@@ -176,7 +183,7 @@ export function isOccupiable(map, r, c) {
 function placeRug(rng, grid, size, rooms) {
   const roomOf = {}
   rooms.forEach((room, i) => {
-    for (const [r, c] of room.cells) roomOf[`${r},${c}`] = i
+    for (const [r, c] of room.cells) roomOf[cellKey(r, c)] = i
   })
 
   const shapes = shuffle(rng, [
@@ -196,13 +203,13 @@ function placeRug(rng, grid, size, rooms) {
     }
     for (const [r0, c0] of shuffle(rng, positions)) {
       let fits = true
-      const room0 = roomOf[`${r0},${c0}`]
+      const room0 = roomOf[cellKey(r0, c0)]
       for (let dr = 0; dr < h && fits; dr++) {
         for (let dc = 0; dc < w && fits; dc++) {
           const r = r0 + dr
           const c = c0 + dc
           if (grid[r][c] !== null) fits = false
-          if (roomOf[`${r},${c}`] !== room0) fits = false
+          if (roomOf[cellKey(r, c)] !== room0) fits = false
         }
       }
       if (!fits) continue
@@ -218,7 +225,7 @@ function placeRug(rng, grid, size, rooms) {
 export function buildRoomLookup(map) {
   const lookup = {}
   for (const room of map.rooms) {
-    for (const [r, c] of room.cells) lookup[`${r},${c}`] = room.name
+    for (const [r, c] of room.cells) lookup[cellKey(r, c)] = room.name
   }
   return lookup
 }

@@ -7,6 +7,7 @@
 import { isOccupiable } from './mapGenerator.js'
 import { findKillers } from './killerRule.js'
 import { buildClueContext } from './clues.js'
+import { GENERATION, cellKey } from './constants.js'
 import { shuffle } from './random.js'
 
 // characters: { suspects: string[], victim: string }
@@ -15,10 +16,10 @@ export function generateSolution(rng, map, characters, roomLookup) {
   const { suspects, victim } = characters
   const size = map.gridSize
   const ctx = buildClueContext(map, roomLookup, characters)
-  const roomAt = (r, c) => roomLookup[`${r},${c}`]
+  const roomAt = (r, c) => roomLookup[cellKey(r, c)]
   const rows = Array.from({ length: size }, (_, i) => i)
 
-  for (let attempt = 0; attempt < 3000; attempt++) {
+  for (let attempt = 0; attempt < GENERATION.SOLUTION_ATTEMPTS; attempt++) {
     // Permutación fila -> columna: cada personaje en fila y columna propias.
     const colOrder = shuffle(rng, rows)
     if (!rows.every((r) => isOccupiable(map, r, colOrder[r]))) continue

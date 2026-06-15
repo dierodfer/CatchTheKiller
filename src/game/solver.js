@@ -9,6 +9,7 @@
 import { freeCells } from './mapGenerator.js'
 import { evalClue, buildClueContext } from './clues.js'
 import { identifyKiller, findKillers } from './killerRule.js'
+import { cellKey } from './constants.js'
 
 // Participantes de una pista: el sujeto más los personajes referenciados.
 function participants(clue) {
@@ -90,7 +91,7 @@ export function solve(map, characters, clues, opts = {}) {
     }
     const name = order[i]
     for (const [r, c] of domains[name]) {
-      const key = `${r},${c}`
+      const key = cellKey(r, c)
       if (used.has(key)) continue
       assigned[name] = { row: r, col: c }
       used.add(key)

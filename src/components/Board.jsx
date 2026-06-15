@@ -2,6 +2,7 @@
 // columnas) a partir de la geometría calculada por useBoardGeometry.
 
 import { motion, useReducedMotion } from 'framer-motion'
+import { cellKey } from '@/game/constants.js'
 import Cell from './Cell.jsx'
 import { GUTTER, useBoardGeometry } from '@/hooks/useBoardGeometry.js'
 
@@ -31,12 +32,13 @@ export default function Board({
 
   const axisLabel = 'flex items-center justify-center font-pixel text-[13px] font-semibold text-plum-600/70'
 
-  // Cabecera: esquina vacía + número de cada columna.
+  // Cabecera: esquina vacía + número de cada columna. Los números de los ejes
+  // son decorativos (aria-hidden): cada celda ya anuncia su fila y columna.
   const header = (
     <div className="flex">
       <div style={{ width: GUTTER, height: GUTTER }} />
       {Array.from({ length: size }, (_, c) => (
-        <div key={c} className={axisLabel} style={{ width: cellSize, height: GUTTER }}>
+        <div key={c} className={axisLabel} style={{ width: cellSize, height: GUTTER }} aria-hidden>
           {c + 1}
         </div>
       ))}
@@ -47,7 +49,7 @@ export default function Board({
   for (let r = 0; r < size; r++) {
     const cells = []
     for (let c = 0; c < size; c++) {
-      const key = `${r},${c}`
+      const key = cellKey(r, c)
       cells.push(
         <Cell
           key={key}
@@ -65,8 +67,8 @@ export default function Board({
     }
     rows.push(
       <div key={r} className="flex">
-        {/* Número de fila. */}
-        <div className={axisLabel} style={{ width: GUTTER, height: cellSize }}>
+        {/* Número de fila (decorativo). */}
+        <div className={axisLabel} style={{ width: GUTTER, height: cellSize }} aria-hidden>
           {r + 1}
         </div>
         {cells}
@@ -103,7 +105,11 @@ export default function Board({
     ) : null
 
   return (
-    <div className="pixel-frame relative inline-block overflow-hidden rounded-lg bg-cream-100/75 p-2.5 shadow-2xl">
+    <div
+      className="pixel-frame relative inline-block overflow-hidden rounded-lg bg-cream-100/75 p-2.5 shadow-2xl"
+      role="group"
+      aria-label="Tablero del caso"
+    >
       {/* Textura ambiental propia de la zona. */}
       {zone && (
         <div

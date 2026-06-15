@@ -1,7 +1,7 @@
 // Orquestación de la generación (sección 6 del documento).
 // Orden estricto: MAPA -> SOLUCIÓN -> PISTAS -> VALIDACIÓN. Todo local.
 
-import { DIFFICULTIES } from './constants.js'
+import { DIFFICULTIES, GENERATION } from './constants.js'
 import { generateMap, buildRoomLookup } from './mapGenerator.js'
 import { generateSolution } from './solutionGenerator.js'
 import { generateClues } from './clueGenerator.js'
@@ -35,7 +35,7 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
 
   const rng = makeRng(seed)
 
-  for (let attempt = 0; attempt < 60; attempt++) {
+  for (let attempt = 0; attempt < GENERATION.PUZZLE_ATTEMPTS; attempt++) {
     // 1. MAPA
     const map = generateMap(rng, difficulty)
     map.difficulty = difficulty.id
