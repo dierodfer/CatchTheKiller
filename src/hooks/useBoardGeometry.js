@@ -6,12 +6,42 @@
 // referencia entre renders — clave para que React.memo en Cell evite
 // renderizados innecesarios al colocar/quitar fichas.
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ROOM_TINTS } from '@/components/palette.js'
 import { controlLineCells } from '@/game/killerRule.js'
 import { isOccupiable } from '@/game/mapGenerator.js'
 
-const CELL_SIZE = { 4: 112, 5: 94, 6: 78, 7: 66 }
+// Ancho de la columna/fila de numeración (1, 2, 3...) en los bordes del tablero.
+export const GUTTER = 18
+
+// Tamaño de celda en pantallas amplias, donde no hay restricción de ancho.
+const MAX_CELL_SIZE = { 4: 112, 5: 94, 6: 78, 7: 66 }
+// Por debajo de este tamaño la cuadrícula deja de ser legible: a partir de
+// aquí se prefiere un desbordamiento mínimo a celdas ilegibles.
+const MIN_CELL_SIZE = 36
+
+// Ancho fuera del tablero que compite por el viewport: relleno horizontal de
+// la página (`px-3`/`sm:px-4` en GameScreen) más el relleno del marco del
+// tablero (`p-2.5`).
+const PAGE_PADDING = 24
+const PAGE_PADDING_SM = 32
+const BOARD_PADDING = 20
+const SM_BREAKPOINT = 640
+
+// Mantiene `cellSize` ajustado al ancho de la ventana, recalculando en cada
+// redimensionado (p. ej. al rotar el dispositivo).
+function useViewportWidth() {
+  const [width, setWidth] = useState(() =>
+    typeof window === 'undefined' ? 1024 : window.innerWidth,
+  )
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  return width
+}
+
 // Muros de habitación: trazo sólido y grueso (estilo pixel art); divisiones
 // interiores apenas visibles, como líneas de rejilla. El borde exterior del
 // tablero es algo más grueso para enmarcar el conjunto.
@@ -29,7 +59,13 @@ export function useBoardGeometry({
   solution,
 }) {
   const size = map.gridSize
-  const cellSize = CELL_SIZE[size] || 80
+  const viewportWidth = useViewportWidth()
+  const pagePadding = viewportWidth >= SM_BREAKPOINT ? PAGE_PADDING_SM : PAGE_PADDING
+  const available = viewportWidth - pagePadding - BOARD_PADDING - GUTTER
+  const cellSize = Math.min(
+    MAX_CELL_SIZE[size] || 80,
+    Math.max(MIN_CELL_SIZE, Math.floor(available / size)),
+  )
 
   const cellGeometry = useMemo(() => {
     const windowByCell = {}

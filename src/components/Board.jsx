@@ -3,9 +3,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import Cell from './Cell.jsx'
-import { useBoardGeometry } from '@/hooks/useBoardGeometry.js'
-
-const GUTTER = 18
+import { GUTTER, useBoardGeometry } from '@/hooks/useBoardGeometry.js'
 
 export default function Board({
   puzzle,
