@@ -14,6 +14,7 @@ export default function Board({
   revealMode,
   zone,
   celebrating = false,
+  draggingName,
 }) {
   const { map, roomLookup, characters, solution, killer } = puzzle
   const { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt } = useBoardGeometry({
@@ -24,6 +25,7 @@ export default function Board({
     killer,
     victim: characters.victim,
     solution,
+    draggingName,
   })
   const reduce = useReducedMotion()
 

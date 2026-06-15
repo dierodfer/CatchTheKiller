@@ -42,7 +42,7 @@ export default function CluePanel({ puzzle }) {
           return (
             <li
               key={subject}
-              className="relative flex items-center gap-3 rounded-sm bg-cream-50 py-2.5 pl-2.5 pr-3 shadow-[0_4px_12px_-5px_rgba(30,19,34,0.4)] ring-1 ring-plum-950/5"
+              className="relative mx-auto flex w-full max-w-md items-center gap-3 rounded-sm bg-cream-50 py-2.5 pl-2.5 pr-3 shadow-[0_4px_12px_-5px_rgba(30,19,34,0.4)] ring-1 ring-plum-950/5"
               style={{ transform: `rotate(${noteTilt(i)}deg)` }}
             >
               {/* "Pin" que sujeta la nota. */}
