@@ -24,20 +24,20 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
           className="mx-auto mb-5 h-20 w-auto opacity-95 drop-shadow-[0_8px_24px_rgba(203,163,92,0.25)] sm:h-24"
         />
         <p className="eyebrow mb-2">Un caso de deducción</p>
-        <h1 className="font-serif text-5xl font-semibold leading-none tracking-tight text-cream sm:text-6xl">
+        <h1 className="font-serif text-5xl font-semibold leading-none tracking-tight text-plum-900 sm:text-6xl">
           Catch the Killer
         </h1>
-        <p className="mx-auto mt-4 max-w-md font-serif text-xl italic leading-snug text-cream-soft">
+        <p className="mx-auto mt-4 max-w-md font-serif text-xl italic leading-snug text-plum-800">
           Reconstruye la escena con pura deducción espacial. El asesino emerge cuando cada
           presente ocupa su lugar.
         </p>
 
         {/* Las dos ambientaciones posibles del caso. */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs text-cream-dim">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs text-plum-600">
           {ZONE_LIST.map((z) => (
             <span
               key={z.id}
-              className="inline-flex items-center gap-1.5 rounded-full border border-gold/15 bg-plum-900/50 px-3 py-1"
+              className="inline-flex items-center gap-1.5 rounded-full border border-gold/15 bg-cream-100/70 px-3 py-1"
             >
               <z.icon size={13} style={{ color: z.accent }} />
               {z.label}
@@ -48,7 +48,7 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
         {/* Selector de dificultad. */}
         <div className="mt-8">
           <p className="eyebrow mb-3">Elige la dificultad</p>
-          <div className="flex flex-wrap justify-center gap-2 rounded-2xl border border-gold/10 bg-plum-900/40 p-2 ring-botanica">
+          <div className="flex flex-wrap justify-center gap-2 rounded-2xl border border-gold/10 bg-cream-100/60 p-2 ring-botanica">
             {Object.values(DIFFICULTIES).map((d) => {
               const active = difficulty === d.id
               return (
@@ -58,12 +58,12 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
                   aria-pressed={active}
                   className={`flex min-w-[7rem] flex-1 flex-col items-center gap-1 rounded-xl px-4 py-3 transition-colors ${
                     active
-                      ? 'bg-gold/15 text-cream ring-1 ring-gold/45'
-                      : 'text-cream-soft ring-1 ring-transparent hover:bg-plum-800/60'
+                      ? 'bg-gold/20 text-plum-900 ring-1 ring-gold-deep/50'
+                      : 'text-plum-800 ring-1 ring-transparent hover:bg-cream-200/70'
                   }`}
                 >
                   <span className="font-serif text-lg font-semibold leading-none">{d.label}</span>
-                  <span className="flex items-center gap-2 text-[11px] text-cream-dim">
+                  <span className="flex items-center gap-2 text-[11px] text-plum-600">
                     <span className="inline-flex items-center gap-0.5">
                       <Grid3x3 size={11} /> {d.gridSize}×{d.gridSize}
                     </span>
@@ -99,7 +99,7 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
           )}
         </motion.button>
 
-        {error && <p className="mt-4 text-sm text-rose">Error: {error}</p>}
+        {error && <p className="mt-4 text-sm text-rose-deep">Error: {error}</p>}
       </motion.div>
     </div>
   )

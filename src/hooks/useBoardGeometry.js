@@ -12,9 +12,12 @@ import { controlLineCells } from '@/game/killerRule.js'
 import { isOccupiable } from '@/game/mapGenerator.js'
 
 const CELL_SIZE = { 4: 80, 5: 68, 6: 58, 7: 50 }
-// Muros de habitación en dorado tenue; divisiones interiores apenas visibles.
-const BORDER_ROOM = '2px solid rgba(203,163,92,0.38)'
-const BORDER_THIN = '1px solid rgba(244,235,220,0.08)'
+// Muros de habitación: trazo sólido y grueso (estilo pixel art); divisiones
+// interiores apenas visibles, como líneas de rejilla. El borde exterior del
+// tablero es algo más grueso para enmarcar el conjunto.
+const BORDER_OUTER = '5px solid #a07d3c'
+const BORDER_ROOM = '3px solid #a07d3c'
+const BORDER_THIN = '1px solid rgba(39,24,41,0.16)'
 
 export function useBoardGeometry({
   map,
@@ -48,13 +51,16 @@ export function useBoardGeometry({
 
     const bordersFor = (r, c) => {
       const room = roomLookup[`${r},${c}`]
-      const diff = (nr, nc) =>
-        nr < 0 || nc < 0 || nr >= size || nc >= size || roomLookup[`${nr},${nc}`] !== room
+      const sideBorder = (nr, nc) => {
+        if (nr < 0 || nc < 0 || nr >= size || nc >= size) return BORDER_OUTER
+        if (roomLookup[`${nr},${nc}`] !== room) return BORDER_ROOM
+        return BORDER_THIN
+      }
       return {
-        top: diff(r - 1, c) ? BORDER_ROOM : BORDER_THIN,
-        bottom: diff(r + 1, c) ? BORDER_ROOM : BORDER_THIN,
-        left: diff(r, c - 1) ? BORDER_ROOM : BORDER_THIN,
-        right: diff(r, c + 1) ? BORDER_ROOM : BORDER_THIN,
+        top: sideBorder(r - 1, c),
+        bottom: sideBorder(r + 1, c),
+        left: sideBorder(r, c - 1),
+        right: sideBorder(r, c + 1),
       }
     }
 

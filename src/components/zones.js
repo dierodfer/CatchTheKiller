@@ -6,7 +6,7 @@
 // (paleta de acento, textura de fondo y un distintivo temático).
 //
 // Las dos zonas son distinguibles a golpe de vista pero cohesivas dentro del
-// sistema "Botanica at Dusk": ambas viven sobre el mismo fondo ciruela y
+// sistema "Botanica at Dawn": ambas viven sobre el mismo fondo crema y
 // comparten el dorado como hilo conductor; cambian la temperatura y la textura.
 
 import { Building2, Mountain } from 'lucide-react'
@@ -20,11 +20,12 @@ export const ZONES = {
     icon: Building2,
     accent: '#b9c2d6', // fría, dentro del sistema
     accentSoft: 'rgba(185, 194, 214, 0.16)',
-    // Textura: vetas finas tipo lino/mármol sobre un velo frío.
+    // Textura: dither de píxeles a cuadros, fría, dos capas desfasadas que
+    // forman una trama de 4 tonos (estilo 8-bit).
     texture:
-      'repeating-linear-gradient(115deg, rgba(185,194,214,0.05) 0 2px, transparent 2px 9px),' +
-      'repeating-linear-gradient(25deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 14px)',
-    glow: 'rgba(206, 214, 232, 0.6)',
+      'repeating-conic-gradient(from 0deg, rgba(185,194,214,0.22) 0% 25%, transparent 0% 50%) 0 0/10px 10px,' +
+      ' repeating-conic-gradient(from 90deg, rgba(255,255,255,0.14) 0% 25%, transparent 0% 50%) 5px 5px/10px 10px',
+    glow: 'rgba(122, 145, 178, 0.55)',
   },
 
   // Casa de montaña — cálido-terroso: madera, piedra, lana.
@@ -35,11 +36,12 @@ export const ZONES = {
     icon: Mountain,
     accent: '#d8a673', // cálida, dentro del sistema
     accentSoft: 'rgba(216, 166, 115, 0.16)',
-    // Textura: veta de madera cálida en diagonal suave.
+    // Textura: dither de píxeles a cuadros, cálida, dos capas desfasadas que
+    // forman una trama de 4 tonos (estilo 8-bit).
     texture:
-      'repeating-linear-gradient(50deg, rgba(216,166,115,0.06) 0 3px, transparent 3px 11px),' +
-      'repeating-linear-gradient(50deg, rgba(120,72,40,0.05) 0 1px, transparent 1px 22px)',
-    glow: 'rgba(230, 184, 130, 0.62)',
+      'repeating-conic-gradient(from 0deg, rgba(216,166,115,0.26) 0% 25%, transparent 0% 50%) 0 0/10px 10px,' +
+      ' repeating-conic-gradient(from 90deg, rgba(120,72,40,0.14) 0% 25%, transparent 0% 50%) 5px 5px/10px 10px',
+    glow: 'rgba(160, 125, 60, 0.55)',
   },
 }
 

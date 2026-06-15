@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
 /* ───────────────────────────────────────────────────────────────────────────
-   Sistema de diseño "Botanica at Dusk"
-   Fondos profundos en ciruela/plum · cremas y dorados cálidos como acento ·
-   verde sage para el éxito · rosa polvoriento para el error. Tipografía con
-   carácter: serif editorial (Cormorant Garamond) para títulos + sans limpio
-   (Inter) para la interfaz.
+   Sistema de diseño "Botanica at Dawn"
+   Fondos cálidos en crema/marfil · ciruela oscuro como tinta de texto ·
+   dorado como acento principal · verde sage para el éxito · rosa
+   polvoriento para el error. Tipografía con carácter: serif editorial
+   (Cormorant Garamond) para títulos + sans limpio (Inter) para la interfaz.
    ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* Ciruela / plum: del más profundo (fondo) al más claro (superficies). */
+  /* Ciruela / plum: escala de tinta/texto, del más oscuro al más suave. */
   --color-plum-950: #160d18;
   --color-plum-900: #1e1322;
   --color-plum-850: #271829;
@@ -17,10 +17,13 @@
   --color-plum-600: #5a3d5f;
   --color-plum-500: #74527a;
 
-  /* Crema: texto y superficies cálidas. */
-  --color-cream: #f4ebdc;
-  --color-cream-soft: #ddccb4;
-  --color-cream-dim: #b6a288;
+  /* Crema: escala de fondo/superficie, del más claro al más cálido. */
+  --color-cream-50: #fbf6ee;
+  --color-cream-100: #f4ebdc;
+  --color-cream-200: #ecdfc9;
+  --color-cream-300: #ddccb4;
+  --color-cream-400: #cdb89a;
+  --color-cream-500: #b6a288;
 
   /* Dorado: acento principal. */
   --color-gold: #cba35c;
@@ -36,6 +39,8 @@
   /* Tipografía. */
   --font-serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Tipografía pixel: solo para etiquetas del tablero (rótulos, coordenadas). */
+  --font-pixel: 'VT323', 'Courier New', monospace;
 }
 
 @layer base {
@@ -46,11 +51,11 @@
   }
 
   body {
-    @apply bg-plum-950 font-sans text-cream antialiased;
+    @apply bg-cream-50 font-sans text-plum-900 antialiased;
     background-image:
-      radial-gradient(900px 520px at 78% -12%, rgba(203, 163, 92, 0.1), transparent 70%),
-      radial-gradient(720px 420px at 4% 112%, rgba(164, 182, 130, 0.07), transparent 70%),
-      radial-gradient(620px 620px at 50% 50%, rgba(90, 61, 95, 0.18), transparent 75%);
+      radial-gradient(900px 520px at 78% -12%, rgba(203, 163, 92, 0.14), transparent 70%),
+      radial-gradient(720px 420px at 4% 112%, rgba(164, 182, 130, 0.1), transparent 70%),
+      radial-gradient(620px 620px at 50% 50%, rgba(90, 61, 95, 0.06), transparent 75%);
     background-attachment: fixed;
   }
 
@@ -61,8 +66,8 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.4;
-    mix-blend-mode: soft-light;
+    opacity: 0.12;
+    mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
@@ -80,7 +85,7 @@
 
   /* Foco visible y coherente (dorado) en todo elemento interactivo. */
   :focus-visible {
-    outline: 2px solid var(--color-gold-soft);
+    outline: 2px solid var(--color-gold-deep);
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -89,12 +94,27 @@
 @layer utilities {
   /* Borde dorado tenue reutilizable para superficies "tarjeta". */
   .ring-botanica {
-    box-shadow: inset 0 0 0 1px rgba(203, 163, 92, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(160, 125, 60, 0.3);
   }
 
   /* Capitular/etiqueta editorial en versalitas. */
   .eyebrow {
-    @apply font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-gold/80;
+    @apply font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-deep/85;
+  }
+
+  /* Tipografía retro para rótulos del tablero (habitaciones, coordenadas). */
+  .font-pixel {
+    font-family: var(--font-pixel);
+    letter-spacing: 0.04em;
+  }
+
+  /* Marco "pixel art" a modo de bisel de consola retro, para el tablero. */
+  .pixel-frame {
+    box-shadow:
+      inset 0 0 0 3px var(--color-cream-50),
+      inset 0 0 0 6px var(--color-gold-deep),
+      inset 0 0 0 7px rgba(30, 19, 34, 0.3),
+      0 14px 32px -12px rgba(30, 19, 34, 0.35);
   }
 }
 

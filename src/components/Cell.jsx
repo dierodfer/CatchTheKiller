@@ -8,20 +8,29 @@
 import { memo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
-import { X } from 'lucide-react'
-import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
+import { FurnitureIcon } from './Furniture.jsx'
 import { DraggableToken, TokenChip } from './CharacterToken.jsx'
+import { RUG_PATTERN, RUG_NOISE, RUG_NOISE_SIZE } from './rugPattern.js'
+import { PixelGrid } from './pixelArt.jsx'
+import { PIXEL_X_GRID, PIXEL_X_PALETTE, PIXEL_FLOOR_PATTERN } from './pixelSprites.js'
 
-// Posición del icono de ventana, anclado a la pared correspondiente.
-const WALL_POSITION = {
-  norte: 'top-0.5 left-1/2 -translate-x-1/2',
-  sur: 'bottom-0.5 left-1/2 -translate-x-1/2',
-  oeste: 'left-0.5 top-1/2 -translate-y-1/2',
-  este: 'right-0.5 top-1/2 -translate-y-1/2',
+// Ventana integrada en la pared: el lado correspondiente del marco se marca en
+// azul (estilo plano técnico) y se añade un cristal claro junto a él.
+const WINDOW_BORDER_SIDE = {
+  norte: 'borderTop',
+  sur: 'borderBottom',
+  oeste: 'borderLeft',
+  este: 'borderRight',
 }
 
-const RUG_PATTERN =
-  'repeating-linear-gradient(45deg, rgba(203,163,92,0.42) 0 6px, rgba(116,82,122,0.42) 6px 12px)'
+const WINDOW_BORDER = '5px solid #6f9bc9'
+
+const WINDOW_GLASS_POSITION = {
+  norte: 'left-2 right-2 top-0.5 h-0.5',
+  sur: 'left-2 right-2 bottom-0.5 h-0.5',
+  oeste: 'top-2 bottom-2 left-0.5 w-0.5',
+  este: 'top-2 bottom-2 right-0.5 w-0.5',
+}
 
 function Cell({
   geometry,
@@ -33,7 +42,6 @@ function Cell({
   onCellClick,
   onTokenClick,
   revealMode,
-  windowColor = '#b9c2d6',
 }) {
   const { r, c, size, tint, borders, label, furniture, isWindow, wall, rugEdges, occupiable } =
     geometry
@@ -56,65 +64,94 @@ function Cell({
       style={{
         width: size,
         height: size,
-        background: revealCell ? 'rgba(203,163,92,0.20)' : tint,
+        background: revealCell ? 'rgba(203,163,92,0.30)' : tint,
         borderTop: borders.top,
         borderRight: borders.right,
         borderBottom: borders.bottom,
         borderLeft: borders.left,
+        ...(isWindow && wall ? { [WINDOW_BORDER_SIDE[wall]]: WINDOW_BORDER } : null),
         cursor: occupiable && selectedToken && !occupantName ? 'pointer' : 'default',
         outline: canDrop ? '2px solid rgba(255,255,255,0.7)' : 'none',
         outlineOffset: -2,
       }}
     >
+      {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: PIXEL_FLOOR_PATTERN,
+          backgroundSize: `${Math.max(4, Math.round(size / 4))}px ${Math.max(4, Math.round(size / 4))}px`,
+          mixBlendMode: 'soft-light',
+          opacity: 0.55,
+        }}
+      />
+
       {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
-        <span className="pointer-events-none absolute left-1 top-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-cream-soft/75">
+        <span className="pointer-events-none absolute left-1 top-0.5 font-pixel text-[12px] font-semibold uppercase tracking-[0.08em] text-plum-700/80">
           {label}
         </span>
       )}
 
       {/* Alfombra: relleno de fondo, puede abarcar varias celdas contiguas. */}
       {furniture === 'alfombra' && rugEdges && (
-        <div
-          className="pointer-events-none absolute"
-          style={{
-            top: rugEdges.top ? margin : 0,
-            right: rugEdges.right ? margin : 0,
-            bottom: rugEdges.bottom ? margin : 0,
-            left: rugEdges.left ? margin : 0,
-            borderTopLeftRadius: rugEdges.top && rugEdges.left ? 8 : 0,
-            borderTopRightRadius: rugEdges.top && rugEdges.right ? 8 : 0,
-            borderBottomLeftRadius: rugEdges.bottom && rugEdges.left ? 8 : 0,
-            borderBottomRightRadius: rugEdges.bottom && rugEdges.right ? 8 : 0,
-            background: RUG_PATTERN,
-            opacity: 0.85,
-          }}
-        />
+        <>
+          <div
+            className="pointer-events-none absolute"
+            style={{
+              top: rugEdges.top ? margin : 0,
+              right: rugEdges.right ? margin : 0,
+              bottom: rugEdges.bottom ? margin : 0,
+              left: rugEdges.left ? margin : 0,
+              borderTopLeftRadius: rugEdges.top && rugEdges.left ? 8 : 0,
+              borderTopRightRadius: rugEdges.top && rugEdges.right ? 8 : 0,
+              borderBottomLeftRadius: rugEdges.bottom && rugEdges.left ? 8 : 0,
+              borderBottomRightRadius: rugEdges.bottom && rugEdges.right ? 8 : 0,
+              background: RUG_PATTERN,
+              opacity: 0.85,
+            }}
+          />
+          <div
+            className="pointer-events-none absolute"
+            style={{
+              top: rugEdges.top ? margin : 0,
+              right: rugEdges.right ? margin : 0,
+              bottom: rugEdges.bottom ? margin : 0,
+              left: rugEdges.left ? margin : 0,
+              borderTopLeftRadius: rugEdges.top && rugEdges.left ? 8 : 0,
+              borderTopRightRadius: rugEdges.top && rugEdges.right ? 8 : 0,
+              borderBottomLeftRadius: rugEdges.bottom && rugEdges.left ? 8 : 0,
+              borderBottomRightRadius: rugEdges.bottom && rugEdges.right ? 8 : 0,
+              backgroundImage: RUG_NOISE,
+              backgroundSize: RUG_NOISE_SIZE,
+              mixBlendMode: 'soft-light',
+              opacity: 0.25,
+            }}
+          />
+        </>
       )}
 
       {/* Mobiliario (excepto alfombra), oculto si hay una ficha encima. */}
       {!occupantName && furniture && furniture !== 'alfombra' && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-75">
-          <FurnitureIcon type={furniture} size={Math.round(size * 0.42)} className="text-cream-soft/80" />
+          <FurnitureIcon type={furniture} size={Math.round(size * 0.42)} className="text-plum-700/70" />
         </div>
       )}
 
-      {/* Ventana: icono anclado a la pared, visible aunque haya una ficha. */}
-      {isWindow && (
+      {/* Ventana: cristal claro junto al tramo de pared marcado en azul. */}
+      {isWindow && wall && (
         <div
-          className={`pointer-events-none absolute ${WALL_POSITION[wall] || ''}`}
-          style={{ color: windowColor }}
-        >
-          <WindowIcon size={Math.round(size * 0.34)} className="opacity-85" />
-        </div>
+          className={`pointer-events-none absolute rounded-full bg-[#eaf3fb] ${WINDOW_GLASS_POSITION[wall]}`}
+        />
       )}
 
       {/* Marca × de línea de control. */}
       {controlled && !occupantName && (
-        <X
+        <PixelGrid
+          grid={PIXEL_X_GRID}
+          palette={PIXEL_X_PALETTE}
           size={Math.round(size * 0.7)}
-          className="pointer-events-none absolute text-cream/15"
-          strokeWidth={1.5}
+          className="pointer-events-none absolute"
         />
       )}
 
@@ -126,7 +163,7 @@ function Cell({
               name={occupantName}
               characters={characters}
               size={tokenSize}
-              highlight={revealCell ? '#e2c98f' : undefined}
+              highlight={revealCell ? '#a07d3c' : undefined}
             />
           ) : (
             <DraggableToken

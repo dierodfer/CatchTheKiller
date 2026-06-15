@@ -1,7 +1,7 @@
 // Generación local del mapa (sección 11 del documento).
 // Orden: cuadrícula -> habitaciones irregulares -> mobiliario -> ventanas -> validación.
 
-import { BLOCKING_FURNITURE, ROOM_NAMES, ADJACENT } from './constants.js'
+import { BLOCKING_FURNITURE, FREE_FURNITURE, ROOM_NAMES, ADJACENT } from './constants.js'
 import { randInt, pick, shuffle } from './random.js'
 
 const WALL_BY_BORDER = (size) => (r, c) => {
@@ -109,7 +109,7 @@ export function generateMap(rng, config) {
       grid[r][c] = pick(rng, BLOCKING_FURNITURE)
     }
 
-    // Mobiliario libre (silla) sobre celdas aún libres.
+    // Mobiliario libre (silla, cama) sobre celdas aún libres.
     const stillFree = []
     for (let r = 0; r < size; r++)
       for (let c = 0; c < size; c++) if (grid[r][c] === null) stillFree.push([r, c])
@@ -119,15 +119,22 @@ export function generateMap(rng, config) {
       const [r, c] = shuffledFree[i]
       grid[r][c] = 'silla'
     }
+    const numBeds = randInt(rng, 1, 2)
+    for (let i = numChairs; i < numChairs + numBeds && i < shuffledFree.length; i++) {
+      const [r, c] = shuffledFree[i]
+      grid[r][c] = 'cama'
+    }
 
     // Alfombra: una región rectangular contigua de 2 a 6 celdas, sin cruzar
     // entre habitaciones.
     placeRug(rng, grid, size, rooms)
 
-    // Ventanas sobre celdas de borde libres (ahora son ocupables).
+    // Ventanas sobre celdas de borde libres (ahora son ocupables). Cuanto
+    // mayor el mapa, más ventanas mínimas (entre 2 y 4).
     const wallOf = WALL_BY_BORDER(size)
     const freeBorder = shuffle(rng, borderCells).filter(([r, c]) => grid[r][c] === null)
-    const numWindows = randInt(rng, 1, 2)
+    const minWindows = Math.min(2 + Math.max(0, size - 4), 4)
+    const numWindows = randInt(rng, minWindows, 4)
     for (let i = 0; i < numWindows && i < freeBorder.length; i++) {
       const [r, c] = freeBorder[i]
       windows.push({ row: r, col: c, wall: wallOf(r, c) })
@@ -160,7 +167,7 @@ export function freeCells(map) {
 // junto a la pared, frente a la ventana.
 export function isOccupiable(map, r, c) {
   const v = map.grid[r][c]
-  return v === null || v === 'silla' || v === 'alfombra'
+  return v === null || FREE_FURNITURE.includes(v)
 }
 
 // Coloca una alfombra rectangular (2 a 6 celdas) sobre celdas libres de una

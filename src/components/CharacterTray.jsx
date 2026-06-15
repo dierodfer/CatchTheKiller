@@ -13,7 +13,7 @@ export default function CharacterTray({ characters, placements, selectedToken, o
   return (
     <div
       ref={setNodeRef}
-      className="rounded-2xl border border-gold/12 bg-plum-850/60 p-3 ring-botanica transition-colors"
+      className="rounded-2xl border border-gold/12 bg-cream-100/80 p-3 ring-botanica transition-colors"
       style={{ outline: isOver ? '2px dashed rgba(203,163,92,0.5)' : 'none', outlineOffset: -4 }}
     >
       <h3 className="eyebrow mb-2.5">Personajes ({unplaced.length})</h3>
@@ -38,7 +38,7 @@ export default function CharacterTray({ characters, placements, selectedToken, o
           ))}
         </AnimatePresence>
         {unplaced.length === 0 && (
-          <p className="font-serif text-base italic text-cream-dim">
+          <p className="font-serif text-base italic text-plum-600">
             Todos los personajes están en la escena.
           </p>
         )}

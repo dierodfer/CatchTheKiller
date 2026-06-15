@@ -18,7 +18,6 @@ const initialState = {
   difficulty: 'facil',
   puzzle: null,
   placements: {}, // { nombre: { row, col } } colocados por el jugador
-  usedClues: {}, // { clueIndex: true } marcadas como usadas
   result: null,
   error: null,
 }
@@ -57,12 +56,6 @@ function reducer(state, action) {
       const placements = { ...state.placements }
       delete placements[action.name]
       return { ...state, placements, result: null }
-    }
-
-    case 'TOGGLE_CLUE': {
-      const usedClues = { ...state.usedClues }
-      usedClues[action.index] = !usedClues[action.index]
-      return { ...state, usedClues }
     }
 
     case 'CHECK':
@@ -128,7 +121,6 @@ export function useGame() {
 
   const place = useCallback((name, row, col) => dispatch({ type: 'PLACE', name, row, col }), [])
   const unplace = useCallback((name) => dispatch({ type: 'UNPLACE', name }), [])
-  const toggleClue = useCallback((index) => dispatch({ type: 'TOGGLE_CLUE', index }), [])
 
   const check = useCallback(() => {
     const { puzzle, placements } = state
@@ -152,7 +144,6 @@ export function useGame() {
     generate,
     place,
     unplace,
-    toggleClue,
     check,
     reveal,
     backToPlay,

@@ -16,7 +16,7 @@ import { solve } from './solver.js'
 import { freeCells } from './mapGenerator.js'
 import { shuffle, pick } from './random.js'
 
-const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'planta', 'ventana']
+const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'planta', 'ventana', 'silla', 'alfombra', 'cama']
 
 // Orden de preferencia para sembrar pistas iniciales (más específicas primero).
 const SEED_PREFERENCE = [
@@ -27,6 +27,7 @@ const SEED_PREFERENCE = [
   'nextToFurniture',
   'onChair',
   'onRug',
+  'onBed',
   'rowAbove',
   'rowBelow',
   'inCorner',
@@ -88,6 +89,7 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('notNextToFurniture', {})
   add('onChair', {})
   add('onRug', {})
+  add('onBed', {})
 
   // Absolutas
   add('inRow', { row: pos.row })
