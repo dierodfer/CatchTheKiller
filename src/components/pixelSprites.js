@@ -14,20 +14,22 @@ export const FACE_GRID = [
   [0, 0, 1, 1, 1, 1, 0, 0],
 ]
 
-// Retrato de la víctima: calavera con cuencas oculares amplias, cavidad nasal
-// y dentadura marcada, para distinguirla con claridad de un sospechoso.
-export const SKULL_GRID = [
+// Retrato de la víctima: mismo encuadre que un sospechoso, pero revelado en
+// gris con grano de píxeles — efecto de "foto" sin color, para distinguirla
+// de un vistazo sin depender de una forma concreta.
+export const VICTIM_GRID = [
   [0, 0, 1, 1, 1, 1, 0, 0],
-  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 4, 2, 2, 4, 1, 0],
   [1, 2, 2, 2, 2, 2, 2, 1],
-  [1, 2, 3, 3, 2, 3, 3, 1],
-  [1, 2, 2, 3, 3, 2, 2, 1],
-  [1, 2, 3, 2, 3, 2, 3, 1],
-  [0, 1, 1, 1, 1, 1, 1, 0],
+  [1, 2, 3, 2, 2, 3, 2, 1],
+  [1, 4, 2, 2, 2, 2, 4, 1],
+  [1, 2, 3, 3, 3, 3, 2, 1],
+  [0, 1, 2, 4, 4, 2, 1, 0],
   [0, 0, 1, 1, 1, 1, 0, 0],
 ]
 
 export const AVATAR_OUTLINE = '#1e1322'
+export const VICTIM_PALETTE = { 1: AVATAR_OUTLINE, 2: '#9a93a0', 3: AVATAR_OUTLINE, 4: '#6c6571' }
 
 // Mobiliario: sprites 8×8 con paleta propia (tonos del sistema Botanica).
 const MESA_GRID = [
