@@ -11,7 +11,7 @@ import { ROOM_TINTS } from '@/components/palette.js'
 import { controlLineCells } from '@/game/killerRule.js'
 import { isOccupiable } from '@/game/mapGenerator.js'
 
-const CELL_SIZE = { 4: 80, 5: 68, 6: 58, 7: 50 }
+const CELL_SIZE = { 4: 112, 5: 94, 6: 78, 7: 66 }
 // Muros de habitación: trazo sólido y grueso (estilo pixel art); divisiones
 // interiores apenas visibles, como líneas de rejilla. El borde exterior del
 // tablero es algo más grueso para enmarcar el conjunto.
@@ -29,7 +29,7 @@ export function useBoardGeometry({
   solution,
 }) {
   const size = map.gridSize
-  const cellSize = CELL_SIZE[size] || 64
+  const cellSize = CELL_SIZE[size] || 80
 
   const cellGeometry = useMemo(() => {
     const windowByCell = {}

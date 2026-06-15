@@ -1,7 +1,7 @@
 // Catálogo central de constantes del juego.
 
 // Mobiliario que bloquea la celda: ningún personaje puede colocarse encima.
-export const BLOCKING_FURNITURE = ['mesa', 'TV', 'planta']
+export const BLOCKING_FURNITURE = ['mesa', 'TV', 'planta', 'estantería']
 
 // Mobiliario "libre": un personaje puede ocupar la celda igualmente.
 export const FREE_FURNITURE = ['silla', 'alfombra', 'cama']

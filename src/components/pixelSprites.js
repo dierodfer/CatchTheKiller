@@ -65,34 +65,50 @@ const PLANTA_GRID = [
   [0, 3, 3, 3, 3, 3, 3, 0],
 ]
 
+// Silla: butaca de frente con respaldo, cojín y reposabrazos.
 const SILLA_GRID = [
-  [1, 1, 1, 1, 1, 1, 1, 0],
-  [1, 2, 2, 2, 2, 2, 1, 0],
-  [1, 2, 0, 0, 0, 2, 1, 0],
+  [0, 1, 1, 1, 1, 1, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 2, 2, 2, 1, 0],
+  [1, 1, 2, 2, 2, 2, 1, 1],
+  [1, 2, 2, 2, 2, 2, 2, 1],
   [1, 1, 1, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 2, 2],
-  [0, 0, 0, 0, 0, 0, 2, 2],
-  [0, 2, 0, 0, 0, 0, 2, 0],
-  [0, 2, 0, 0, 0, 0, 2, 0],
+  [0, 1, 0, 0, 0, 0, 1, 0],
+  [0, 1, 0, 0, 0, 0, 1, 0],
 ]
 
-// Cama: cabecero, almohada y colcha — un personaje puede acostarse encima.
+// Cama: vista de perfil con cabecero, almohada y colcha — un personaje puede
+// acostarse encima.
 const CAMA_GRID = [
+  [1, 1, 0, 0, 0, 0, 0, 0],
+  [1, 1, 0, 0, 0, 0, 0, 0],
+  [1, 1, 2, 2, 0, 0, 0, 0],
+  [1, 1, 2, 2, 3, 3, 3, 3],
+  [1, 1, 3, 3, 3, 3, 3, 3],
   [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 2, 2, 0, 0, 2, 2, 1],
-  [1, 2, 2, 0, 0, 2, 2, 1],
+  [0, 1, 0, 0, 0, 0, 1, 0],
+  [0, 1, 0, 0, 0, 0, 1, 0],
+]
+
+// Estantería: mueble bloqueante (misma función que mesa/TV/planta), con baldas
+// y lomos de libros de colores.
+const ESTANTERIA_GRID = [
   [1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 3, 3, 3, 3, 3, 3, 1],
-  [1, 3, 3, 3, 3, 3, 3, 1],
-  [1, 3, 3, 3, 3, 3, 3, 1],
+  [1, 2, 3, 2, 3, 2, 3, 1],
+  [1, 2, 3, 2, 3, 2, 3, 1],
   [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 3, 2, 3, 2, 3, 2, 1],
+  [1, 3, 2, 3, 2, 3, 2, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [0, 1, 0, 0, 0, 0, 1, 0],
 ]
 
 export const FURNITURE_SPRITES = {
   mesa: { grid: MESA_GRID, palette: { 1: '#cba35c', 2: '#432c48' } },
   TV: { grid: TV_GRID, palette: { 1: '#321f37', 2: '#5a3d5f', 3: '#8bb0c9' } },
   planta: { grid: PLANTA_GRID, palette: { 1: '#7d9162', 2: '#a4b682', 3: '#cf9d87' } },
-  silla: { grid: SILLA_GRID, palette: { 1: '#a07d3c', 2: '#432c48' } },
+  estantería: { grid: ESTANTERIA_GRID, palette: { 1: '#a07d3c', 2: '#5a3d5f', 3: '#7d9162' } },
+  silla: { grid: SILLA_GRID, palette: { 1: '#5a3d5f', 2: '#c98f5a' } },
   cama: { grid: CAMA_GRID, palette: { 1: '#a07d3c', 2: '#fbf6ee', 3: '#cf93ab' } },
 }
 

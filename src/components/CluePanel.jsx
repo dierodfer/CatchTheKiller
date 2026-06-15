@@ -3,7 +3,7 @@
 // se agrupan en la misma nota (no se reparten en notas distintas). Es una
 // vista estática de consulta (no se marcan como "usadas").
 
-import { Pin, Quote } from 'lucide-react'
+import { Pin, Quote, Skull } from 'lucide-react'
 import { colorForCharacter } from './palette.js'
 import { PixelAvatar } from './pixelArt.jsx'
 
@@ -60,8 +60,14 @@ export default function CluePanel({ puzzle }) {
               </div>
               <div className="text-[15px] leading-snug text-plum-800">
                 <span className="font-semibold" style={{ color: color.bg }}>
-                  {subject}:
-                </span>{' '}
+                  {subject}
+                </span>
+                {isVictim && (
+                  <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-plum-900 px-1.5 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-cream-50">
+                    <Skull size={9} /> Víctima
+                  </span>
+                )}
+                <span className="text-plum-500">:</span>{' '}
                 {texts.map((text, j) => (
                   <span key={j}>
                     {j > 0 && <span className="text-plum-500"> · </span>}«{text}»
