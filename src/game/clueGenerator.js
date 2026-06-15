@@ -16,7 +16,7 @@ import { solve } from './solver.js'
 import { freeCells } from './mapGenerator.js'
 import { shuffle, pick } from './random.js'
 
-const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'planta', 'ventana', 'silla', 'alfombra', 'cama']
+const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'planta', 'estantería', 'silla', 'alfombra', 'cama']
 
 // Orden de preferencia para sembrar pistas iniciales (más específicas primero).
 const SEED_PREFERENCE = [
@@ -25,6 +25,7 @@ const SEED_PREFERENCE = [
   'inRow',
   'inColumn',
   'nextToFurniture',
+  'nextToWindow',
   'onChair',
   'onRug',
   'onBed',
@@ -87,6 +88,7 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   // Proximidad a mobiliario
   for (const f of FURNITURE_FOR_PROXIMITY) add('nextToFurniture', { furniture: f })
   add('notNextToFurniture', {})
+  add('nextToWindow', {})
   add('onChair', {})
   add('onRug', {})
   add('onBed', {})
@@ -149,14 +151,13 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
     chosenIds.add(clueId(seed))
   }
 
-  // 3. Añadir pistas hasta lograr unicidad. Lo normal es 1-2 pistas por
-  // sujeto; una 3ª solo se permite como caso especial si no basta con 2, y
-  // sin límite como último recurso para no descartar un mapa/solución válidos.
+  // 3. Añadir pistas hasta lograr unicidad. El máximo es de 2 pistas por
+  // sujeto: si no se logra unicidad dentro de ese límite, se descarta este
+  // mapa/solución y el orquestador reintenta con otro.
   const CAP = 14
   const MAX_PER_SUBJECT = 2
-  const MAX_PER_SUBJECT_SPECIAL = 3
   const countForSubject = (subject) => chosen.filter((c) => c.subject === subject).length
-  const maxAdds = characters.suspects.length * 3 + 6
+  const maxAdds = characters.suspects.length * 2 + 4
 
   const addUntilUnique = (limits) => {
     let guard = 0
@@ -184,8 +185,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
     }
   }
 
-  addUntilUnique([MAX_PER_SUBJECT, MAX_PER_SUBJECT_SPECIAL])
-  if (count(chosen, 2) !== 1) addUntilUnique([Infinity])
+  addUntilUnique([MAX_PER_SUBJECT])
 
   if (count(chosen, 2) !== 1) return null
 

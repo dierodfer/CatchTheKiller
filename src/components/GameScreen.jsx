@@ -9,7 +9,6 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core'
-import { Skull } from 'lucide-react'
 import Board from './Board.jsx'
 import CharacterTray from './CharacterTray.jsx'
 import CluePanel from './CluePanel.jsx'
@@ -87,32 +86,26 @@ export default function GameScreen({ game }) {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-4 sm:py-6">
-      {/* Cabecera del caso. */}
-      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6">
+      {/* Cabecera del caso, centrada. */}
+      <header className="mb-6 flex flex-col items-center gap-2.5 text-center">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="" className="h-9 w-auto drop-shadow" />
-          <div>
-            <h1 className="font-serif text-2xl font-semibold leading-none text-plum-900">
-              Catch the Killer
-            </h1>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="rounded-full border border-gold/15 bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800">
-                {diff.label} · {puzzle.map.gridSize}×{puzzle.map.gridSize}
-              </span>
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800"
-                style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
-              >
-                <zone.icon size={11} style={{ color: zone.accent }} />
-                {zone.label}
-              </span>
-            </div>
-          </div>
+          <img src="/logo.png" alt="" className="h-10 w-auto drop-shadow" />
+          <h1 className="font-serif text-2xl font-semibold leading-none text-plum-900 sm:text-3xl">
+            Catch the Killer
+          </h1>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full border border-gold/15 bg-cream-100/80 px-3 py-1.5 text-sm text-plum-800">
-          <Skull size={15} className="text-plum-600" />
-          Víctima: <span className="font-semibold text-plum-900">{puzzle.characters.victim}</span>
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <span className="rounded-full border border-gold/15 bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800">
+            {diff.label} · {puzzle.map.gridSize}×{puzzle.map.gridSize}
+          </span>
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800"
+            style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
+          >
+            <zone.icon size={11} style={{ color: zone.accent }} />
+            {zone.label}
+          </span>
         </div>
       </header>
 
@@ -122,10 +115,10 @@ export default function GameScreen({ game }) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:justify-center">
           {/* Personajes + tablero. */}
-          <div className="flex justify-center lg:justify-start">
-            <div className="flex max-w-full flex-col gap-3 overflow-x-auto">
+          <div className="flex w-full justify-center lg:w-auto">
+            <div className="flex max-w-full flex-col items-center gap-3 overflow-x-auto">
               <CharacterTray
                 characters={puzzle.characters}
                 placements={placements}

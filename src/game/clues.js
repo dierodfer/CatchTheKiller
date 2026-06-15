@@ -152,22 +152,40 @@ export const CLUE_TYPES = {
   nextToFurniture: {
     tier: 'room',
     unary: true,
+    // Solo cuenta el mueble si está en la MISMA habitación que el personaje: una
+    // celda contigua puede pertenecer a otra habitación y su mobiliario no debe
+    // referenciarse ("estaba junto a la alfombra" siempre es de su propio cuarto).
     evaluate: (pos, p, _all, ctx) =>
-      adjacentHas(ctx, pos, (r, c) =>
-        p.furniture === 'ventana'
-          ? ctx.isWindow(r, c)
-          : ctx.furnitureAt(r, c) === p.furniture,
+      adjacentHas(
+        ctx,
+        pos,
+        (r, c) =>
+          ctx.furnitureAt(r, c) === p.furniture &&
+          ctx.roomAt(r, c) === ctx.roomAt(pos.row, pos.col),
       ),
-    text: (p) =>
-      p.furniture === 'ventana'
-        ? `Estaba junto a una ventana`
-        : `Estaba junto a una ${p.furniture === 'TV' ? 'TV' : p.furniture}`,
+    text: (p) => `Estaba junto a una ${p.furniture === 'TV' ? 'TV' : p.furniture}`,
+  },
+  // La ventana forma parte de la pared de su celda: estar "junto a la ventana"
+  // significa ocupar esa misma celda (no una contigua).
+  nextToWindow: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, _p, _all, ctx) => ctx.isWindow(pos.row, pos.col),
+    text: () => `Estaba junto a una ventana`,
   },
   notNextToFurniture: {
     tier: 'room',
     unary: true,
+    // Coherente con nextToFurniture: solo se consideran muebles de la misma
+    // habitación, así que el mobiliario de cuartos contiguos no invalida la pista.
     evaluate: (pos, _p, _all, ctx) =>
-      !adjacentHas(ctx, pos, (r, c) => FURNITURE.includes(ctx.furnitureAt(r, c))),
+      !adjacentHas(
+        ctx,
+        pos,
+        (r, c) =>
+          FURNITURE.includes(ctx.furnitureAt(r, c)) &&
+          ctx.roomAt(r, c) === ctx.roomAt(pos.row, pos.col),
+      ),
     text: () => `No estaba junto a ningún mueble`,
   },
   onChair: {
