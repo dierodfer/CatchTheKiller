@@ -24,7 +24,7 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
         className="w-full max-w-3xl text-center"
       >
         <img
-          src="/logo.png"
+          src={`${import.meta.env.BASE_URL}logo.png`}
           alt=""
           className="mx-auto mb-5 h-20 w-auto opacity-95 drop-shadow-[0_8px_24px_rgba(203,163,92,0.25)] sm:h-24"
         />
@@ -53,18 +53,18 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
         {/* Selector de dificultad: control deslizante continuo de Fácil a Experto. */}
         <div className="mt-8">
           <p className="eyebrow mb-3">Elige la dificultad</p>
-          <div className="rounded-2xl border border-gold/10 bg-cream-100/60 p-5 ring-botanica">
+          <div className="rounded-2xl border border-gold/10 bg-cream-100/60 p-6 ring-botanica sm:p-7">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-serif text-2xl font-semibold leading-none text-plum-900">
+              <span className="font-serif text-3xl font-semibold leading-none text-plum-900 sm:text-4xl">
                 {diff.label}
               </span>
-              <span className="text-[11px] font-medium text-plum-600">
+              <span className="text-sm font-medium text-plum-600">
                 {diff.numCharacters - 1} posibles asesinos · 1 muerto
               </span>
             </div>
 
             {/* Sospechosos: crecen en número según el nivel elegido. */}
-            <div className="my-3 flex min-h-[28px] flex-wrap items-center gap-1.5">
+            <div className="my-4 flex min-h-[36px] flex-wrap items-center gap-2">
               <AnimatePresence initial={false}>
                 {Array.from({ length: diff.numCharacters - 1 }, (_, i) => (
                   <motion.div
@@ -74,14 +74,14 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
                     exit={reduce ? undefined : { opacity: 0, scale: 0.4 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <PixelAvatar color={SUSPECT_COLORS[i % SUSPECT_COLORS.length].bg} size={26} />
+                    <PixelAvatar color={SUSPECT_COLORS[i % SUSPECT_COLORS.length].bg} size={34} />
                   </motion.div>
                 ))}
               </AnimatePresence>
-              <div className="mx-1 h-6 w-px shrink-0 bg-gold/20" aria-hidden />
-              <div className="flex items-center gap-1 text-plum-500">
-                <PixelAvatar isVictim size={26} />
-                <Skull size={13} />
+              <div className="mx-1.5 h-8 w-px shrink-0 bg-gold/20" aria-hidden />
+              <div className="flex items-center gap-1.5 text-plum-500">
+                <PixelAvatar isVictim size={34} />
+                <Skull size={16} />
               </div>
             </div>
 
@@ -92,10 +92,10 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
               step={1}
               value={levelIndex}
               onChange={(e) => onSelect(LEVELS[Number(e.target.value)].id)}
-              className="h-2 w-full cursor-pointer appearance-none rounded-full bg-cream-300 accent-gold-deep"
+              className="h-3 w-full cursor-pointer appearance-none rounded-full bg-cream-300 accent-gold-deep [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full"
               aria-label="Dificultad"
             />
-            <div className="mt-1.5 flex justify-between text-[11px] font-medium text-plum-600">
+            <div className="mt-2 flex justify-between text-sm font-medium text-plum-600">
               {LEVELS.map((d) => (
                 <span key={d.id} className={d.id === difficulty ? 'text-plum-900' : undefined}>
                   {d.label}
@@ -107,7 +107,7 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
 
         {/* Previsualización del mapa de la dificultad seleccionada. */}
         <div className="mt-7">
-          <p className="eyebrow mb-3">Así será el escenario · {diff.label}</p>
+          <p className="eyebrow mb-3">Así será el escenario</p>
           <MapPreview key={diff.id} difficulty={diff} />
         </div>
 
