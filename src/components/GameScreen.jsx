@@ -134,6 +134,7 @@ export default function GameScreen({ game }) {
                 revealMode={revealMode}
                 zone={zone}
                 celebrating={celebrating}
+                draggingName={activeId}
               />
             </div>
           </div>

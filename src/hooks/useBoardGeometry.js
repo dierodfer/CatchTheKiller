@@ -57,6 +57,7 @@ export function useBoardGeometry({
   killer,
   victim,
   solution,
+  draggingName,
 }) {
   const size = map.gridSize
   const viewportWidth = useViewportWidth()
@@ -133,14 +134,17 @@ export function useBoardGeometry({
     return grid
   }, [map, roomLookup, size, cellSize])
 
-  // Celdas bajo línea de control de cualquier ficha colocada.
+  // Celdas bajo línea de control de cualquier ficha colocada. La ficha que se
+  // está arrastrando no aporta su línea de control: al "levantarla" del
+  // tablero, sus marcas de control desaparecen mientras está en el aire.
   const controlled = useMemo(() => {
     const set = new Set()
     for (const name of Object.keys(placements)) {
+      if (name === draggingName) continue
       for (const [r, c] of controlLineCells(placements[name], size)) set.add(`${r},${c}`)
     }
     return set
-  }, [placements, size])
+  }, [placements, size, draggingName])
 
   // En la revelación, la habitación donde el asesino estaba a solas con la
   // víctima (resaltada para explicar visualmente la regla).
