@@ -21,7 +21,7 @@ const WALL_POSITION = {
 }
 
 const RUG_PATTERN =
-  'repeating-linear-gradient(45deg, rgba(217,119,6,0.45) 0 6px, rgba(120,53,15,0.45) 6px 12px)'
+  'repeating-linear-gradient(45deg, rgba(203,163,92,0.42) 0 6px, rgba(116,82,122,0.42) 6px 12px)'
 
 function Cell({
   geometry,
@@ -33,6 +33,7 @@ function Cell({
   onCellClick,
   onTokenClick,
   revealMode,
+  windowColor = '#b9c2d6',
 }) {
   const { r, c, size, tint, borders, label, furniture, isWindow, wall, rugEdges, occupiable } =
     geometry
@@ -49,12 +50,13 @@ function Cell({
   return (
     <div
       ref={setNodeRef}
+      data-rc={`${r}-${c}`}
       onClick={() => occupiable && onCellClick(r, c)}
       className="relative flex items-center justify-center"
       style={{
         width: size,
         height: size,
-        background: revealCell ? 'rgba(192,57,43,0.22)' : tint,
+        background: revealCell ? 'rgba(203,163,92,0.20)' : tint,
         borderTop: borders.top,
         borderRight: borders.right,
         borderBottom: borders.bottom,
@@ -66,7 +68,7 @@ function Cell({
     >
       {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
-        <span className="pointer-events-none absolute left-1 top-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-300/80">
+        <span className="pointer-events-none absolute left-1 top-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-cream-soft/75">
           {label}
         </span>
       )}
@@ -92,15 +94,18 @@ function Cell({
 
       {/* Mobiliario (excepto alfombra), oculto si hay una ficha encima. */}
       {!occupantName && furniture && furniture !== 'alfombra' && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-70">
-          <FurnitureIcon type={furniture} size={Math.round(size * 0.42)} className="text-slate-300/80" />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-75">
+          <FurnitureIcon type={furniture} size={Math.round(size * 0.42)} className="text-cream-soft/80" />
         </div>
       )}
 
       {/* Ventana: icono anclado a la pared, visible aunque haya una ficha. */}
       {isWindow && (
-        <div className={`pointer-events-none absolute ${WALL_POSITION[wall] || ''}`}>
-          <WindowIcon size={Math.round(size * 0.34)} className="text-sky-300/80" />
+        <div
+          className={`pointer-events-none absolute ${WALL_POSITION[wall] || ''}`}
+          style={{ color: windowColor }}
+        >
+          <WindowIcon size={Math.round(size * 0.34)} className="opacity-85" />
         </div>
       )}
 
@@ -108,7 +113,7 @@ function Cell({
       {controlled && !occupantName && (
         <X
           size={Math.round(size * 0.7)}
-          className="pointer-events-none absolute text-white/15"
+          className="pointer-events-none absolute text-cream/15"
           strokeWidth={1.5}
         />
       )}
@@ -121,7 +126,7 @@ function Cell({
               name={occupantName}
               characters={characters}
               size={tokenSize}
-              highlight={revealCell ? '#f59e0b' : undefined}
+              highlight={revealCell ? '#e2c98f' : undefined}
             />
           ) : (
             <DraggableToken

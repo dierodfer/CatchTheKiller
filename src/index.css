@@ -1,12 +1,41 @@
 @import 'tailwindcss';
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Sistema de diseño "Botanica at Dusk"
+   Fondos profundos en ciruela/plum · cremas y dorados cálidos como acento ·
+   verde sage para el éxito · rosa polvoriento para el error. Tipografía con
+   carácter: serif editorial (Cormorant Garamond) para títulos + sans limpio
+   (Inter) para la interfaz.
+   ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-ink-900: #0b0d12;
-  --color-ink-800: #12151c;
-  --color-ink-700: #1a1f29;
-  --color-ink-600: #252b38;
-  --color-ink-500: #333b4d;
-  --color-blood: #c0392b;
+  /* Ciruela / plum: del más profundo (fondo) al más claro (superficies). */
+  --color-plum-950: #160d18;
+  --color-plum-900: #1e1322;
+  --color-plum-850: #271829;
+  --color-plum-800: #321f37;
+  --color-plum-700: #432c48;
+  --color-plum-600: #5a3d5f;
+  --color-plum-500: #74527a;
+
+  /* Crema: texto y superficies cálidas. */
+  --color-cream: #f4ebdc;
+  --color-cream-soft: #ddccb4;
+  --color-cream-dim: #b6a288;
+
+  /* Dorado: acento principal. */
+  --color-gold: #cba35c;
+  --color-gold-soft: #e2c98f;
+  --color-gold-deep: #a07d3c;
+
+  /* Verde sage: éxito. Rosa polvoriento: error. */
+  --color-sage: #a4b682;
+  --color-sage-deep: #7d9162;
+  --color-rose: #d2a0a4;
+  --color-rose-deep: #b97a80;
+
+  /* Tipografía. */
+  --font-serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
@@ -15,11 +44,57 @@
   #root {
     height: 100%;
   }
+
   body {
-    @apply bg-ink-900 text-slate-100 antialiased;
+    @apply bg-plum-950 font-sans text-cream antialiased;
     background-image:
-      radial-gradient(800px 400px at 80% -10%, rgba(192, 57, 43, 0.12), transparent),
-      radial-gradient(600px 300px at 0% 110%, rgba(59, 130, 246, 0.08), transparent);
+      radial-gradient(900px 520px at 78% -12%, rgba(203, 163, 92, 0.1), transparent 70%),
+      radial-gradient(720px 420px at 4% 112%, rgba(164, 182, 130, 0.07), transparent 70%),
+      radial-gradient(620px 620px at 50% 50%, rgba(90, 61, 95, 0.18), transparent 75%);
+    background-attachment: fixed;
+  }
+
+  /* Grano sutil sobre todo el lienzo: tacto premium sin restar legibilidad. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Títulos: serif editorial por defecto. */
+  h1,
+  h2,
+  h3 {
+    @apply font-serif;
+  }
+
+  /* Foco visible y coherente (dorado) en todo elemento interactivo. */
+  :focus-visible {
+    outline: 2px solid var(--color-gold-soft);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer utilities {
+  /* Borde dorado tenue reutilizable para superficies "tarjeta". */
+  .ring-botanica {
+    box-shadow: inset 0 0 0 1px rgba(203, 163, 92, 0.16);
+  }
+
+  /* Capitular/etiqueta editorial en versalitas. */
+  .eyebrow {
+    @apply font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-gold/80;
   }
 }
 
@@ -27,4 +102,16 @@
 .no-select {
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Respeta la preferencia del sistema: reduce el movimiento de forma global. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

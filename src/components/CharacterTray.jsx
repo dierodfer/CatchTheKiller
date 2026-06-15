@@ -13,12 +13,10 @@ export default function CharacterTray({ characters, placements, selectedToken, o
   return (
     <div
       ref={setNodeRef}
-      className="rounded-xl bg-ink-800/70 p-3 ring-1 ring-white/5 transition-colors"
-      style={{ outline: isOver ? '2px dashed rgba(255,255,255,0.4)' : 'none', outlineOffset: -4 }}
+      className="rounded-2xl border border-gold/12 bg-plum-850/60 p-3 ring-botanica transition-colors"
+      style={{ outline: isOver ? '2px dashed rgba(203,163,92,0.5)' : 'none', outlineOffset: -4 }}
     >
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        Personajes ({unplaced.length})
-      </h3>
+      <h3 className="eyebrow mb-2.5">Personajes ({unplaced.length})</h3>
       <div className="flex min-h-[60px] flex-wrap items-start gap-3">
         <AnimatePresence>
           {unplaced.map((name) => (
@@ -40,7 +38,9 @@ export default function CharacterTray({ characters, placements, selectedToken, o
           ))}
         </AnimatePresence>
         {unplaced.length === 0 && (
-          <p className="text-sm text-slate-500">Todos los personajes están en el tablero.</p>
+          <p className="font-serif text-base italic text-cream-dim">
+            Todos los personajes están en la escena.
+          </p>
         )}
       </div>
     </div>
