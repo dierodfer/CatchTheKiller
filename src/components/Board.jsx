@@ -29,7 +29,7 @@ export default function Board({
   })
   const reduce = useReducedMotion()
 
-  const axisLabel = 'flex items-center justify-center text-[10px] font-semibold text-cream-dim/70'
+  const axisLabel = 'flex items-center justify-center text-[10px] font-semibold text-plum-600/70'
 
   // Cabecera: esquina vacía + número de cada columna.
   const header = (
@@ -77,7 +77,7 @@ export default function Board({
 
   // Celebración: la escena se ilumina habitación por habitación, trazando la
   // forma real de cada sala con un resplandor dorado escalonado.
-  const glowGold = zone?.glow || 'rgba(203, 163, 92, 0.32)'
+  const glowGold = zone?.glow || 'rgba(160, 125, 60, 0.35)'
   const celebrationLayer =
     celebrating && !reduce ? (
       <div className="pointer-events-none absolute inset-0" style={{ top: GUTTER }} aria-hidden>
@@ -92,7 +92,7 @@ export default function Board({
                 width: cellSize,
                 height: cellSize,
                 background: `radial-gradient(circle at 50% 50%, ${glowGold}, transparent 75%)`,
-                mixBlendMode: 'screen',
+                mixBlendMode: 'multiply',
               }}
               initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: [0, 1, 0.55], scale: [0.6, 1.12, 1] }}
@@ -104,12 +104,12 @@ export default function Board({
     ) : null
 
   return (
-    <div className="relative inline-block overflow-hidden rounded-2xl border border-gold/15 bg-plum-850/75 p-2.5 shadow-2xl ring-botanica">
+    <div className="relative inline-block overflow-hidden rounded-2xl border border-gold/15 bg-cream-100/75 p-2.5 shadow-2xl ring-botanica">
       {/* Textura ambiental propia de la zona. */}
       {zone && (
         <div
-          className="pointer-events-none absolute inset-0 opacity-80"
-          style={{ backgroundImage: zone.texture }}
+          className="pointer-events-none absolute inset-0 opacity-30"
+          style={{ backgroundImage: zone.texture, mixBlendMode: 'multiply' }}
           aria-hidden
         />
       )}

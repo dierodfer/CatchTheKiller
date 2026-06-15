@@ -4,7 +4,7 @@ import { Eye, Gavel, RotateCcw } from 'lucide-react'
 
 export default function Toolbar({ allPlaced, onCheck, onReveal, onNewGame }) {
   return (
-    <div className="rounded-2xl border border-gold/12 bg-plum-850/60 p-4 ring-botanica">
+    <div className="rounded-2xl border border-gold/12 bg-cream-100/80 p-4 ring-botanica">
       <div className="flex flex-wrap gap-2">
         <button
           onClick={onCheck}
@@ -15,20 +15,20 @@ export default function Toolbar({ allPlaced, onCheck, onReveal, onNewGame }) {
         </button>
         <button
           onClick={onReveal}
-          className="flex items-center justify-center gap-2 rounded-full border border-gold/20 bg-plum-700/50 px-4 py-2.5 text-sm font-medium text-cream-soft transition hover:bg-plum-600/60 hover:text-cream"
+          className="flex items-center justify-center gap-2 rounded-full border border-gold/20 bg-cream-200/70 px-4 py-2.5 text-sm font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
           <Eye size={16} /> Resolución
         </button>
         <button
           onClick={onNewGame}
-          className="flex items-center justify-center gap-2 rounded-full border border-gold/20 bg-plum-700/50 px-4 py-2.5 text-sm font-medium text-cream-soft transition hover:bg-plum-600/60 hover:text-cream"
+          className="flex items-center justify-center gap-2 rounded-full border border-gold/20 bg-cream-200/70 px-4 py-2.5 text-sm font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
           <RotateCcw size={16} /> Nuevo
         </button>
       </div>
 
       {!allPlaced && (
-        <p className="mt-2.5 font-serif text-[15px] italic text-cream-dim">
+        <p className="mt-2.5 font-serif text-[15px] italic text-plum-600">
           Coloca a todos los personajes para poder resolver.
         </p>
       )}

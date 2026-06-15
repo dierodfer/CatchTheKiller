@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
 import { DraggableToken, TokenChip } from './CharacterToken.jsx'
+import { RUG_PATTERN, RUG_NOISE } from './rugPattern.js'
 
 // Posición del icono de ventana, anclado a la pared correspondiente.
 const WALL_POSITION = {
@@ -19,9 +20,6 @@ const WALL_POSITION = {
   oeste: 'left-0.5 top-1/2 -translate-y-1/2',
   este: 'right-0.5 top-1/2 -translate-y-1/2',
 }
-
-const RUG_PATTERN =
-  'repeating-linear-gradient(45deg, rgba(203,163,92,0.42) 0 6px, rgba(116,82,122,0.42) 6px 12px)'
 
 function Cell({
   geometry,
@@ -56,7 +54,7 @@ function Cell({
       style={{
         width: size,
         height: size,
-        background: revealCell ? 'rgba(203,163,92,0.20)' : tint,
+        background: revealCell ? 'rgba(203,163,92,0.30)' : tint,
         borderTop: borders.top,
         borderRight: borders.right,
         borderBottom: borders.bottom,
@@ -68,34 +66,52 @@ function Cell({
     >
       {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
-        <span className="pointer-events-none absolute left-1 top-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-cream-soft/75">
+        <span className="pointer-events-none absolute left-1 top-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-plum-700/75">
           {label}
         </span>
       )}
 
       {/* Alfombra: relleno de fondo, puede abarcar varias celdas contiguas. */}
       {furniture === 'alfombra' && rugEdges && (
-        <div
-          className="pointer-events-none absolute"
-          style={{
-            top: rugEdges.top ? margin : 0,
-            right: rugEdges.right ? margin : 0,
-            bottom: rugEdges.bottom ? margin : 0,
-            left: rugEdges.left ? margin : 0,
-            borderTopLeftRadius: rugEdges.top && rugEdges.left ? 8 : 0,
-            borderTopRightRadius: rugEdges.top && rugEdges.right ? 8 : 0,
-            borderBottomLeftRadius: rugEdges.bottom && rugEdges.left ? 8 : 0,
-            borderBottomRightRadius: rugEdges.bottom && rugEdges.right ? 8 : 0,
-            background: RUG_PATTERN,
-            opacity: 0.85,
-          }}
-        />
+        <>
+          <div
+            className="pointer-events-none absolute"
+            style={{
+              top: rugEdges.top ? margin : 0,
+              right: rugEdges.right ? margin : 0,
+              bottom: rugEdges.bottom ? margin : 0,
+              left: rugEdges.left ? margin : 0,
+              borderTopLeftRadius: rugEdges.top && rugEdges.left ? 8 : 0,
+              borderTopRightRadius: rugEdges.top && rugEdges.right ? 8 : 0,
+              borderBottomLeftRadius: rugEdges.bottom && rugEdges.left ? 8 : 0,
+              borderBottomRightRadius: rugEdges.bottom && rugEdges.right ? 8 : 0,
+              background: RUG_PATTERN,
+              opacity: 0.85,
+            }}
+          />
+          <div
+            className="pointer-events-none absolute"
+            style={{
+              top: rugEdges.top ? margin : 0,
+              right: rugEdges.right ? margin : 0,
+              bottom: rugEdges.bottom ? margin : 0,
+              left: rugEdges.left ? margin : 0,
+              borderTopLeftRadius: rugEdges.top && rugEdges.left ? 8 : 0,
+              borderTopRightRadius: rugEdges.top && rugEdges.right ? 8 : 0,
+              borderBottomLeftRadius: rugEdges.bottom && rugEdges.left ? 8 : 0,
+              borderBottomRightRadius: rugEdges.bottom && rugEdges.right ? 8 : 0,
+              backgroundImage: RUG_NOISE,
+              mixBlendMode: 'soft-light',
+              opacity: 0.25,
+            }}
+          />
+        </>
       )}
 
       {/* Mobiliario (excepto alfombra), oculto si hay una ficha encima. */}
       {!occupantName && furniture && furniture !== 'alfombra' && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-75">
-          <FurnitureIcon type={furniture} size={Math.round(size * 0.42)} className="text-cream-soft/80" />
+          <FurnitureIcon type={furniture} size={Math.round(size * 0.42)} className="text-plum-700/70" />
         </div>
       )}
 
@@ -113,7 +129,7 @@ function Cell({
       {controlled && !occupantName && (
         <X
           size={Math.round(size * 0.7)}
-          className="pointer-events-none absolute text-cream/15"
+          className="pointer-events-none absolute text-plum-900/12"
           strokeWidth={1.5}
         />
       )}
@@ -126,7 +142,7 @@ function Cell({
               name={occupantName}
               characters={characters}
               size={tokenSize}
-              highlight={revealCell ? '#e2c98f' : undefined}
+              highlight={revealCell ? '#a07d3c' : undefined}
             />
           ) : (
             <DraggableToken

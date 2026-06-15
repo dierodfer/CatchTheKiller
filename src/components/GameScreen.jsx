@@ -93,15 +93,15 @@ export default function GameScreen({ game }) {
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="" className="h-9 w-auto drop-shadow" />
           <div>
-            <h1 className="font-serif text-2xl font-semibold leading-none text-cream">
+            <h1 className="font-serif text-2xl font-semibold leading-none text-plum-900">
               Catch the Killer
             </h1>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="rounded-full border border-gold/15 bg-plum-800/70 px-2 py-0.5 text-[11px] font-medium text-cream-soft">
+              <span className="rounded-full border border-gold/15 bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800">
                 {diff.label} · {puzzle.map.gridSize}×{puzzle.map.gridSize}
               </span>
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-plum-800/70 px-2 py-0.5 text-[11px] font-medium text-cream-soft"
+                className="inline-flex items-center gap-1 rounded-full bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800"
                 style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
               >
                 <zone.icon size={11} style={{ color: zone.accent }} />
@@ -110,9 +110,9 @@ export default function GameScreen({ game }) {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full border border-gold/15 bg-plum-850/60 px-3 py-1.5 text-sm text-cream-soft">
-          <Skull size={15} className="text-cream-dim" />
-          Víctima: <span className="font-semibold text-cream">{puzzle.characters.victim}</span>
+        <div className="flex items-center gap-1.5 rounded-full border border-gold/15 bg-cream-100/80 px-3 py-1.5 text-sm text-plum-800">
+          <Skull size={15} className="text-plum-600" />
+          Víctima: <span className="font-semibold text-plum-900">{puzzle.characters.victim}</span>
         </div>
       </header>
 

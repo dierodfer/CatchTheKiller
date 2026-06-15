@@ -18,18 +18,19 @@ export const SUSPECT_COLORS = [
 export const VICTIM_COLOR = { bg: '#e6d2a0', ring: '#f2e4c2', name: 'dorado' }
 
 // Tintes suaves para habitaciones (se ciclan). Lavados translúcidos en la
-// familia ciruela/dorado/sage/rosa para mantener la cohesión.
+// familia ciruela/dorado/sage/rosa, con hues bien diferenciados entre sí
+// para que cada habitación se distinga sobre el fondo claro del tablero.
 export const ROOM_TINTS = [
-  'rgba(203, 163, 92, 0.09)',
-  'rgba(164, 182, 130, 0.09)',
-  'rgba(207, 147, 171, 0.09)',
-  'rgba(169, 139, 201, 0.08)',
-  'rgba(139, 176, 201, 0.08)',
-  'rgba(216, 166, 115, 0.09)',
-  'rgba(210, 160, 164, 0.08)',
-  'rgba(159, 192, 138, 0.08)',
-  'rgba(226, 201, 143, 0.08)',
-  'rgba(116, 82, 122, 0.14)',
+  'rgba(203, 163, 92, 0.16)', // dorado
+  'rgba(125, 145, 98, 0.16)', // sage profundo
+  'rgba(207, 147, 171, 0.15)', // rosa malva
+  'rgba(169, 139, 201, 0.15)', // amatista
+  'rgba(139, 176, 201, 0.15)', // azul niebla
+  'rgba(216, 166, 115, 0.17)', // terracota
+  'rgba(160, 125, 60, 0.14)', // dorado profundo
+  'rgba(159, 192, 138, 0.16)', // sage claro
+  'rgba(116, 82, 122, 0.15)', // ciruela suave
+  'rgba(185, 122, 128, 0.16)', // rosa profundo
 ]
 
 export function colorForCharacter(name, characters) {

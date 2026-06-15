@@ -34,7 +34,7 @@ export function TokenChip({ name, characters, size = 40, dimmed = false, highlig
           />
         )}
       </div>
-      <span className="max-w-[72px] truncate text-[11px] font-medium text-cream-soft">
+      <span className="max-w-[72px] truncate text-[11px] font-medium text-plum-800">
         {name}
       </span>
     </div>
@@ -44,21 +44,20 @@ export function TokenChip({ name, characters, size = 40, dimmed = false, highlig
 // Ficha arrastrable; también admite click (seleccionar / recoger).
 export function DraggableToken({ name, characters, size, onClick, selected }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: name })
-  const color = colorForCharacter(name, characters)
   return (
     <button
       ref={setNodeRef}
       {...listeners}
       {...attributes}
       onClick={onClick}
-      className="rounded-lg outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-gold-soft"
+      className="rounded-lg outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-gold-deep"
       style={{ touchAction: 'none', cursor: 'grab', opacity: isDragging ? 0 : 1 }}
     >
       <TokenChip
         name={name}
         characters={characters}
         size={size}
-        highlight={selected ? color.ring : null}
+        highlight={selected ? 'rgba(160,125,60,0.55)' : null}
       />
     </button>
   )

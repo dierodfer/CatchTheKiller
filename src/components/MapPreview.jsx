@@ -7,6 +7,7 @@ import { makeRng, randomSeed } from '@/game/random.js'
 import { ROOM_TINTS } from './palette.js'
 import { zoneForSeed } from './zones.js'
 import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
+import { RUG_PATTERN, RUG_NOISE } from './rugPattern.js'
 
 const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
 
@@ -63,30 +64,44 @@ export default function MapPreview({ difficulty }) {
             width: cellSize,
             height: cellSize,
             background: ROOM_TINTS[roomIndex[roomLookup[key]] % ROOM_TINTS.length],
-            border: '1px solid rgba(244,235,220,0.07)',
+            border: '1px solid rgba(39,24,41,0.08)',
           }}
         >
           {furniture === 'alfombra' && (
-            <div
-              className="pointer-events-none absolute"
-              style={{
-                top: edges.top ? margin : 0,
-                right: edges.right ? margin : 0,
-                bottom: edges.bottom ? margin : 0,
-                left: edges.left ? margin : 0,
-                borderRadius: 6,
-                background:
-                  'repeating-linear-gradient(45deg, rgba(203,163,92,0.42) 0 5px, rgba(116,82,122,0.42) 5px 10px)',
-                opacity: 0.85,
-              }}
-            />
+            <>
+              <div
+                className="pointer-events-none absolute"
+                style={{
+                  top: edges.top ? margin : 0,
+                  right: edges.right ? margin : 0,
+                  bottom: edges.bottom ? margin : 0,
+                  left: edges.left ? margin : 0,
+                  borderRadius: 6,
+                  background: RUG_PATTERN,
+                  opacity: 0.85,
+                }}
+              />
+              <div
+                className="pointer-events-none absolute"
+                style={{
+                  top: edges.top ? margin : 0,
+                  right: edges.right ? margin : 0,
+                  bottom: edges.bottom ? margin : 0,
+                  left: edges.left ? margin : 0,
+                  borderRadius: 6,
+                  backgroundImage: RUG_NOISE,
+                  mixBlendMode: 'soft-light',
+                  opacity: 0.25,
+                }}
+              />
+            </>
           )}
           {furniture && furniture !== 'alfombra' && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-70">
               <FurnitureIcon
                 type={furniture}
                 size={Math.round(cellSize * 0.5)}
-                className="text-cream-soft/80"
+                className="text-plum-700/70"
               />
             </div>
           )}
@@ -110,16 +125,16 @@ export default function MapPreview({ difficulty }) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative inline-block overflow-hidden rounded-2xl border border-gold/15 bg-plum-850/70 p-2.5 shadow-2xl ring-botanica">
+      <div className="relative inline-block overflow-hidden rounded-2xl border border-gold/15 bg-cream-100/80 p-2.5 shadow-2xl ring-botanica">
         {/* Textura sutil propia de la zona. */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-70"
-          style={{ backgroundImage: zone.texture }}
+          className="pointer-events-none absolute inset-0 opacity-30"
+          style={{ backgroundImage: zone.texture, mixBlendMode: 'multiply' }}
           aria-hidden
         />
         <div className="relative">{rows}</div>
         <span
-          className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-plum-950/70 px-2 py-0.5 text-[10px] font-medium text-cream-soft backdrop-blur-sm"
+          className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-plum-950/55 px-2 py-0.5 text-[10px] font-medium text-cream-100 backdrop-blur-sm"
           style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
         >
           <zone.icon size={11} style={{ color: zone.accent }} />
@@ -129,7 +144,7 @@ export default function MapPreview({ difficulty }) {
       <button
         type="button"
         onClick={() => setSeed(randomSeed())}
-        className="inline-flex items-center gap-1.5 rounded-full border border-gold/15 bg-plum-800/50 px-3.5 py-1.5 text-xs font-medium text-cream-soft transition hover:bg-plum-700/60 hover:text-cream"
+        className="inline-flex items-center gap-1.5 rounded-full border border-gold/15 bg-cream-200/70 px-3.5 py-1.5 text-xs font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
       >
         <Shuffle size={13} /> Otro mapa de ejemplo
       </button>

@@ -22,9 +22,9 @@ export default function CluePanel({ puzzle, usedClues, onToggleClue }) {
   })
 
   return (
-    <div className="rounded-2xl border border-gold/12 bg-plum-850/60 p-4 ring-botanica">
-      <h3 className="mb-3 flex items-center gap-2 font-serif text-xl font-semibold text-cream">
-        <Quote size={16} className="text-gold" /> Pistas del caso
+    <div className="rounded-2xl border border-gold/12 bg-cream-100/80 p-4 ring-botanica">
+      <h3 className="mb-3 flex items-center gap-2 font-serif text-xl font-semibold text-plum-900">
+        <Quote size={16} className="text-gold-deep" /> Pistas del caso
       </h3>
       <ul className="space-y-1">
         {groups.map((group) => {
@@ -35,7 +35,7 @@ export default function CluePanel({ puzzle, usedClues, onToggleClue }) {
               <button
                 onClick={() => group.indices.forEach((i) => onToggleClue(i))}
                 aria-pressed={used}
-                className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-plum-700/40 ${
+                className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-cream-200/60 ${
                   used ? 'opacity-45' : ''
                 }`}
               >
@@ -45,8 +45,8 @@ export default function CluePanel({ puzzle, usedClues, onToggleClue }) {
                 >
                   {used && <Check size={11} color="#160d18" strokeWidth={3} />}
                 </span>
-                <span className="text-[15px] leading-snug text-cream-soft">
-                  <span className="font-semibold" style={{ color: color.ring }}>
+                <span className="text-[15px] leading-snug text-plum-800">
+                  <span className="font-semibold" style={{ color: color.bg }}>
                     {group.subject}:
                   </span>{' '}
                   <span className={used ? 'line-through' : ''}>«{group.texts.join('. ')}»</span>
