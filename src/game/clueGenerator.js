@@ -31,9 +31,18 @@ const SEED_PREFERENCE = [
   'onBed',
   'rowAbove',
   'rowBelow',
+  'colLeft',
+  'colRight',
   'inCorner',
   'inBorder',
 ]
+
+// Pistas de posición absoluta en fila/columna ("Estaba en la fila 2", "No
+// estaba en la columna 3"): se permite como máximo una en todo el puzzle para
+// no saturarlo de coordenadas — las pistas de habitación, mobiliario y
+// dirección relativa deben llevar el peso del razonamiento.
+const ROWCOL_KINDS = new Set(['inRow', 'notInRow', 'inColumn', 'notInColumn'])
+const MAX_ROWCOL_CLUES = 1
 
 const clueId = (c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`
 
@@ -104,10 +113,12 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('notInBorder', {})
 
   // Relativas. Nadie comparte fila ni columna con nadie (regla del asesino),
-  // así que solo tienen sentido las comparaciones de orden entre filas.
+  // así que las cuatro direcciones cardinales son comparaciones válidas.
   for (const o of others) {
     add('rowAbove', { other: o })
     add('rowBelow', { other: o })
+    add('colLeft', { other: o })
+    add('colRight', { other: o })
   }
 
   return out
@@ -137,16 +148,24 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   // 2. Sembrar una pista por sujeto (preferentemente específica).
   const chosen = []
   const chosenIds = new Set()
+  const rowColCount = () => chosen.filter((c) => ROWCOL_KINDS.has(c.kind)).length
   for (const s of subjects) {
     let seed = null
+    const rowColCapped = rowColCount() >= MAX_ROWCOL_CLUES
     for (const kind of SEED_PREFERENCE) {
+      if (rowColCapped && ROWCOL_KINDS.has(kind)) continue
       const opts = pools[s].filter((c) => c.kind === kind)
       if (opts.length) {
         seed = pick(rng, opts)
         break
       }
     }
-    if (!seed) seed = pick(rng, pools[s])
+    if (!seed) {
+      const fallback = rowColCapped
+        ? pools[s].filter((c) => !ROWCOL_KINDS.has(c.kind))
+        : pools[s]
+      seed = pick(rng, fallback.length ? fallback : pools[s])
+    }
     chosen.push(seed)
     chosenIds.add(clueId(seed))
   }
@@ -164,10 +183,12 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
     while (count(chosen, 2) !== 1 && guard++ < maxAdds) {
       let best = null
       let bestCount = Infinity
+      const rowColCapped = rowColCount() >= MAX_ROWCOL_CLUES
       for (const limit of limits) {
         for (const cand of shuffle(rng, all).slice(0, 48)) {
           if (chosenIds.has(clueId(cand))) continue
           if (countForSubject(cand.subject) >= limit) continue
+          if (rowColCapped && ROWCOL_KINDS.has(cand.kind)) continue
           chosen.push(cand)
           const c = count(chosen, CAP)
           chosen.pop()

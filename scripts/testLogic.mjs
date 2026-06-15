@@ -117,6 +117,15 @@ for (const diff of difficulties) {
       `seed ${seed}: pistas en orden alfabético por sujeto`,
     )
 
+    // Invariante: como máximo 1 pista absoluta de fila/columna por puzzle.
+    const rowColClues = clues.filter((c) =>
+      ['inRow', 'notInRow', 'inColumn', 'notInColumn'].includes(c.kind),
+    )
+    assert(
+      rowColClues.length <= 1,
+      `seed ${seed}: como máximo 1 pista de fila/columna (hay ${rowColClues.length})`,
+    )
+
     // Invariante: una pista "junto a un mueble" nunca se emite si el sujeto está
     // de hecho ENCIMA de ese mismo tipo de mueble (alfombra/silla/cama) — sería
     // engañosa ("estaba sobre la alfombra" ≠ "junto a una alfombra").

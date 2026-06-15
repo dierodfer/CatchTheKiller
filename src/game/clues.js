@@ -129,6 +129,8 @@ export const CLUE_TYPES = {
   },
 
   // ───────── Posición relativa entre personajes ─────────
+  // Nadie comparte fila ni columna con nadie (regla del asesino), así que las
+  // cuatro direcciones cardinales (fila y columna) son siempre comparables.
   rowAbove: {
     tier: 'relative',
     unary: false,
@@ -136,7 +138,7 @@ export const CLUE_TYPES = {
       const op = all[p.other]
       return !!op && pos.row < op.row
     },
-    text: (p) => `Estaba en una fila superior a ${p.other}`,
+    text: (p) => `Estaba al norte de ${p.other}`,
   },
   rowBelow: {
     tier: 'relative',
@@ -145,7 +147,25 @@ export const CLUE_TYPES = {
       const op = all[p.other]
       return !!op && pos.row > op.row
     },
-    text: (p) => `Estaba en una fila inferior a ${p.other}`,
+    text: (p) => `Estaba al sur de ${p.other}`,
+  },
+  colLeft: {
+    tier: 'relative',
+    unary: false,
+    evaluate: (pos, p, all) => {
+      const op = all[p.other]
+      return !!op && pos.col < op.col
+    },
+    text: (p) => `Estaba a la izquierda de ${p.other}`,
+  },
+  colRight: {
+    tier: 'relative',
+    unary: false,
+    evaluate: (pos, p, all) => {
+      const op = all[p.other]
+      return !!op && pos.col > op.col
+    },
+    text: (p) => `Estaba a la derecha de ${p.other}`,
   },
 
   // ───────── Proximidad a mobiliario ─────────
