@@ -1,15 +1,15 @@
 // Ficha de personaje: visual + envoltorio arrastrable (dnd-kit).
 
 import { useDraggable } from '@dnd-kit/core'
-import { User, Skull } from 'lucide-react'
 import { colorForCharacter } from './palette.js'
+import { PixelAvatar } from './pixelArt.jsx'
 
 // Visual puro (reutilizado en bandeja, tablero y DragOverlay).
 export function TokenChip({ name, characters, size = 40, dimmed = false, highlight }) {
   const color = colorForCharacter(name, characters)
   const isVictim = name === characters.victim
   const dim = dimmed ? 0.45 : 1
-  const iconSize = size * 0.5
+  const iconSize = Math.round(size * 0.62)
   return (
     <div
       className="no-select flex flex-col items-center gap-0.5"
@@ -17,17 +17,13 @@ export function TokenChip({ name, characters, size = 40, dimmed = false, highlig
       title={name}
     >
       <div style={{ position: 'relative', display: 'inline-flex' }}>
-        {isVictim ? (
-          <Skull size={iconSize} color={color.bg} />
-        ) : (
-          <User size={iconSize} color={color.bg} />
-        )}
+        <PixelAvatar color={color.bg} isVictim={isVictim} size={iconSize} />
         {highlight && (
           <div
             style={{
               position: 'absolute',
               inset: -6,
-              borderRadius: '50%',
+              borderRadius: 4,
               border: `3px solid ${highlight}`,
               pointerEvents: 'none',
             }}

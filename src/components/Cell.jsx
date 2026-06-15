@@ -8,10 +8,11 @@
 import { memo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
-import { X } from 'lucide-react'
 import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
 import { DraggableToken, TokenChip } from './CharacterToken.jsx'
-import { RUG_PATTERN, RUG_NOISE } from './rugPattern.js'
+import { RUG_PATTERN, RUG_NOISE, RUG_NOISE_SIZE } from './rugPattern.js'
+import { PixelGrid } from './pixelArt.jsx'
+import { PIXEL_X_GRID, PIXEL_X_PALETTE, PIXEL_FLOOR_PATTERN } from './pixelSprites.js'
 
 // Posición del icono de ventana, anclado a la pared correspondiente.
 const WALL_POSITION = {
@@ -64,9 +65,20 @@ function Cell({
         outlineOffset: -2,
       }}
     >
+      {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: PIXEL_FLOOR_PATTERN,
+          backgroundSize: `${Math.max(4, Math.round(size / 4))}px ${Math.max(4, Math.round(size / 4))}px`,
+          mixBlendMode: 'soft-light',
+          opacity: 0.55,
+        }}
+      />
+
       {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
-        <span className="pointer-events-none absolute left-1 top-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-plum-700/75">
+        <span className="pointer-events-none absolute left-1 top-0.5 font-pixel text-[12px] font-semibold uppercase tracking-[0.08em] text-plum-700/80">
           {label}
         </span>
       )}
@@ -101,6 +113,7 @@ function Cell({
               borderBottomLeftRadius: rugEdges.bottom && rugEdges.left ? 8 : 0,
               borderBottomRightRadius: rugEdges.bottom && rugEdges.right ? 8 : 0,
               backgroundImage: RUG_NOISE,
+              backgroundSize: RUG_NOISE_SIZE,
               mixBlendMode: 'soft-light',
               opacity: 0.25,
             }}
@@ -127,10 +140,11 @@ function Cell({
 
       {/* Marca × de línea de control. */}
       {controlled && !occupantName && (
-        <X
+        <PixelGrid
+          grid={PIXEL_X_GRID}
+          palette={PIXEL_X_PALETTE}
           size={Math.round(size * 0.7)}
-          className="pointer-events-none absolute text-plum-900/12"
-          strokeWidth={1.5}
+          className="pointer-events-none absolute"
         />
       )}
 

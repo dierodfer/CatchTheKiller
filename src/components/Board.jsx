@@ -29,7 +29,7 @@ export default function Board({
   })
   const reduce = useReducedMotion()
 
-  const axisLabel = 'flex items-center justify-center text-[10px] font-semibold text-plum-600/70'
+  const axisLabel = 'flex items-center justify-center font-pixel text-[13px] font-semibold text-plum-600/70'
 
   // Cabecera: esquina vacía + número de cada columna.
   const header = (
@@ -104,11 +104,11 @@ export default function Board({
     ) : null
 
   return (
-    <div className="relative inline-block overflow-hidden rounded-2xl border border-gold/15 bg-cream-100/75 p-2.5 shadow-2xl ring-botanica">
+    <div className="pixel-frame relative inline-block overflow-hidden rounded-lg bg-cream-100/75 p-2.5 shadow-2xl">
       {/* Textura ambiental propia de la zona. */}
       {zone && (
         <div
-          className="pointer-events-none absolute inset-0 opacity-30"
+          className="pointer-events-none absolute inset-0 opacity-40"
           style={{ backgroundImage: zone.texture, mixBlendMode: 'multiply' }}
           aria-hidden
         />

@@ -20,11 +20,11 @@ export const ZONES = {
     icon: Building2,
     accent: '#b9c2d6', // fría, dentro del sistema
     accentSoft: 'rgba(185, 194, 214, 0.16)',
-    // Textura: veteado de mármol/lino mediante ruido SVG (feTurbulence de
-    // baja frecuencia) más un velo diagonal frío muy sutil.
+    // Textura: dither de píxeles a cuadros, fría, dos capas desfasadas que
+    // forman una trama de 4 tonos (estilo 8-bit).
     texture:
-      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.06 0.09' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E\")," +
-      'linear-gradient(115deg, rgba(185,194,214,0.07) 0%, transparent 40%, rgba(255,255,255,0.05) 60%, transparent 100%)',
+      'repeating-conic-gradient(from 0deg, rgba(185,194,214,0.22) 0% 25%, transparent 0% 50%) 0 0/10px 10px,' +
+      ' repeating-conic-gradient(from 90deg, rgba(255,255,255,0.14) 0% 25%, transparent 0% 50%) 5px 5px/10px 10px',
     glow: 'rgba(122, 145, 178, 0.55)',
   },
 
@@ -36,12 +36,11 @@ export const ZONES = {
     icon: Mountain,
     accent: '#d8a673', // cálida, dentro del sistema
     accentSoft: 'rgba(216, 166, 115, 0.16)',
-    // Textura: veta de madera mediante ruido SVG direccional (feTurbulence
-    // estirado + feColorMatrix que tiñe el ruido en marrón cálido) más una
-    // veta fina adicional.
+    // Textura: dither de píxeles a cuadros, cálida, dos capas desfasadas que
+    // forman una trama de 4 tonos (estilo 8-bit).
     texture:
-      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.012 0.18' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.55  0 0 0 0 0.38  0 0 0 0 0.22  0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E\")," +
-      'repeating-linear-gradient(0deg, rgba(120,72,40,0.05) 0 2px, transparent 2px 14px)',
+      'repeating-conic-gradient(from 0deg, rgba(216,166,115,0.26) 0% 25%, transparent 0% 50%) 0 0/10px 10px,' +
+      ' repeating-conic-gradient(from 90deg, rgba(120,72,40,0.14) 0% 25%, transparent 0% 50%) 5px 5px/10px 10px',
     glow: 'rgba(160, 125, 60, 0.55)',
   },
 }

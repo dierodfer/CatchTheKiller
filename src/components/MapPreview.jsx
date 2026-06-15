@@ -7,7 +7,8 @@ import { makeRng, randomSeed } from '@/game/random.js'
 import { ROOM_TINTS } from './palette.js'
 import { zoneForSeed } from './zones.js'
 import { FurnitureIcon, WindowIcon } from './Furniture.jsx'
-import { RUG_PATTERN, RUG_NOISE } from './rugPattern.js'
+import { RUG_PATTERN, RUG_NOISE, RUG_NOISE_SIZE } from './rugPattern.js'
+import { PIXEL_FLOOR_PATTERN } from './pixelSprites.js'
 
 const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
 
@@ -64,9 +65,19 @@ export default function MapPreview({ difficulty }) {
             width: cellSize,
             height: cellSize,
             background: ROOM_TINTS[roomIndex[roomLookup[key]] % ROOM_TINTS.length],
-            border: '1px solid rgba(39,24,41,0.08)',
+            border: '1px solid rgba(39,24,41,0.16)',
           }}
         >
+          {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage: PIXEL_FLOOR_PATTERN,
+              backgroundSize: `${Math.max(4, Math.round(cellSize / 4))}px ${Math.max(4, Math.round(cellSize / 4))}px`,
+              mixBlendMode: 'soft-light',
+              opacity: 0.55,
+            }}
+          />
           {furniture === 'alfombra' && (
             <>
               <div
@@ -90,6 +101,7 @@ export default function MapPreview({ difficulty }) {
                   left: edges.left ? margin : 0,
                   borderRadius: 6,
                   backgroundImage: RUG_NOISE,
+                  backgroundSize: RUG_NOISE_SIZE,
                   mixBlendMode: 'soft-light',
                   opacity: 0.25,
                 }}
@@ -125,16 +137,16 @@ export default function MapPreview({ difficulty }) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative inline-block overflow-hidden rounded-2xl border border-gold/15 bg-cream-100/80 p-2.5 shadow-2xl ring-botanica">
+      <div className="pixel-frame relative inline-block overflow-hidden rounded-lg bg-cream-100/80 p-2.5 shadow-2xl">
         {/* Textura sutil propia de la zona. */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-30"
+          className="pointer-events-none absolute inset-0 opacity-40"
           style={{ backgroundImage: zone.texture, mixBlendMode: 'multiply' }}
           aria-hidden
         />
         <div className="relative">{rows}</div>
         <span
-          className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-plum-950/55 px-2 py-0.5 text-[10px] font-medium text-cream-100 backdrop-blur-sm"
+          className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-plum-950/55 px-2 py-0.5 font-pixel text-[13px] font-medium text-cream-100 backdrop-blur-sm"
           style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
         >
           <zone.icon size={11} style={{ color: zone.accent }} />

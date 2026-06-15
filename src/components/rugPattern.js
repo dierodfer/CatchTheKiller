@@ -1,11 +1,12 @@
-// Patrón de alfombra compartido entre Cell y MapPreview: bandas diagonales de
-// ancho irregular (más orgánico que un rayado uniforme) más una capa de ruido
-// SVG para sugerir textura de fibra tejida.
+// Patrón de alfombra compartido entre Cell y MapPreview: trama de píxeles a
+// cuadros (bordes nítidos, sin difuminado) más una capa de dither para
+// sugerir una alfombra tejida en estilo pixel art.
 
 export const RUG_PATTERN =
-  'repeating-linear-gradient(45deg,' +
-  ' rgba(203,163,92,0.45) 0 5px, rgba(116,82,122,0.4) 5px 8px,' +
-  ' rgba(160,125,60,0.42) 8px 15px, rgba(125,145,98,0.35) 15px 19px)'
+  'repeating-linear-gradient(0deg, rgba(160,125,60,0.45) 0 4px, rgba(116,82,122,0.4) 4px 8px),' +
+  ' repeating-linear-gradient(90deg, rgba(203,163,92,0.32) 0 4px, transparent 4px 8px)'
 
 export const RUG_NOISE =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)' opacity='0.5'/%3E%3C/svg%3E\")"
+  'repeating-conic-gradient(rgba(255,255,255,0.55) 0% 25%, transparent 0% 50%)'
+
+export const RUG_NOISE_SIZE = '6px 6px'
