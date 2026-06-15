@@ -155,7 +155,14 @@ export const CLUE_TYPES = {
     // Solo cuenta el mueble si está en la MISMA habitación que el personaje: una
     // celda contigua puede pertenecer a otra habitación y su mobiliario no debe
     // referenciarse ("estaba junto a la alfombra" siempre es de su propio cuarto).
+    //
+    // Además, "junto a" excluye "encima de": si el personaje ocupa una celda del
+    // mismo tipo de mueble (alfombra, silla o cama), la pista no aplica aunque
+    // haya otra contigua igual — la redacción correcta sería "estaba sobre la
+    // alfombra", no "junto a una alfombra". Sin este filtro la pista resultaría
+    // engañosa para el jugador.
     evaluate: (pos, p, _all, ctx) =>
+      ctx.furnitureAt(pos.row, pos.col) !== p.furniture &&
       adjacentHas(
         ctx,
         pos,
