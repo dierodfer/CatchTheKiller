@@ -31,3 +31,18 @@ export function shuffle(rng, arr) {
   }
   return a
 }
+
+// Elección aleatoria ponderada: cada elemento se escoge con probabilidad
+// proporcional a `weightOf(item)`. Si todos los pesos son 0 (o el array es de
+// pesos no positivos), cae a una elección uniforme.
+export function weightedPick(rng, items, weightOf) {
+  let total = 0
+  for (const it of items) total += Math.max(0, weightOf(it))
+  if (total <= 0) return pick(rng, items)
+  let t = rng() * total
+  for (const it of items) {
+    t -= Math.max(0, weightOf(it))
+    if (t < 0) return it
+  }
+  return items[items.length - 1]
+}

@@ -14,28 +14,55 @@
 import { CLUE_TYPES, evalClue, buildClueContext } from './clues.js'
 import { solve } from './solver.js'
 import { freeCells } from './mapGenerator.js'
-import { shuffle, pick } from './random.js'
+import { shuffle, pick, weightedPick } from './random.js'
 
 const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'planta', 'estantería', 'silla', 'alfombra', 'cama']
 
-// Orden de preferencia para sembrar pistas iniciales (más específicas primero).
-const SEED_PREFERENCE = [
-  'inRoom',
-  'withInRoom',
-  'inRow',
-  'inColumn',
-  'nextToFurniture',
-  'nextToWindow',
-  'onChair',
-  'onRug',
-  'onBed',
-  'rowAbove',
-  'rowBelow',
-  'colLeft',
-  'colRight',
-  'inCorner',
-  'inBorder',
-]
+// Peso de cada tipo de pista al SEMBRAR la pista inicial de un sujeto. La
+// siembra elige primero un *tipo* (al azar ponderado entre los disponibles) y
+// luego una instancia concreta de ese tipo: así las pistas específicas e
+// interesantes dominan sin que un único tipo (antes siempre `inRoom`) acapare
+// la mayoría de las pistas.
+//
+// Las semillas son pistas UNARIAS y específicas (acotan la celda del propio
+// sujeto). Esto es clave para el rendimiento: el Solver solo poda el dominio
+// inicial de cada personaje con pistas unarias, así que sembrar con pistas
+// relacionales (withInRoom, direccionales…) dejaría el dominio sin acotar y
+// dispararía el coste de generación en mapas grandes.
+//
+// Las pistas relacionales/direccionales y las débiles/negativas valen 0 aquí
+// (no se siembran), pero SÍ aparecen luego como refuerzo en addUntilUnique
+// cuando ayudan a la unicidad — de ahí que sigan saliendo en el puzzle final.
+// Los tipos no listados usan peso 1.
+const SEED_WEIGHT = {
+  // Unarias específicas y muy informativas
+  inRoom: 5,
+  nextToFurniture: 5,
+  onChair: 4,
+  onRug: 4,
+  onBed: 4,
+  nextToWindow: 4,
+  // Coordenada absoluta (además sujeta al tope global de fila/columna)
+  inRow: 2,
+  inColumn: 2,
+  // Relacionales/direccionales: nunca como semilla (no acotan el dominio)
+  withInRoom: 0,
+  aloneInRoom: 0,
+  notWithInRoom: 0,
+  rowAbove: 0,
+  rowBelow: 0,
+  colLeft: 0,
+  colRight: 0,
+  // Débiles/negativas: nunca como semilla
+  notInRoom: 0,
+  notNextToFurniture: 0,
+  inCorner: 0,
+  notInCorner: 0,
+  inBorder: 0,
+  notInBorder: 0,
+  notInRow: 0,
+  notInColumn: 0,
+}
 
 // Pistas de posición absoluta en fila/columna ("Estaba en la fila 2", "No
 // estaba en la columna 3"): se permite como máximo una en todo el puzzle para
@@ -48,6 +75,24 @@ const clueId = (c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`
 
 function makeClue(subject, kind, params, ctx) {
   return { subject, kind, params, text: CLUE_TYPES[kind].text(params, ctx) }
+}
+
+// Siembra de la pista inicial de un sujeto: elige un tipo al azar ponderado
+// (ver SEED_WEIGHT) entre los disponibles en su pool, y luego una instancia
+// concreta de ese tipo. Agrupar por tipo evita que los tipos con muchas
+// instancias (p. ej. `notInRow`, una por cada fila) salgan favorecidos solo por
+// abundancia. `rowColCapped` excluye fila/columna si ya se alcanzó el tope.
+function pickSeed(rng, pool, rowColCapped) {
+  const byKind = new Map()
+  for (const c of pool) {
+    if (rowColCapped && ROWCOL_KINDS.has(c.kind)) continue
+    if (!byKind.has(c.kind)) byKind.set(c.kind, [])
+    byKind.get(c.kind).push(c)
+  }
+  // Solo quedaban candidatas de fila/columna y están topadas: usa el pool entero.
+  if (byKind.size === 0) return pick(rng, pool)
+  const kind = weightedPick(rng, [...byKind.keys()], (k) => SEED_WEIGHT[k] ?? 1)
+  return pick(rng, byKind.get(kind))
 }
 
 // Una pista unaria es "obvia" si se cumple en TODA celda ocupable: no aporta
@@ -145,27 +190,12 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
 
   const count = (clues, limit) => solve(map, characters, clues, { limit, roomLookup }).length
 
-  // 2. Sembrar una pista por sujeto (preferentemente específica).
+  // 2. Sembrar una pista por sujeto (tipo elegido al azar ponderado).
   const chosen = []
   const chosenIds = new Set()
   const rowColCount = () => chosen.filter((c) => ROWCOL_KINDS.has(c.kind)).length
-  for (const s of subjects) {
-    let seed = null
-    const rowColCapped = rowColCount() >= MAX_ROWCOL_CLUES
-    for (const kind of SEED_PREFERENCE) {
-      if (rowColCapped && ROWCOL_KINDS.has(kind)) continue
-      const opts = pools[s].filter((c) => c.kind === kind)
-      if (opts.length) {
-        seed = pick(rng, opts)
-        break
-      }
-    }
-    if (!seed) {
-      const fallback = rowColCapped
-        ? pools[s].filter((c) => !ROWCOL_KINDS.has(c.kind))
-        : pools[s]
-      seed = pick(rng, fallback.length ? fallback : pools[s])
-    }
+  for (const s of shuffle(rng, subjects)) {
+    const seed = pickSeed(rng, pools[s], rowColCount() >= MAX_ROWCOL_CLUES)
     chosen.push(seed)
     chosenIds.add(clueId(seed))
   }
