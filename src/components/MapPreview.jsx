@@ -1,7 +1,6 @@
 // Previsualización (solo lectura) del tipo de mapa que generará una dificultad.
 
 import { useMemo, useState } from 'react'
-import { Shuffle } from 'lucide-react'
 import { generateMap, buildRoomLookup } from '@/game/mapGenerator.js'
 import { makeRng, randomSeed } from '@/game/random.js'
 import { ROOM_TINTS } from './palette.js'
@@ -31,7 +30,7 @@ const WINDOW_GLASS_POSITION = {
 }
 
 export default function MapPreview({ difficulty }) {
-  const [seed, setSeed] = useState(() => randomSeed())
+  const [seed] = useState(() => randomSeed())
 
   const map = useMemo(() => generateMap(makeRng(seed), difficulty), [seed, difficulty])
   const roomLookup = useMemo(() => buildRoomLookup(map), [map])
@@ -162,13 +161,6 @@ export default function MapPreview({ difficulty }) {
           {zone.short}
         </span>
       </div>
-      <button
-        type="button"
-        onClick={() => setSeed(randomSeed())}
-        className="inline-flex items-center gap-1.5 rounded-full border border-gold/15 bg-cream-200/70 px-3.5 py-1.5 text-xs font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
-      >
-        <Shuffle size={13} /> Otro mapa de ejemplo
-      </button>
     </div>
   )
 }

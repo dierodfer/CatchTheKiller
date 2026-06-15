@@ -90,7 +90,7 @@ export default function GameScreen({ game }) {
       {/* Cabecera del caso, centrada. */}
       <header className="mb-6 flex flex-col items-center gap-2.5 text-center">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="" className="h-10 w-auto drop-shadow" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" className="h-10 w-auto drop-shadow" />
           <h1 className="font-serif text-2xl font-semibold leading-none text-plum-900 sm:text-3xl">
             Catch the Killer
           </h1>
