@@ -15,6 +15,7 @@ import CluePanel from './CluePanel.jsx'
 import Toolbar from './Toolbar.jsx'
 import ResultBanner from './ResultBanner.jsx'
 import RevealConfirmModal from './RevealConfirmModal.jsx'
+import RulesModal from './RulesModal.jsx'
 import { TokenChip } from './CharacterToken.jsx'
 import { zoneForSeed } from './zones.js'
 import { DIFFICULTIES } from '@/game/constants.js'
@@ -25,6 +26,7 @@ export default function GameScreen({ game }) {
   const [selectedToken, setSelectedToken] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
+  const [showRules, setShowRules] = useState(false)
   // Resultado cuyo aviso se cerró. Cada desenlace nuevo genera un `result`
   // distinto, así que el aviso vuelve a mostrarse sin necesidad de efectos.
   const [dismissedResult, setDismissedResult] = useState(null)
@@ -147,6 +149,7 @@ export default function GameScreen({ game }) {
               onCheck={check}
               onReveal={() => setConfirmReveal(true)}
               onNewGame={newGame}
+              onShowRules={() => setShowRules(true)}
             />
           </div>
         </div>
@@ -167,6 +170,8 @@ export default function GameScreen({ game }) {
           onNewGame={newGame}
         />
       )}
+
+      <RulesModal open={showRules} onClose={() => setShowRules(false)} />
 
       <RevealConfirmModal
         open={confirmReveal}
