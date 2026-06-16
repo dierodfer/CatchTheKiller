@@ -3,7 +3,7 @@
 // se agrupan en la misma nota (no se reparten en notas distintas). Es una
 // vista estática de consulta (no se marcan como "usadas").
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Pin, Quote, Skull } from 'lucide-react'
 import { colorForCharacter } from './palette.js'
 import { PixelAvatar } from './pixelArt.jsx'
@@ -30,6 +30,14 @@ function groupBySubject(clues) {
 export default function CluePanel({ puzzle }) {
   const { clues, characters } = puzzle
   const groups = useMemo(() => groupBySubject(clues), [clues])
+  const [struck, setStruck] = useState(new Set())
+
+  const toggleStruck = (key) =>
+    setStruck((prev) => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
 
   return (
     <div className="rounded-2xl border border-gold/12 bg-cream-100/80 p-4 ring-botanica">
@@ -69,11 +77,21 @@ export default function CluePanel({ puzzle }) {
                   </span>
                 )}
                 <span className="text-plum-500">:</span>{' '}
-                {texts.map((text, j) => (
-                  <span key={j}>
-                    {j > 0 && <span className="text-plum-500"> · </span>}«{text}»
-                  </span>
-                ))}
+                {texts.map((text, j) => {
+                  const key = `${subject}::${j}`
+                  const isStruck = struck.has(key)
+                  return (
+                    <span key={j}>
+                      {j > 0 && <span className="text-plum-500"> · </span>}
+                      <span
+                        onClick={() => toggleStruck(key)}
+                        className={`cursor-pointer select-none transition-opacity ${isStruck ? 'opacity-40 line-through' : 'hover:opacity-80'}`}
+                      >
+                        «{text}»
+                      </span>
+                    </span>
+                  )
+                })}
               </div>
             </li>
           )

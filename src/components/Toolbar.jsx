@@ -1,8 +1,8 @@
 // Controles de partida: resolver, ver la solución, nuevo puzzle.
 
-import { Eye, Gavel, RotateCcw } from 'lucide-react'
+import { BookOpen, Eye, Gavel, RotateCcw } from 'lucide-react'
 
-export default function Toolbar({ allPlaced, onCheck, onReveal, onNewGame }) {
+export default function Toolbar({ allPlaced, onCheck, onReveal, onNewGame, onShowRules }) {
   return (
     <div className="rounded-2xl border border-gold/12 bg-cream-100/80 p-4 ring-botanica">
       <div className="flex flex-wrap gap-2">
@@ -24,6 +24,12 @@ export default function Toolbar({ allPlaced, onCheck, onReveal, onNewGame }) {
           className="flex items-center justify-center gap-2 rounded-full border border-gold/20 bg-cream-200/70 px-4 py-2.5 text-sm font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
           <RotateCcw size={16} /> Nuevo
+        </button>
+        <button
+          onClick={onShowRules}
+          className="flex items-center justify-center gap-2 rounded-full border border-gold/20 bg-cream-200/70 px-4 py-2.5 text-sm font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
+        >
+          <BookOpen size={16} /> Reglas
         </button>
       </div>
 
