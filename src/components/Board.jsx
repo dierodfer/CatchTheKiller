@@ -39,7 +39,7 @@ export default function Board({
       <div style={{ width: GUTTER, height: GUTTER }} />
       {Array.from({ length: size }, (_, c) => (
         <div key={c} className={axisLabel} style={{ width: cellSize, height: GUTTER }} aria-hidden>
-          {c + 1}
+          {String.fromCharCode(65 + c)}
         </div>
       ))}
     </div>

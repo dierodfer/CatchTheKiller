@@ -118,6 +118,11 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   const myRoom = ctx.roomAt(pos.row, pos.col)
   const size = ctx.gridSize
 
+  // Habitación de la víctima: un sospechoso con inRoom apuntando a ella
+  // revelaría directamente al asesino (único en esa sala con la víctima).
+  const victimPos = !isVictim ? solution[characters.victim] : null
+  const victimRoom = victimPos ? ctx.roomAt(victimPos.row, victimPos.col) : null
+
   const add = (kind, params) => {
     if (!allowed(kind)) return
     const clue = makeClue(subject, kind, params, ctx)
@@ -127,7 +132,7 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   }
 
   // Habitación
-  add('inRoom', { room: myRoom })
+  if (isVictim || myRoom !== victimRoom) add('inRoom', { room: myRoom })
   for (const room of shuffle(rng, ctx.rooms).slice(0, 2)) {
     if (room !== myRoom) add('notInRoom', { room })
   }

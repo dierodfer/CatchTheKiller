@@ -32,10 +32,10 @@ export default function CluePanel({ puzzle }) {
   const groups = useMemo(() => groupBySubject(clues), [clues])
   const [struck, setStruck] = useState(new Set())
 
-  const toggleStruck = (key) =>
+  const toggleStruck = (subject) =>
     setStruck((prev) => {
       const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
+      next.has(subject) ? next.delete(subject) : next.add(subject)
       return next
     })
 
@@ -48,10 +48,12 @@ export default function CluePanel({ puzzle }) {
         {groups.map(({ subject, texts }, i) => {
           const color = colorForCharacter(subject, characters)
           const isVictim = subject === characters.victim
+          const isStruck = struck.has(subject)
           return (
             <li
               key={subject}
-              className="relative mx-auto flex w-full max-w-md items-center gap-3 rounded-sm bg-cream-50 py-2.5 pl-2.5 pr-3 shadow-[0_4px_12px_-5px_rgba(30,19,34,0.4)] ring-1 ring-plum-950/5"
+              onClick={() => toggleStruck(subject)}
+              className={`relative mx-auto flex w-full max-w-md cursor-pointer select-none items-center gap-3 rounded-sm bg-cream-50 py-2.5 pl-2.5 pr-3 shadow-[0_4px_12px_-5px_rgba(30,19,34,0.4)] ring-1 ring-plum-950/5 transition-all duration-300 ${isStruck ? 'opacity-30 saturate-0' : ''}`}
               style={{ transform: `rotate(${noteTilt(i)}deg)` }}
             >
               {/* "Pin" que sujeta la nota. */}
@@ -67,7 +69,7 @@ export default function CluePanel({ puzzle }) {
               >
                 <PixelAvatar color={color.bg} isVictim={isVictim} size={28} />
               </div>
-              <div className="text-[15px] leading-snug text-plum-800">
+              <div className={`text-[15px] leading-snug text-plum-800 ${isStruck ? 'line-through decoration-plum-700/60' : ''}`}>
                 <span className="font-semibold" style={{ color: color.bg }}>
                   {subject}
                 </span>
@@ -77,22 +79,16 @@ export default function CluePanel({ puzzle }) {
                   </span>
                 )}
                 <span className="text-plum-500">:</span>{' '}
-                {texts.map((text, j) => {
-                  const key = `${subject}::${j}`
-                  const isStruck = struck.has(key)
-                  return (
-                    <span key={j}>
-                      {j > 0 && <span className="text-plum-500"> · </span>}
-                      <span
-                        onClick={() => toggleStruck(key)}
-                        className={`cursor-pointer select-none transition-opacity ${isStruck ? 'opacity-40 line-through' : 'hover:opacity-80'}`}
-                      >
-                        «{text}»
-                      </span>
-                    </span>
-                  )
-                })}
+                {texts.map((text, j) => (
+                  <span key={j}>
+                    {j > 0 && <span className="text-plum-500"> · </span>}
+                    <span>«{text}»</span>
+                  </span>
+                ))}
               </div>
+              {isStruck && (
+                <div className="pointer-events-none absolute inset-x-3 top-1/2 h-px -translate-y-1/2 bg-plum-800/50" />
+              )}
             </li>
           )
         })}
