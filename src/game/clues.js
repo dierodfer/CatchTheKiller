@@ -98,13 +98,13 @@ export const CLUE_TYPES = {
     tier: 'absolute',
     unary: true,
     evaluate: (pos, p) => pos.col === p.col,
-    text: (p) => `Estaba en la columna ${p.col + 1}`,
+    text: (p) => `Estaba en la columna ${String.fromCharCode(65 + p.col)}`,
   },
   notInColumn: {
     tier: 'absolute',
     unary: true,
     evaluate: (pos, p) => pos.col !== p.col,
-    text: (p) => `No estaba en la columna ${p.col + 1}`,
+    text: (p) => `No estaba en la columna ${String.fromCharCode(65 + p.col)}`,
   },
   inCorner: {
     tier: 'absolute',
