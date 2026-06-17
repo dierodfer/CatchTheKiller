@@ -18,6 +18,7 @@ const initialState = {
   difficulty: 'facil',
   puzzle: null,
   placements: {}, // { nombre: { row, col } } colocados por el jugador
+  revealedExtras: 0, // pistas extra solicitadas por el jugador
   result: null,
   error: null,
 }
@@ -83,6 +84,12 @@ function reducer(state, action) {
       }
     }
 
+    case 'REQUEST_EXTRA_CLUE': {
+      const max = state.puzzle?.extraClues?.length || 0
+      if (state.revealedExtras >= max) return state
+      return { ...state, revealedExtras: state.revealedExtras + 1 }
+    }
+
     case 'BACK_TO_PLAY':
       return { ...state, status: STATUS.PLAYING, result: null }
 
@@ -135,6 +142,7 @@ export function useGame() {
   }, [state])
 
   const reveal = useCallback(() => dispatch({ type: 'REVEAL' }), [])
+  const requestExtraClue = useCallback(() => dispatch({ type: 'REQUEST_EXTRA_CLUE' }), [])
   const backToPlay = useCallback(() => dispatch({ type: 'BACK_TO_PLAY' }), [])
   const newGame = useCallback(() => dispatch({ type: 'NEW_GAME' }), [])
 
@@ -146,6 +154,7 @@ export function useGame() {
     unplace,
     check,
     reveal,
+    requestExtraClue,
     backToPlay,
     newGame,
   }

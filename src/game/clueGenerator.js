@@ -305,10 +305,26 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
 
   // Orden de presentación: sujetos alfabéticamente; varias pistas del mismo
   // sujeto se agrupan (consecutivas) en la UI.
-  const subjectsAlpha = [...new Set(minimized.map((c) => c.subject))].sort((a, b) =>
-    a.localeCompare(b, 'es'),
+  const sortAlpha = (list) => {
+    const sa = [...new Set(list.map((c) => c.subject))].sort((a, b) =>
+      a.localeCompare(b, 'es'),
+    )
+    return sa.flatMap((s) => list.filter((c) => c.subject === s))
+  }
+
+  const clues = sortAlpha(minimized)
+
+  // 5. Pistas extra de reserva: verdaderas y no incluidas en el set principal,
+  // que el jugador puede solicitar a petición. No afectan a la unicidad (son
+  // redundantes), pero aportan información adicional para desbloquear.
+  const chosenFinalIds = new Set(clues.map(clueId))
+  const extraPool = all.filter(
+    (c) => !chosenFinalIds.has(clueId(c)) && !axisRedundant(c, clues),
   )
-  return subjectsAlpha.flatMap((s) => minimized.filter((c) => c.subject === s))
+  const numExtra = difficulty.extraClues || 0
+  const extraClues = sortAlpha(shuffle(rng, extraPool).slice(0, numExtra))
+
+  return { clues, extraClues }
 }
 
 function minimize(map, characters, clues, roomLookup, count) {
