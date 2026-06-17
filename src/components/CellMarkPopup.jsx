@@ -9,7 +9,9 @@ export default function CellMarkPopup({
   c,
   characters,
   marks,
+  occupantName,
   onToggle,
+  onRemove,
   onClose,
   cellSize,
 }) {
@@ -84,6 +86,25 @@ export default function CellMarkPopup({
           )
         })}
       </div>
+
+      {/* Quitar la ficha colocada (a ancho completo, bajo los personajes). */}
+      {occupantName && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove(occupantName)
+            onClose()
+          }}
+          className="mt-1.5 w-full rounded-md px-2 py-1.5 text-[11px] font-semibold transition-all hover:brightness-95"
+          style={{
+            background: '#f3dada',
+            color: '#9a3a3a',
+            border: '2px solid #e0b0b0',
+          }}
+        >
+          Quitar a {occupantName}
+        </button>
+      )}
     </div>
   )
 }

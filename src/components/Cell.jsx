@@ -57,21 +57,19 @@ function Cell({
   const tokenSize = Math.round(size * 0.62)
   const canDrop = occupiable && (isOver || (selectedToken && !occupantName))
   const margin = Math.max(2, Math.round(size * 0.05))
-  const clickable = occupiable && (selectedToken ? !occupantName : !occupantName)
+  const clickable = occupiable && !revealMode
 
   const cellMarks = marks?.[`${r},${c}`] || []
   const isMarkingThis = markingCell?.r === r && markingCell?.c === c
 
   const handleClick = () => {
     if (!occupiable || revealMode) return
-    if (selectedToken) {
+    if (selectedToken && !occupantName) {
       onCellClick(r, c)
-    } else if (!occupantName) {
-      if (isMarkingThis) {
-        onMarkClose()
-      } else {
-        onMarkOpen(r, c)
-      }
+    } else if (isMarkingThis) {
+      onMarkClose()
+    } else {
+      onMarkOpen(r, c)
     }
   }
 
@@ -140,8 +138,9 @@ function Cell({
         />
       )}
 
-      {/* Marcas de candidatos (anotaciones del jugador). */}
-      {cellMarks.length > 0 && !occupantName && (
+      {/* Marcas de candidatos (anotaciones del jugador). Permanecen visibles
+          aunque haya una ficha colocada encima. */}
+      {cellMarks.length > 0 && (
         <div
           className="pointer-events-none absolute inset-0 flex flex-wrap items-end justify-center gap-px p-0.5"
           style={{ alignContent: 'end' }}
@@ -185,7 +184,8 @@ function Cell({
               size={tokenSize}
               onClick={(e) => {
                 e.stopPropagation()
-                onTokenClick(occupantName)
+                if (isMarkingThis) onMarkClose()
+                else onMarkOpen(r, c)
               }}
             />
           )}
@@ -199,7 +199,9 @@ function Cell({
           c={c}
           characters={characters}
           marks={marks}
+          occupantName={occupantName}
           onToggle={onMarkToggle}
+          onRemove={onTokenClick}
           onClose={onMarkClose}
           cellSize={size}
         />
