@@ -40,11 +40,15 @@ export default function GameScreen({ game }) {
   const celebrating = status === 'win' && result?.solved && !result?.revealed
   const bannerDelay = celebrating ? Math.min(puzzle.map.rooms.length * 0.32 + 0.4, 2.2) : 0
 
-  const allPlaced = useMemo(
-    () =>
-      [...puzzle.characters.suspects, puzzle.characters.victim].every((n) => placements[n]),
-    [puzzle.characters, placements],
+  const characterNames = useMemo(
+    () => [...puzzle.characters.suspects, puzzle.characters.victim],
+    [puzzle.characters],
   )
+  const placedCount = useMemo(
+    () => characterNames.filter((n) => placements[n]).length,
+    [characterNames, placements],
+  )
+  const allPlaced = placedCount === characterNames.length
 
   const handleTokenClick = useCallback(
     (name) => {
@@ -176,6 +180,8 @@ export default function GameScreen({ game }) {
             <CluePanel puzzle={puzzle} />
             <Toolbar
               allPlaced={allPlaced}
+              placedCount={placedCount}
+              totalCount={characterNames.length}
               onCheck={check}
               onReveal={() => setConfirmReveal(true)}
               onNewGame={newGame}
