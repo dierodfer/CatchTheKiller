@@ -44,23 +44,47 @@
 }
 
 @layer base {
+  /* Color base sólido en html Y body: el elemento raíz propaga su fondo a todo
+     el lienzo del viewport, así que nunca puede quedar una franja sin pintar a
+     ningún lado por mucho que se redimensione la ventana. */
+  html,
+  body {
+    @apply bg-cream-50;
+  }
+
+  /* Ancho fijado al 100% y sin desbordamiento horizontal: ningún elemento
+     puede generar un scroll lateral fantasma que descuadre el centrado del
+     contenido (síntoma de "todo empujado a la derecha"). */
   html,
   body,
   #root {
-    height: 100%;
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
   }
 
   body {
-    @apply bg-cream-50 font-sans text-plum-900 antialiased;
+    @apply font-sans text-plum-900 antialiased;
+  }
+
+  /* Capa decorativa (gradientes ambientales + grano) anclada al viewport con
+     position:fixed en lugar de background-attachment:fixed. Cubre exactamente
+     el viewport visible, es perfectamente simétrica y no genera costuras de
+     repintado al redimensionar ni al recargar en caliente. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
     background-image:
-      radial-gradient(900px 520px at 78% -12%, rgba(203, 163, 92, 0.14), transparent 70%),
-      radial-gradient(720px 420px at 4% 112%, rgba(164, 182, 130, 0.1), transparent 70%),
-      radial-gradient(620px 620px at 50% 50%, rgba(90, 61, 95, 0.06), transparent 75%);
-    background-attachment: fixed;
+      radial-gradient(900px 520px at 50% -8%, rgba(203, 163, 92, 0.10), transparent 70%),
+      radial-gradient(720px 420px at 50% 110%, rgba(164, 182, 130, 0.08), transparent 70%),
+      radial-gradient(620px 620px at 50% 50%, rgba(90, 61, 95, 0.05), transparent 75%);
   }
 
   /* Grano sutil sobre todo el lienzo: tacto premium sin restar legibilidad. */
-  body::before {
+  body::after {
     content: '';
     position: fixed;
     inset: 0;

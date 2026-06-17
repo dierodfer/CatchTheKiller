@@ -129,7 +129,10 @@ export default function CluePanel({ puzzle }) {
                 {/* Identidad + testimonios. */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-1.5">
-                    <span className="truncate font-serif text-[17px] font-semibold leading-none" style={{ color: color.bg }}>
+                    <span
+                      className={`truncate font-serif text-[17px] font-semibold leading-none ${isVictim ? 'text-plum-500' : ''}`}
+                      style={isVictim ? undefined : { color: color.bg }}
+                    >
                       {subject}
                     </span>
                     {isVictim && (
