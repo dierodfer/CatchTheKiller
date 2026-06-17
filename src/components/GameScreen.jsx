@@ -27,9 +27,9 @@ export default function GameScreen({ game }) {
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
   const [showRules, setShowRules] = useState(false)
-  // Resultado cuyo aviso se cerró. Cada desenlace nuevo genera un `result`
-  // distinto, así que el aviso vuelve a mostrarse sin necesidad de efectos.
   const [dismissedResult, setDismissedResult] = useState(null)
+  const [marks, setMarks] = useState({})
+  const [markingCell, setMarkingCell] = useState(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const revealMode = status === 'win'
@@ -49,6 +49,7 @@ export default function GameScreen({ game }) {
   const handleTokenClick = useCallback(
     (name) => {
       if (revealMode) return
+      setMarkingCell(null)
       if (placements[name]) {
         unplace(name)
         setSelectedToken(null)
@@ -68,9 +69,33 @@ export default function GameScreen({ game }) {
     [revealMode, selectedToken, place],
   )
 
+  const handleMarkToggle = useCallback((r, c, name) => {
+    const key = `${r},${c}`
+    setMarks((prev) => {
+      const current = prev[key] || []
+      const next = current.includes(name)
+        ? current.filter((n) => n !== name)
+        : [...current, name]
+      if (next.length === 0) {
+        const { [key]: _, ...rest } = prev
+        return rest
+      }
+      return { ...prev, [key]: next }
+    })
+  }, [])
+
+  const handleMarkOpen = useCallback((r, c) => {
+    setMarkingCell({ r, c })
+  }, [])
+
+  const handleMarkClose = useCallback(() => {
+    setMarkingCell(null)
+  }, [])
+
   const handleDragStart = (e) => {
     setActiveId(e.active.id)
     setSelectedToken(null)
+    setMarkingCell(null)
   }
 
   const handleDragEnd = (e) => {
@@ -137,6 +162,11 @@ export default function GameScreen({ game }) {
                 zone={zone}
                 celebrating={celebrating}
                 draggingName={activeId}
+                marks={marks}
+                markingCell={markingCell}
+                onMarkToggle={handleMarkToggle}
+                onMarkOpen={handleMarkOpen}
+                onMarkClose={handleMarkClose}
               />
             </div>
           </div>

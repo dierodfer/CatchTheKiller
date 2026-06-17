@@ -16,6 +16,11 @@ export default function Board({
   zone,
   celebrating = false,
   draggingName,
+  marks,
+  markingCell,
+  onMarkToggle,
+  onMarkOpen,
+  onMarkClose,
 }) {
   const { map, roomLookup, characters, solution, killer } = puzzle
   const { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt } = useBoardGeometry({
@@ -62,6 +67,11 @@ export default function Board({
           onCellClick={onCellClick}
           onTokenClick={onTokenClick}
           revealMode={revealMode}
+          marks={marks}
+          markingCell={markingCell}
+          onMarkToggle={onMarkToggle}
+          onMarkOpen={onMarkOpen}
+          onMarkClose={onMarkClose}
         />,
       )
     }
