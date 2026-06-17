@@ -27,9 +27,9 @@ export default function GameScreen({ game }) {
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
   const [showRules, setShowRules] = useState(false)
-  // Resultado cuyo aviso se cerró. Cada desenlace nuevo genera un `result`
-  // distinto, así que el aviso vuelve a mostrarse sin necesidad de efectos.
   const [dismissedResult, setDismissedResult] = useState(null)
+  const [marks, setMarks] = useState({})
+  const [markingCell, setMarkingCell] = useState(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const revealMode = status === 'win'
@@ -40,15 +40,20 @@ export default function GameScreen({ game }) {
   const celebrating = status === 'win' && result?.solved && !result?.revealed
   const bannerDelay = celebrating ? Math.min(puzzle.map.rooms.length * 0.32 + 0.4, 2.2) : 0
 
-  const allPlaced = useMemo(
-    () =>
-      [...puzzle.characters.suspects, puzzle.characters.victim].every((n) => placements[n]),
-    [puzzle.characters, placements],
+  const characterNames = useMemo(
+    () => [...puzzle.characters.suspects, puzzle.characters.victim],
+    [puzzle.characters],
   )
+  const placedCount = useMemo(
+    () => characterNames.filter((n) => placements[n]).length,
+    [characterNames, placements],
+  )
+  const allPlaced = placedCount === characterNames.length
 
   const handleTokenClick = useCallback(
     (name) => {
       if (revealMode) return
+      setMarkingCell(null)
       if (placements[name]) {
         unplace(name)
         setSelectedToken(null)
@@ -68,9 +73,34 @@ export default function GameScreen({ game }) {
     [revealMode, selectedToken, place],
   )
 
+  const handleMarkToggle = useCallback((r, c, name) => {
+    const key = `${r},${c}`
+    setMarks((prev) => {
+      const current = prev[key] || []
+      const next = current.includes(name)
+        ? current.filter((n) => n !== name)
+        : [...current, name]
+      if (next.length === 0) {
+        const rest = { ...prev }
+        delete rest[key]
+        return rest
+      }
+      return { ...prev, [key]: next }
+    })
+  }, [])
+
+  const handleMarkOpen = useCallback((r, c) => {
+    setMarkingCell({ r, c })
+  }, [])
+
+  const handleMarkClose = useCallback(() => {
+    setMarkingCell(null)
+  }, [])
+
   const handleDragStart = (e) => {
     setActiveId(e.active.id)
     setSelectedToken(null)
+    setMarkingCell(null)
   }
 
   const handleDragEnd = (e) => {
@@ -137,6 +167,11 @@ export default function GameScreen({ game }) {
                 zone={zone}
                 celebrating={celebrating}
                 draggingName={activeId}
+                marks={marks}
+                markingCell={markingCell}
+                onMarkToggle={handleMarkToggle}
+                onMarkOpen={handleMarkOpen}
+                onMarkClose={handleMarkClose}
               />
             </div>
           </div>
@@ -146,6 +181,8 @@ export default function GameScreen({ game }) {
             <CluePanel puzzle={puzzle} />
             <Toolbar
               allPlaced={allPlaced}
+              placedCount={placedCount}
+              totalCount={characterNames.length}
               onCheck={check}
               onReveal={() => setConfirmReveal(true)}
               onNewGame={newGame}

@@ -5,13 +5,15 @@
 // partida. Memoizado: con `geometry`/`characters` de referencia estable, una
 // celda solo se vuelve a renderizar si cambia su propio estado.
 
-import { memo } from 'react'
+import { memo, useCallback, useRef } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
 import { FurnitureIcon } from './Furniture.jsx'
 import { DraggableToken, TokenChip } from './CharacterToken.jsx'
 import { PixelGrid } from './pixelArt.jsx'
 import { PIXEL_X_GRID, PIXEL_X_PALETTE } from './pixelSprites.js'
+import { colorForCharacter } from './palette.js'
+import CellMarkPopup from './CellMarkPopup.jsx'
 import {
   WINDOW_BORDER_SIDE,
   WINDOW_GLASS_COLOR,
@@ -38,6 +40,11 @@ function Cell({
   onCellClick,
   onTokenClick,
   revealMode,
+  marks,
+  markingCell,
+  onMarkToggle,
+  onMarkOpen,
+  onMarkClose,
 }) {
   const { r, c, size, tint, borders, label, furniture, isWindow, wall, rugEdges, occupiable } =
     geometry
@@ -47,16 +54,40 @@ function Cell({
     disabled: !occupiable,
   })
 
+  // Ref propio a la celda (combinado con el de dnd-kit) para anclar el popup.
+  const cellRef = useRef(null)
+  const setRefs = useCallback(
+    (node) => {
+      cellRef.current = node
+      setNodeRef(node)
+    },
+    [setNodeRef],
+  )
+
   const tokenSize = Math.round(size * 0.62)
   const canDrop = occupiable && (isOver || (selectedToken && !occupantName))
   const margin = Math.max(2, Math.round(size * 0.05))
-  const clickable = occupiable && selectedToken && !occupantName
+  const clickable = occupiable && !revealMode
+
+  const cellMarks = marks?.[`${r},${c}`] || []
+  const isMarkingThis = markingCell?.r === r && markingCell?.c === c
+
+  const handleClick = () => {
+    if (!occupiable || revealMode) return
+    if (selectedToken && !occupantName) {
+      onCellClick(r, c)
+    } else if (isMarkingThis) {
+      onMarkClose()
+    } else {
+      onMarkOpen(r, c)
+    }
+  }
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       data-rc={`${r}-${c}`}
-      onClick={() => occupiable && onCellClick(r, c)}
+      onClick={handleClick}
       role={occupiable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}
       aria-label={`Casilla fila ${r + 1}, columna ${c + 1}${occupantName ? `, ${occupantName}` : ''}`}
@@ -112,9 +143,38 @@ function Cell({
         <PixelGrid
           grid={PIXEL_X_GRID}
           palette={PIXEL_X_PALETTE}
-          size={Math.round(size * 0.7)}
+          size={Math.round(size * 0.5)}
           className="pointer-events-none absolute"
         />
+      )}
+
+      {/* Marcas de candidatos (anotaciones del jugador). Permanecen visibles
+          aunque haya una ficha colocada encima. */}
+      {cellMarks.length > 0 && (
+        <div
+          className="pointer-events-none absolute inset-0 flex flex-wrap items-end justify-center gap-px p-0.5"
+          style={{ alignContent: 'end' }}
+        >
+          {cellMarks.map((name) => {
+            const color = colorForCharacter(name, characters)
+            return (
+              <span
+                key={name}
+                className="inline-flex items-center justify-center rounded-full text-white font-bold leading-none"
+                style={{
+                  width: Math.max(12, Math.round(size * 0.2)),
+                  height: Math.max(12, Math.round(size * 0.2)),
+                  fontSize: Math.max(7, Math.round(size * 0.12)),
+                  background: color.bg,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+                }}
+                title={name}
+              >
+                {name[0]}
+              </span>
+            )
+          })}
+        </div>
       )}
 
       {/* Ficha colocada. */}
@@ -134,11 +194,28 @@ function Cell({
               size={tokenSize}
               onClick={(e) => {
                 e.stopPropagation()
-                onTokenClick(occupantName)
+                if (isMarkingThis) onMarkClose()
+                else onMarkOpen(r, c)
               }}
             />
           )}
         </motion.div>
+      )}
+
+      {/* Popup de marcado. */}
+      {isMarkingThis && (
+        <CellMarkPopup
+          r={r}
+          c={c}
+          characters={characters}
+          marks={marks}
+          occupantName={occupantName}
+          onToggle={onMarkToggle}
+          onRemove={onTokenClick}
+          onClose={onMarkClose}
+          cellSize={size}
+          anchorRef={cellRef}
+        />
       )}
     </div>
   )
