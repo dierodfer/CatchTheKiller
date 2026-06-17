@@ -13,7 +13,7 @@
 
 import { CLUE_TYPES, evalClue, buildClueContext } from './clues.js'
 import { GENERATION } from './constants.js'
-import { PROXIMITY_ELEMENTS, ON_ELEMENTS } from './elements.js'
+import { PROXIMITY_ELEMENTS, ON_ELEMENTS, ELEMENT_IDS } from './elements.js'
 import { solve } from './solver.js'
 import { freeCells } from './mapGenerator.js'
 import { shuffle, pick, weightedPick } from './random.js'
@@ -44,13 +44,17 @@ const SEED_WEIGHT = {
   inRow: 2,
   inColumn: 2,
   // Relacionales/direccionales: nunca como semilla (no acotan el dominio)
+  noSuspectInRoom: 0,
   withInRoom: 0,
-  aloneInRoom: 0,
   notWithInRoom: 0,
   rowAbove: 0,
   rowBelow: 0,
   colLeft: 0,
   colRight: 0,
+  // Pistas de habitación (unarias, peso medio)
+  roomSize: 3,
+  roomElementCount: 3,
+  roomWindowCount: 3,
   // Débiles/negativas: nunca como semilla
   notInRoom: 0,
   notNextToMueble: 0,
@@ -67,6 +71,27 @@ const SEED_WEIGHT = {
 // (GENERATION.MAX_ROWCOL_CLUES) para no saturarlo de coordenadas — las pistas
 // de habitación, mobiliario y dirección relativa llevan el peso del razonamiento.
 const ROWCOL_KINDS = new Set(['inRow', 'notInRow', 'inColumn', 'notInColumn'])
+
+// Coherencia por eje: un MISMO sujeto no puede llevar a la vez una pista
+// absoluta de su columna y una relativa de izquierda/derecha — si ya se conoce
+// su columna, decir que está a la izquierda/derecha de otro es redundante y se
+// presupone. Igual en vertical: fila absoluta vs norte/sur. (El caso CRUZADO
+// —A fija su columna y B dice estar a su izquierda— NO se ve afectado: son
+// sujetos distintos, y ahí la dirección sí ayuda a ubicar a B.)
+const COL_ABS = new Set(['inColumn', 'notInColumn'])
+const COL_REL = new Set(['colLeft', 'colRight'])
+const ROW_ABS = new Set(['inRow', 'notInRow'])
+const ROW_REL = new Set(['rowAbove', 'rowBelow'])
+
+function axisRedundant(cand, chosen) {
+  const same = chosen.filter((c) => c.subject === cand.subject)
+  const has = (set) => same.some((c) => set.has(c.kind))
+  if (COL_ABS.has(cand.kind) && has(COL_REL)) return true
+  if (COL_REL.has(cand.kind) && has(COL_ABS)) return true
+  if (ROW_ABS.has(cand.kind) && has(ROW_REL)) return true
+  if (ROW_REL.has(cand.kind) && has(ROW_ABS)) return true
+  return false
+}
 
 const clueId = (c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`
 
@@ -135,7 +160,7 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   for (const room of shuffle(rng, ctx.rooms).slice(0, 2)) {
     if (room !== myRoom) add('notInRoom', { room })
   }
-  add('aloneInRoom', {})
+  add('noSuspectInRoom', {})
   for (const o of others) {
     add('withInRoom', { other: o })
     add('notWithInRoom', { other: o })
@@ -146,6 +171,22 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('notNextToMueble', {})
   add('nextToWindow', {})
   for (const id of ON_ELEMENTS) add('onElement', { element: id })
+
+  // Propiedades de la habitación
+  add('roomSize', { size: 'grande' })
+  add('roomSize', { size: 'pequeña' })
+  // Conteo ambiguo por elemento ("más de 1 cama", "menos de 2 plantas"). La
+  // alfombra se excluye: ocupa varias celdas pero es UNA sola, así que contar
+  // celdas daría cifras engañosas. add()/isObviousClue descartan las cotas que
+  // no discriminan (verdaderas en toda sala).
+  for (const id of ELEMENT_IDS) {
+    if (id === 'alfombra') continue
+    add('roomElementCount', { element: id, op: 'masDe', value: 1 })
+    add('roomElementCount', { element: id, op: 'masDe', value: 2 })
+    add('roomElementCount', { element: id, op: 'menosDe', value: 2 })
+    add('roomElementCount', { element: id, op: 'menosDe', value: 3 })
+  }
+  add('roomWindowCount', { count: ctx.roomWindows(myRoom) })
 
   // Absolutas
   add('inRow', { row: pos.row })
@@ -222,6 +263,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
           if (chosenIds.has(clueId(cand))) continue
           if (countForSubject(cand.subject) >= limit) continue
           if (rowColCapped && ROWCOL_KINDS.has(cand.kind)) continue
+          if (axisRedundant(cand, chosen)) continue
           chosen.push(cand)
           const c = count(chosen, CAP)
           chosen.pop()

@@ -10,7 +10,7 @@
 // "la IA propone, el Solver decide" — aquí no hay IA, la lógica es la autoridad.
 
 import { ADJACENT, ROOM_ARTICLE, cellKey } from './constants.js'
-import { ELEMENTS, MUEBLE_ELEMENTS, elementPhrase } from './elements.js'
+import { ELEMENTS, MUEBLE_ELEMENTS, elementPhrase, elementCountPhrase } from './elements.js'
 
 // Frase "el/la <habitación>" con el artículo correcto (concordancia de género).
 const roomPhrase = (room) => `${ROOM_ARTICLE[room] ?? 'el'} ${room}`
@@ -47,12 +47,16 @@ export const CLUE_TYPES = {
     evaluate: (pos, p, _all, ctx) => ctx.roomAt(pos.row, pos.col) !== p.room,
     text: (p) => `No estaba en ${roomPhrase(p.room)}`,
   },
-  aloneInRoom: {
+  // "No compartía habitación con ningún otro sospechoso". A diferencia de
+  // "estaba solo", NO excluye a la víctima: el asesino (a solas con la víctima)
+  // también la cumple, así que la pista nunca delata quién NO es el asesino.
+  // Mantiene casi toda la fuerza de desambiguación de habitaciones.
+  noSuspectInRoom: {
     tier: 'room',
     unary: false,
     evaluate: (pos, _p, all, ctx) => {
       const myRoom = ctx.roomAt(pos.row, pos.col)
-      for (const name of ctx.everyone) {
+      for (const name of ctx.suspects) {
         const op = all[name]
         if (!op) continue
         // Cada personaje ocupa una celda única: la coincidente es uno mismo.
@@ -61,7 +65,7 @@ export const CLUE_TYPES = {
       }
       return true
     },
-    text: () => `Estaba solo en mi habitación`,
+    text: () => `No compartía habitación con ningún otro sospechoso`,
   },
   withInRoom: {
     tier: 'room',
@@ -227,6 +231,42 @@ export const CLUE_TYPES = {
     evaluate: (pos, p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === p.element,
     text: (p) => ELEMENTS[p.element].onText,
   },
+
+  // ───────── Propiedades de la habitación ─────────
+  roomSize: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, p, _all, ctx) => {
+      const n = ctx.roomCells(ctx.roomAt(pos.row, pos.col))
+      return p.size === 'grande' ? n >= 6 : n <= 3
+    },
+    text: (p) => `Estaba en una habitación ${p.size}`,
+  },
+  // Conteo ambiguo de un elemento en la habitación: "más de 1 cama" (≥2) o
+  // "menos de 2 plantas" (≤1). No revela la cifra exacta — solo una cota — y por
+  // eso resulta menos delator que afirmar la presencia concreta de un elemento.
+  roomElementCount: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, p, _all, ctx) => {
+      const n = ctx.roomElementCount(ctx.roomAt(pos.row, pos.col), p.element)
+      return p.op === 'masDe' ? n > p.value : n < p.value
+    },
+    text: (p) =>
+      `En mi habitación había ${p.op === 'masDe' ? 'más' : 'menos'} de ` +
+      `${elementCountPhrase(p.element, p.value)}`,
+  },
+  roomWindowCount: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, p, _all, ctx) =>
+      ctx.roomWindows(ctx.roomAt(pos.row, pos.col)) === p.count,
+    text: (p) =>
+      p.count === 0
+        ? `Mi habitación no tenía ventanas`
+        : `Mi habitación tenía ${p.count} ventana${p.count > 1 ? 's' : ''}`,
+  },
+
 }
 
 // Evalúa una pista concreta sobre un conjunto de posiciones.
@@ -240,13 +280,37 @@ export function evalClue(clue, placements, ctx) {
 export function buildClueContext(map, roomLookup, characters) {
   const windowSet = new Set(map.windows.map((w) => cellKey(w.row, w.col)))
   const everyone = [...characters.suspects, characters.victim]
-  // Índice inverso posición -> nombre, recalculado por evaluación de aloneInRoom.
+  const suspects = [...characters.suspects]
+
+  // Índices precomputados para las pistas de habitación: nº de celdas, conteo de
+  // cada elemento por sala y nº de ventanas por sala.
+  const roomCellCount = {}
+  const roomElemCounts = {}
+  for (const room of map.rooms) {
+    roomCellCount[room.name] = room.cells.length
+    const counts = {}
+    for (const [r, c] of room.cells) {
+      const e = map.grid[r][c]
+      if (e) counts[e] = (counts[e] || 0) + 1
+    }
+    roomElemCounts[room.name] = counts
+  }
+  const roomWindowCount = {}
+  for (const w of map.windows) {
+    const rn = roomLookup[cellKey(w.row, w.col)]
+    roomWindowCount[rn] = (roomWindowCount[rn] || 0) + 1
+  }
+
   return {
     gridSize: map.gridSize,
     everyone,
+    suspects,
     roomAt: (r, c) => roomLookup[cellKey(r, c)],
     furnitureAt: (r, c) =>
       r >= 0 && c >= 0 && r < map.gridSize && c < map.gridSize ? map.grid[r][c] : null,
     isWindow: (r, c) => windowSet.has(cellKey(r, c)),
+    roomCells: (roomName) => roomCellCount[roomName] || 0,
+    roomElementCount: (roomName, elementId) => roomElemCounts[roomName]?.[elementId] || 0,
+    roomWindows: (roomName) => roomWindowCount[roomName] || 0,
   }
 }
