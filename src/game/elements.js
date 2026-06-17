@@ -14,6 +14,7 @@
 // Campos:
 //   - id:       identificador estable (clave en map.grid).
 //   - label:    nombre mostrado en las pistas (futuro: variable por ambiente).
+//   - plural:   forma plural del nombre (para pistas de conteo: "2 camas").
 //   - article:  artículo indeterminado para concordancia ("una mesa", "un sofá").
 //   - blocking: true si bloquea la celda (ningún personaje puede ocuparla).
 //   - mueble:   true si se considera "mueble" (alfombra y planta NO lo son).
@@ -21,14 +22,15 @@
 
 export const ELEMENTS = {
   // Bloqueantes (no ocupables).
-  mesa: { id: 'mesa', label: 'mesa', article: 'una', blocking: true, mueble: true },
-  TV: { id: 'TV', label: 'TV', article: 'una', blocking: true, mueble: true },
-  planta: { id: 'planta', label: 'planta', article: 'una', blocking: true, mueble: false },
-  estantería: { id: 'estantería', label: 'estantería', article: 'una', blocking: true, mueble: true },
+  mesa: { id: 'mesa', label: 'mesa', plural: 'mesas', article: 'una', blocking: true, mueble: true },
+  TV: { id: 'TV', label: 'TV', plural: 'TVs', article: 'una', blocking: true, mueble: true },
+  planta: { id: 'planta', label: 'planta', plural: 'plantas', article: 'una', blocking: true, mueble: false },
+  estantería: { id: 'estantería', label: 'estantería', plural: 'estanterías', article: 'una', blocking: true, mueble: true },
   // Libres (ocupables): definen `onText` para la pista "estaba encima de".
   silla: {
     id: 'silla',
     label: 'silla',
+    plural: 'sillas',
     article: 'una',
     blocking: false,
     mueble: true,
@@ -37,6 +39,7 @@ export const ELEMENTS = {
   alfombra: {
     id: 'alfombra',
     label: 'alfombra',
+    plural: 'alfombras',
     article: 'una',
     blocking: false,
     mueble: false,
@@ -45,6 +48,7 @@ export const ELEMENTS = {
   cama: {
     id: 'cama',
     label: 'cama',
+    plural: 'camas',
     article: 'una',
     blocking: false,
     mueble: true,
@@ -77,6 +81,11 @@ export const ON_ELEMENTS = idsWhere((e) => !!e.onText)
 // Frase indeterminada "una <elemento>" con el nombre actual del elemento.
 // Punto único de indirección para el nombre mostrado (futuro: por ambiente).
 export const elementPhrase = (id) => `${ELEMENTS[id].article} ${ELEMENTS[id].label}`
+
+// Frase de conteo "N <elemento>" con concordancia singular/plural
+// ("1 cama", "2 plantas"). Para las pistas de cantidad por habitación.
+export const elementCountPhrase = (id, n) =>
+  `${n} ${n === 1 ? ELEMENTS[id].label : ELEMENTS[id].plural}`
 
 // ¿Este id se considera un "mueble"? (alfombra/planta → false).
 export const isMueble = (id) => !!ELEMENTS[id]?.mueble
