@@ -9,7 +9,8 @@
 // El evaluador es la base tanto del generador de pistas como del Solver:
 // "la IA propone, el Solver decide" — aquí no hay IA, la lógica es la autoridad.
 
-import { FURNITURE, ADJACENT, ROOM_ARTICLE, cellKey } from './constants.js'
+import { ADJACENT, ROOM_ARTICLE, cellKey } from './constants.js'
+import { ELEMENTS, MUEBLE_ELEMENTS, elementPhrase } from './elements.js'
 
 // Frase "el/la <habitación>" con el artículo correcto (concordancia de género).
 const roomPhrase = (room) => `${ROOM_ARTICLE[room] ?? 'el'} ${room}`
@@ -171,30 +172,29 @@ export const CLUE_TYPES = {
     text: (p) => `Estaba a la derecha de ${p.other}`,
   },
 
-  // ───────── Proximidad a mobiliario ─────────
-  nextToFurniture: {
+  // ───────── Proximidad a elementos del mapa ─────────
+  // Pista "junto a una X" para cualquier elemento (param `element` = id).
+  nextToElement: {
     tier: 'room',
     unary: true,
-    // Solo cuenta el mueble si está en la MISMA habitación que el personaje: una
-    // celda contigua puede pertenecer a otra habitación y su mobiliario no debe
-    // referenciarse.
+    // Solo cuenta el elemento si está en la MISMA habitación que el personaje:
+    // una celda contigua puede pertenecer a otra habitación y su elemento no
+    // debe referenciarse.
     //
     // Además, "junto a" excluye "encima de": si el personaje ocupa una celda del
-    // mismo tipo de mueble (silla o cama), la pista no aplica aunque haya otra
-    // contigua igual — la redacción correcta sería "estaba sobre la silla", no
-    // "junto a una silla". Sin este filtro la pista resultaría engañosa.
+    // mismo tipo de elemento (silla/alfombra/cama), la pista no aplica aunque
+    // haya otra contigua igual — la redacción correcta sería "estaba sobre la
+    // alfombra", no "junto a una alfombra". Sin este filtro sería engañosa.
     evaluate: (pos, p, _all, ctx) =>
-      ctx.furnitureAt(pos.row, pos.col) !== p.furniture &&
+      ctx.furnitureAt(pos.row, pos.col) !== p.element &&
       adjacentHas(
         ctx,
         pos,
         (r, c) =>
-          ctx.furnitureAt(r, c) === p.furniture &&
+          ctx.furnitureAt(r, c) === p.element &&
           ctx.roomAt(r, c) === ctx.roomAt(pos.row, pos.col),
       ),
-    // Todos los muebles son femeninos en español (mesa, TV, estantería, silla, cama),
-    // así que "una" concuerda en todos los casos.
-    text: (p) => `Estaba junto a una ${p.furniture}`,
+    text: (p) => `Estaba junto a ${elementPhrase(p.element)}`,
   },
   // La ventana forma parte de la pared de su celda: estar "junto a la ventana"
   // significa ocupar esa misma celda (no una contigua).
@@ -204,38 +204,28 @@ export const CLUE_TYPES = {
     evaluate: (pos, _p, _all, ctx) => ctx.isWindow(pos.row, pos.col),
     text: () => `Estaba junto a una ventana`,
   },
-  notNextToFurniture: {
+  // "Ningún mueble" considera SOLO los elementos marcados como mueble
+  // (alfombra y planta no cuentan).
+  notNextToMueble: {
     tier: 'room',
     unary: true,
-    // Coherente con nextToFurniture: solo se consideran muebles de la misma
-    // habitación, así que el mobiliario de cuartos contiguos no invalida la pista.
     evaluate: (pos, _p, _all, ctx) =>
       !adjacentHas(
         ctx,
         pos,
         (r, c) =>
-          FURNITURE.includes(ctx.furnitureAt(r, c)) &&
+          MUEBLE_ELEMENTS.includes(ctx.furnitureAt(r, c)) &&
           ctx.roomAt(r, c) === ctx.roomAt(pos.row, pos.col),
       ),
     text: () => `No estaba junto a ningún mueble`,
   },
-  onChair: {
+  // Pista "encima de" para cualquier elemento ocupable (param `element` = id);
+  // la redacción la define `onText` del propio elemento.
+  onElement: {
     tier: 'room',
     unary: true,
-    evaluate: (pos, _p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === 'silla',
-    text: () => `Estaba sentado en una silla`,
-  },
-  onRug: {
-    tier: 'room',
-    unary: true,
-    evaluate: (pos, _p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === 'alfombra',
-    text: () => `Estaba sobre la alfombra`,
-  },
-  onBed: {
-    tier: 'room',
-    unary: true,
-    evaluate: (pos, _p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === 'cama',
-    text: () => `Estaba acostado en la cama`,
+    evaluate: (pos, p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === p.element,
+    text: (p) => ELEMENTS[p.element].onText,
   },
 }
 

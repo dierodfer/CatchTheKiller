@@ -1,14 +1,8 @@
 // Generación local del mapa (sección 11 del documento).
 // Orden: cuadrícula -> habitaciones irregulares -> mobiliario -> ventanas -> validación.
 
-import {
-  BLOCKING_FURNITURE,
-  FREE_FURNITURE,
-  ROOM_NAMES,
-  ADJACENT,
-  GENERATION,
-  cellKey,
-} from './constants.js'
+import { ROOM_NAMES, ADJACENT, GENERATION, cellKey } from './constants.js'
+import { BLOCKING_ELEMENTS, FREE_ELEMENTS } from './elements.js'
 import { randInt, pick, shuffle } from './random.js'
 
 const WALL_BY_BORDER = (size) => (r, c) => {
@@ -113,7 +107,7 @@ export function generateMap(rng, config) {
     const numBlocking = randInt(rng, blockingRange[0], blockingRange[1])
     const blockingCells = shuffle(rng, interiorCells).slice(0, numBlocking)
     for (const [r, c] of blockingCells) {
-      grid[r][c] = pick(rng, BLOCKING_FURNITURE)
+      grid[r][c] = pick(rng, BLOCKING_ELEMENTS)
     }
 
     // Mobiliario libre (silla, cama) sobre celdas aún libres.
@@ -174,7 +168,7 @@ export function freeCells(map) {
 // junto a la pared, frente a la ventana.
 export function isOccupiable(map, r, c) {
   const v = map.grid[r][c]
-  return v === null || FREE_FURNITURE.includes(v)
+  return v === null || FREE_ELEMENTS.includes(v)
 }
 
 // Coloca una alfombra rectangular (2 a 6 celdas) sobre celdas libres de una

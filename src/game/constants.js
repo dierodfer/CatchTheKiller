@@ -1,17 +1,7 @@
 // Catálogo central de constantes del juego.
-
-// Mobiliario que bloquea la celda: ningún personaje puede colocarse encima.
-export const BLOCKING_FURNITURE = ['mesa', 'TV', 'planta', 'estantería']
-
-// Mobiliario "libre": un personaje puede ocupar la celda igualmente.
-export const FREE_FURNITURE = ['silla', 'alfombra', 'cama']
-
-// Conjunto completo de mobiliario interior.
-export const FURNITURE = [...BLOCKING_FURNITURE, ...FREE_FURNITURE]
-
-// Mobiliario candidato para pistas de proximidad ("Estaba junto a una X"):
-// solo los 5 muebles de referencia (sin planta ni alfombra en pistas).
-export const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'estantería', 'silla', 'cama']
+//
+// Los "elementos del mapa" (antes "mobiliario") viven en su propio registro:
+// ver `elements.js` (ELEMENTS, BLOCKING_ELEMENTS, FREE_ELEMENTS, etc.).
 
 // Nombres de habitaciones disponibles (sección 11 del documento).
 export const ROOM_NAMES = [

@@ -126,15 +126,15 @@ for (const diff of difficulties) {
       `seed ${seed}: como máximo 1 pista de fila/columna (hay ${rowColClues.length})`,
     )
 
-    // Invariante: una pista "junto a un mueble" nunca se emite si el sujeto está
-    // de hecho ENCIMA de ese mismo tipo de mueble (alfombra/silla/cama) — sería
-    // engañosa ("estaba sobre la alfombra" ≠ "junto a una alfombra").
+    // Invariante: una pista "junto a un elemento" nunca se emite si el sujeto
+    // está de hecho ENCIMA de ese mismo tipo de elemento (alfombra/silla/cama) —
+    // sería engañosa ("estaba sobre la alfombra" ≠ "junto a una alfombra").
     for (const c of clues) {
-      if (c.kind !== 'nextToFurniture') continue
+      if (c.kind !== 'nextToElement') continue
       const p = solution[c.subject]
       assert(
-        map.grid[p.row][p.col] !== c.params.furniture,
-        `seed ${seed}: "${c.subject} junto a ${c.params.furniture}" pero está encima de una`,
+        map.grid[p.row][p.col] !== c.params.element,
+        `seed ${seed}: "${c.subject} junto a ${c.params.element}" pero está encima de uno`,
       )
     }
 

@@ -12,7 +12,8 @@
 // verificación de unicidad.
 
 import { CLUE_TYPES, evalClue, buildClueContext } from './clues.js'
-import { FURNITURE_FOR_PROXIMITY, GENERATION } from './constants.js'
+import { GENERATION } from './constants.js'
+import { PROXIMITY_ELEMENTS, ON_ELEMENTS } from './elements.js'
 import { solve } from './solver.js'
 import { freeCells } from './mapGenerator.js'
 import { shuffle, pick, weightedPick } from './random.js'
@@ -36,10 +37,8 @@ import { shuffle, pick, weightedPick } from './random.js'
 const SEED_WEIGHT = {
   // Unarias específicas y muy informativas
   inRoom: 5,
-  nextToFurniture: 5,
-  onChair: 4,
-  onRug: 4,
-  onBed: 4,
+  nextToElement: 5,
+  onElement: 4,
   nextToWindow: 4,
   // Coordenada absoluta (además sujeta al tope global de fila/columna)
   inRow: 2,
@@ -54,7 +53,7 @@ const SEED_WEIGHT = {
   colRight: 0,
   // Débiles/negativas: nunca como semilla
   notInRoom: 0,
-  notNextToFurniture: 0,
+  notNextToMueble: 0,
   inCorner: 0,
   notInCorner: 0,
   inBorder: 0,
@@ -142,13 +141,11 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
     add('notWithInRoom', { other: o })
   }
 
-  // Proximidad a mobiliario
-  for (const f of FURNITURE_FOR_PROXIMITY) add('nextToFurniture', { furniture: f })
-  add('notNextToFurniture', {})
+  // Proximidad a elementos del mapa
+  for (const id of PROXIMITY_ELEMENTS) add('nextToElement', { element: id })
+  add('notNextToMueble', {})
   add('nextToWindow', {})
-  add('onChair', {})
-  // onRug no se genera como pista (solo alfombra interna en el mapa)
-  add('onBed', {})
+  for (const id of ON_ELEMENTS) add('onElement', { element: id })
 
   // Absolutas
   add('inRow', { row: pos.row })
@@ -245,7 +242,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
         if (best) break
         // Entre las candidatas igual de constriñentes, prefiere el tipo de pista
         // menos usado hasta ahora: así el refuerzo aporta variedad, no más
-        // `inRoom`/`nextToFurniture`.
+        // `inRoom`/`nextToElement`.
         if (ties.length) {
           best = ties.reduce((a, b) => (kindUsage(b) < kindUsage(a) ? b : a))
           break
