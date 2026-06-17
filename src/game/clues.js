@@ -33,6 +33,10 @@ function adjacentHas(ctx, pos, predicate) {
   return false
 }
 
+function manhattan(a, b) {
+  return Math.abs(a.row - b.row) + Math.abs(a.col - b.col)
+}
+
 export const CLUE_TYPES = {
   // ───────── Posición en habitación ─────────
   inRoom: {
@@ -227,6 +231,70 @@ export const CLUE_TYPES = {
     evaluate: (pos, p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === p.element,
     text: (p) => ELEMENTS[p.element].onText,
   },
+
+  // ───────── Propiedades de la habitación ─────────
+  roomSize: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, p, _all, ctx) => {
+      const n = ctx.roomCells(ctx.roomAt(pos.row, pos.col))
+      return p.size === 'grande' ? n >= 6 : n <= 3
+    },
+    text: (p) => `Estaba en una habitación ${p.size}`,
+  },
+  roomHasElement: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, p, _all, ctx) =>
+      ctx.roomHasElement(ctx.roomAt(pos.row, pos.col), p.element),
+    text: (p) => `En mi habitación había ${elementPhrase(p.element)}`,
+  },
+  roomWindowCount: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, p, _all, ctx) =>
+      ctx.roomWindows(ctx.roomAt(pos.row, pos.col)) === p.count,
+    text: (p) =>
+      p.count === 0
+        ? `Mi habitación no tenía ventanas`
+        : `Mi habitación tenía ${p.count} ventana${p.count > 1 ? 's' : ''}`,
+  },
+
+  // ───────── Frontera de habitación ─────────
+  atRoomEdge: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, _p, _all, ctx) =>
+      adjacentHas(ctx, pos, (r, c) => ctx.roomAt(r, c) !== ctx.roomAt(pos.row, pos.col)),
+    text: () => `Estaba junto a la entrada de mi habitación`,
+  },
+  notAtRoomEdge: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, _p, _all, ctx) =>
+      !adjacentHas(ctx, pos, (r, c) => ctx.roomAt(r, c) !== ctx.roomAt(pos.row, pos.col)),
+    text: () => `Estaba en el interior de mi habitación`,
+  },
+
+  // ───────── Dirección de ventana ─────────
+  windowWall: {
+    tier: 'room',
+    unary: true,
+    evaluate: (pos, p, _all, ctx) => ctx.windowWall(pos.row, pos.col) === p.wall,
+    text: (p) => `Mi ventana daba al ${p.wall}`,
+  },
+
+  // ───────── Distancia relativa ─────────
+  closerThan: {
+    tier: 'relative',
+    unary: false,
+    evaluate: (pos, p, all) => {
+      const a = all[p.closer]
+      const b = all[p.farther]
+      return !!a && !!b && manhattan(pos, a) < manhattan(pos, b)
+    },
+    text: (p) => `Estaba más cerca de ${p.closer} que de ${p.farther}`,
+  },
 }
 
 // Evalúa una pista concreta sobre un conjunto de posiciones.
@@ -240,7 +308,26 @@ export function evalClue(clue, placements, ctx) {
 export function buildClueContext(map, roomLookup, characters) {
   const windowSet = new Set(map.windows.map((w) => cellKey(w.row, w.col)))
   const everyone = [...characters.suspects, characters.victim]
-  // Índice inverso posición -> nombre, recalculado por evaluación de aloneInRoom.
+
+  // Índices precomputados para las nuevas pistas.
+  const roomCellCount = {}
+  const roomElementSet = {}
+  for (const room of map.rooms) {
+    roomCellCount[room.name] = room.cells.length
+    const elems = new Set()
+    for (const [r, c] of room.cells) {
+      if (map.grid[r][c]) elems.add(map.grid[r][c])
+    }
+    roomElementSet[room.name] = elems
+  }
+  const roomWindowCount = {}
+  for (const w of map.windows) {
+    const rn = roomLookup[cellKey(w.row, w.col)]
+    roomWindowCount[rn] = (roomWindowCount[rn] || 0) + 1
+  }
+  const windowWallMap = {}
+  for (const w of map.windows) windowWallMap[cellKey(w.row, w.col)] = w.wall
+
   return {
     gridSize: map.gridSize,
     everyone,
@@ -248,5 +335,9 @@ export function buildClueContext(map, roomLookup, characters) {
     furnitureAt: (r, c) =>
       r >= 0 && c >= 0 && r < map.gridSize && c < map.gridSize ? map.grid[r][c] : null,
     isWindow: (r, c) => windowSet.has(cellKey(r, c)),
+    roomCells: (roomName) => roomCellCount[roomName] || 0,
+    roomHasElement: (roomName, elementId) => !!roomElementSet[roomName]?.has(elementId),
+    roomWindows: (roomName) => roomWindowCount[roomName] || 0,
+    windowWall: (r, c) => windowWallMap[cellKey(r, c)] || null,
   }
 }

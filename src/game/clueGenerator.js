@@ -13,7 +13,7 @@
 
 import { CLUE_TYPES, evalClue, buildClueContext } from './clues.js'
 import { GENERATION } from './constants.js'
-import { PROXIMITY_ELEMENTS, ON_ELEMENTS } from './elements.js'
+import { PROXIMITY_ELEMENTS, ON_ELEMENTS, ELEMENT_IDS } from './elements.js'
 import { solve } from './solver.js'
 import { freeCells } from './mapGenerator.js'
 import { shuffle, pick, weightedPick } from './random.js'
@@ -51,9 +51,17 @@ const SEED_WEIGHT = {
   rowBelow: 0,
   colLeft: 0,
   colRight: 0,
-  // Débiles/negativas: nunca como semilla
+  // Nuevas pistas de habitación (unarias, peso medio)
+  roomSize: 3,
+  roomHasElement: 3,
+  roomWindowCount: 3,
+  atRoomEdge: 2,
+  windowWall: 3,
+  // Débiles/negativas/relativas: nunca como semilla
   notInRoom: 0,
   notNextToMueble: 0,
+  notAtRoomEdge: 0,
+  closerThan: 0,
   inCorner: 0,
   notInCorner: 0,
   inBorder: 0,
@@ -146,6 +154,30 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('notNextToMueble', {})
   add('nextToWindow', {})
   for (const id of ON_ELEMENTS) add('onElement', { element: id })
+
+  // Propiedades de la habitación
+  add('roomSize', { size: 'grande' })
+  add('roomSize', { size: 'pequeña' })
+  for (const id of ELEMENT_IDS) add('roomHasElement', { element: id })
+  const myWindowCount = ctx.roomWindows(myRoom)
+  add('roomWindowCount', { count: myWindowCount })
+  if (myWindowCount === 0) add('roomWindowCount', { count: 0 })
+
+  // Frontera de habitación
+  add('atRoomEdge', {})
+  add('notAtRoomEdge', {})
+
+  // Dirección de la ventana
+  const myWall = ctx.windowWall(pos.row, pos.col)
+  if (myWall) add('windowWall', { wall: myWall })
+
+  // Distancia relativa
+  for (let i = 0; i < others.length; i++) {
+    for (let j = i + 1; j < others.length; j++) {
+      add('closerThan', { closer: others[i], farther: others[j] })
+      add('closerThan', { closer: others[j], farther: others[i] })
+    }
+  }
 
   // Absolutas
   add('inRow', { row: pos.row })
