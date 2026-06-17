@@ -81,7 +81,8 @@ export default function GameScreen({ game }) {
         ? current.filter((n) => n !== name)
         : [...current, name]
       if (next.length === 0) {
-        const { [key]: _, ...rest } = prev
+        const rest = { ...prev }
+        delete rest[key]
         return rest
       }
       return { ...prev, [key]: next }
