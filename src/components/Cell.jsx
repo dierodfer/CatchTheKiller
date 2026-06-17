@@ -5,7 +5,7 @@
 // partida. Memoizado: con `geometry`/`characters` de referencia estable, una
 // celda solo se vuelve a renderizar si cambia su propio estado.
 
-import { memo } from 'react'
+import { memo, useCallback, useRef } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
 import { FurnitureIcon } from './Furniture.jsx'
@@ -54,6 +54,16 @@ function Cell({
     disabled: !occupiable,
   })
 
+  // Ref propio a la celda (combinado con el de dnd-kit) para anclar el popup.
+  const cellRef = useRef(null)
+  const setRefs = useCallback(
+    (node) => {
+      cellRef.current = node
+      setNodeRef(node)
+    },
+    [setNodeRef],
+  )
+
   const tokenSize = Math.round(size * 0.62)
   const canDrop = occupiable && (isOver || (selectedToken && !occupantName))
   const margin = Math.max(2, Math.round(size * 0.05))
@@ -75,7 +85,7 @@ function Cell({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       data-rc={`${r}-${c}`}
       onClick={handleClick}
       role={occupiable ? 'button' : undefined}
@@ -204,6 +214,7 @@ function Cell({
           onRemove={onTokenClick}
           onClose={onMarkClose}
           cellSize={size}
+          anchorRef={cellRef}
         />
       )}
     </div>

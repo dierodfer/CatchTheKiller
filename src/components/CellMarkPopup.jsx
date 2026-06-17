@@ -1,8 +1,15 @@
 // Popup de marcado de casilla: permite al jugador anotar qué personajes
 // podrían estar en una posición concreta del tablero.
+//
+// Se renderiza en un portal al <body> con posición fija calculada a partir de
+// la celda ancla. Así no lo recorta el `overflow-hidden` del tablero cuando la
+// casilla está cerca del borde, y se reubica para no salirse de la pantalla.
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { colorForCharacter } from './palette.js'
+
+const VIEWPORT_MARGIN = 8 // separación mínima respecto a los bordes de la ventana
 
 export default function CellMarkPopup({
   r,
@@ -14,9 +21,30 @@ export default function CellMarkPopup({
   onRemove,
   onClose,
   cellSize,
+  anchorRef,
 }) {
   const ref = useRef(null)
   const allNames = [...characters.suspects, characters.victim]
+  const [pos, setPos] = useState(null)
+
+  // Posiciona el popup junto a la celda ancla, debajo si cabe (si no, encima),
+  // y lo mantiene dentro del viewport.
+  useLayoutEffect(() => {
+    const anchor = anchorRef?.current
+    const el = ref.current
+    if (!anchor || !el) return
+    const a = anchor.getBoundingClientRect()
+    const p = el.getBoundingClientRect()
+
+    let left = a.left + a.width / 2 - p.width / 2
+    let top = a.bottom + 6
+    if (top + p.height > window.innerHeight - VIEWPORT_MARGIN) {
+      top = a.top - p.height - 6 // no cabe debajo: lo coloco encima
+    }
+    left = Math.max(VIEWPORT_MARGIN, Math.min(left, window.innerWidth - p.width - VIEWPORT_MARGIN))
+    top = Math.max(VIEWPORT_MARGIN, Math.min(top, window.innerHeight - p.height - VIEWPORT_MARGIN))
+    setPos({ left, top })
+  }, [anchorRef])
 
   useEffect(() => {
     const handler = (e) => {
@@ -37,13 +65,15 @@ export default function CellMarkPopup({
   const currentMarks = marks[`${r},${c}`] || []
   const cols = allNames.length <= 4 ? 2 : 3
 
-  return (
+  return createPortal(
     <div
       ref={ref}
-      className="absolute z-50 rounded-lg border border-gold/20 bg-cream-50 p-2 shadow-xl"
+      className="fixed z-50 rounded-lg border border-gold/20 bg-cream-50 p-2 shadow-xl"
       style={{
         minWidth: Math.max(cellSize * 1.5, 120),
-        transform: 'translate(-25%, -25%)',
+        left: pos?.left ?? 0,
+        top: pos?.top ?? 0,
+        visibility: pos ? 'visible' : 'hidden',
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -105,6 +135,7 @@ export default function CellMarkPopup({
           Quitar a {occupantName}
         </button>
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }
