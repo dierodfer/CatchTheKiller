@@ -21,8 +21,8 @@ import { zoneForSeed } from './zones.js'
 import { DIFFICULTIES } from '@/game/constants.js'
 
 export default function GameScreen({ game }) {
-  const { state, place, unplace, check, reveal, backToPlay, newGame } = game
-  const { puzzle, placements, status, result } = state
+  const { state, place, unplace, check, reveal, requestExtraClue, backToPlay, newGame } = game
+  const { puzzle, placements, status, result, revealedExtras } = state
   const [selectedToken, setSelectedToken] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
@@ -178,7 +178,11 @@ export default function GameScreen({ game }) {
 
           {/* Panel lateral. */}
           <div className="flex w-full flex-col gap-4 lg:max-w-sm">
-            <CluePanel puzzle={puzzle} />
+            <CluePanel
+              puzzle={puzzle}
+              revealedExtras={revealedExtras}
+              onRequestExtra={requestExtraClue}
+            />
             <Toolbar
               allPlaced={allPlaced}
               placedCount={placedCount}

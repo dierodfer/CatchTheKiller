@@ -57,7 +57,7 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
     if (!solution) continue
 
     // 3. PISTAS
-    const clues = generateClues(
+    const clueResult = generateClues(
       rng,
       map,
       characters,
@@ -65,7 +65,8 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
       roomLookup,
       difficulty,
     )
-    if (!clues) continue
+    if (!clueResult) continue
+    const { clues, extraClues } = clueResult
 
     // 4 + 5. VALIDACIÓN FINAL (autoridad del Solver)
     if (!hasUniqueSolution(map, characters, clues, roomLookup)) continue
@@ -83,6 +84,7 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
       roomLookup,
       characters,
       clues,
+      extraClues,
       solution: solution.placements,
       killer,
     }

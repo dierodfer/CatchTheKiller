@@ -41,6 +41,7 @@ export const DIFFICULTIES = {
     numCharacters: 4, // 3 sospechosos + 1 víctima
     blockingRange: [3, 4],
     clueTiers: ['absolute', 'room'],
+    extraClues: 2,
   },
   media: {
     id: 'media',
@@ -49,6 +50,7 @@ export const DIFFICULTIES = {
     numCharacters: 5, // 4 sospechosos + 1 víctima
     blockingRange: [5, 7],
     clueTiers: ['absolute', 'room', 'relative'],
+    extraClues: 2,
   },
   dificil: {
     id: 'dificil',
@@ -57,6 +59,7 @@ export const DIFFICULTIES = {
     numCharacters: 6, // 5 sospechosos + 1 víctima
     blockingRange: [8, 10],
     clueTiers: ['absolute', 'room', 'relative'],
+    extraClues: 3,
   },
   experto: {
     id: 'experto',
@@ -65,6 +68,7 @@ export const DIFFICULTIES = {
     numCharacters: 7, // 6 sospechosos + 1 víctima
     blockingRange: [11, 14],
     clueTiers: ['absolute', 'room', 'relative'],
+    extraClues: 4,
   },
 }
 

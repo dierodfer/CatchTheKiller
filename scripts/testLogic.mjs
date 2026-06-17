@@ -5,7 +5,7 @@ import { generatePuzzle } from '../src/game/puzzleGenerator.js'
 import { solve, validatePlayerSolution } from '../src/game/solver.js'
 import { freeCells, isOccupiable } from '../src/game/mapGenerator.js'
 import { findKillers } from '../src/game/killerRule.js'
-import { buildClueContext } from '../src/game/clues.js'
+import { buildClueContext, evalClue } from '../src/game/clues.js'
 
 const difficulties = ['facil', 'media', 'dificil', 'experto']
 const perDifficulty = 8
@@ -35,7 +35,7 @@ for (const diff of difficulties) {
     const ms = Date.now() - t0
     totalMs += ms
 
-    const { map, characters, clues, solution, killer, roomLookup } = puzzle
+    const { map, characters, clues, extraClues, solution, killer, roomLookup } = puzzle
 
     // Invariante: cada sospechoso tiene al menos una pista (agrupadas en la UI
     // como una única "pista" por personaje). La víctima también tiene pistas
@@ -149,9 +149,20 @@ for (const diff of difficulties) {
     // Holgura: celdas libres >= nº personajes.
     assert(freeCells(map).length >= characters.suspects.length + 1, `seed ${seed}: celdas libres`)
 
+    // Invariante: pistas extra son verdaderas y no duplican las principales.
+    const mainIds = new Set(clues.map((c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`))
+    for (const ec of extraClues) {
+      const ecId = `${ec.subject}|${ec.kind}|${JSON.stringify(ec.params)}`
+      assert(!mainIds.has(ecId), `seed ${seed}: pista extra no duplica principal`)
+      assert(
+        evalClue(ec, solution, ctx),
+        `seed ${seed}: pista extra verdadera (${ec.text})`,
+      )
+    }
+
     console.log(
       `  ✓ seed ${seed}: ${map.gridSize}×${map.gridSize}, ${map.rooms.length} hab., ` +
-        `asesino=${killer}, ${ms}ms`,
+        `asesino=${killer}, extras=${extraClues.length}, ${ms}ms`,
     )
   }
   console.log(`  media ${(totalMs / perDifficulty).toFixed(0)}ms/puzzle`)

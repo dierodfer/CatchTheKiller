@@ -5,7 +5,7 @@
 // el jugador; no altera la lógica del caso.
 
 import { useMemo, useState } from 'react'
-import { Skull } from 'lucide-react'
+import { Lightbulb, Skull } from 'lucide-react'
 import { colorForCharacter } from './palette.js'
 import { PixelAvatar } from './pixelArt.jsx'
 
@@ -57,8 +57,8 @@ function groupBySubject(clues) {
   return order.map((subject) => ({ subject, texts: bySubject.get(subject) }))
 }
 
-export default function CluePanel({ puzzle }) {
-  const { clues, characters } = puzzle
+export default function CluePanel({ puzzle, revealedExtras = 0, onRequestExtra }) {
+  const { clues, extraClues = [], characters } = puzzle
   const groups = useMemo(() => groupBySubject(clues), [clues])
   const [struck, setStruck] = useState(new Set())
 
@@ -144,9 +144,9 @@ export default function CluePanel({ puzzle }) {
                   <div className="flex flex-col gap-0.5">
                     {texts.map((text, j) => (
                       <p key={j} className="font-serif text-[15px] italic leading-snug text-plum-700">
-                        <span className="mr-0.5 align-[-0.15em] text-base not-italic text-gold-deep">“</span>
+                        <span className="mr-0.5 align-[-0.15em] text-base not-italic text-gold-deep">{'“'}</span>
                         {text}
-                        <span className="ml-0.5 align-[-0.15em] text-base not-italic text-gold-deep">”</span>
+                        <span className="ml-0.5 align-[-0.15em] text-base not-italic text-gold-deep">{'”'}</span>
                       </p>
                     ))}
                   </div>
@@ -163,6 +163,74 @@ export default function CluePanel({ puzzle }) {
           )
         })}
       </ul>
+
+      {/* Pistas extra: slot independiente con botón "Pedir pista". */}
+      {extraClues.length > 0 && (
+        <ExtraCluesSlot
+          extraClues={extraClues}
+          revealedExtras={revealedExtras}
+          onRequestExtra={onRequestExtra}
+          characters={characters}
+        />
+      )}
+    </div>
+  )
+}
+
+function ExtraCluesSlot({ extraClues, revealedExtras, onRequestExtra, characters }) {
+  const revealed = extraClues.slice(0, revealedExtras)
+  const remaining = extraClues.length - revealedExtras
+  const groups = useMemo(() => groupBySubject(revealed), [revealed])
+
+  return (
+    <div className="mt-4 rounded-xl border border-dashed border-gold/25 bg-cream-200/40 p-3">
+      <p className="eyebrow mb-1">Pistas adicionales</p>
+
+      {groups.length > 0 && (
+        <ul className="mb-3 flex flex-col gap-2">
+          {groups.map(({ subject, texts }) => {
+            const color = colorForCharacter(subject, characters)
+            const isVictim = subject === characters.victim
+            return (
+              <li
+                key={subject}
+                className="rounded-[4px] border border-gold/15 bg-cream-50/80 px-3 py-2"
+              >
+                <div className="mb-0.5 flex items-center gap-1.5">
+                  <Lightbulb size={12} className="shrink-0 text-gold-deep" />
+                  <span
+                    className={`truncate font-serif text-[15px] font-semibold leading-none ${isVictim ? 'text-plum-500' : ''}`}
+                    style={isVictim ? undefined : { color: color.bg }}
+                  >
+                    {subject}
+                  </span>
+                </div>
+                {texts.map((text, j) => (
+                  <p key={j} className="font-serif text-[14px] italic leading-snug text-plum-700">
+                    <span className="mr-0.5 align-[-0.15em] text-sm not-italic text-gold-deep">{'“'}</span>
+                    {text}
+                    <span className="ml-0.5 align-[-0.15em] text-sm not-italic text-gold-deep">{'”'}</span>
+                  </p>
+                ))}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      {remaining > 0 ? (
+        <button
+          onClick={onRequestExtra}
+          className="flex w-full items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-100 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-gold/15 hover:text-plum-900"
+        >
+          <Lightbulb size={14} className="text-gold-deep" />
+          Pedir pista ({remaining} disponible{remaining > 1 ? 's' : ''})
+        </button>
+      ) : (
+        <p className="text-center text-[12px] text-plum-500">
+          No quedan pistas adicionales.
+        </p>
+      )}
     </div>
   )
 }
