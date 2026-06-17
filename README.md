@@ -90,9 +90,38 @@ funciona en cualquier subruta sin tocar configuración adicional.
 
 La lógica del juego vive en `src/game/` y es independiente de la UI:
 
+### Elementos del mapa (`src/game/elements.js`)
+
+Registro central de todos los objetos que pueden aparecer en el tablero. Cada
+elemento se identifica por un `id` estable (el valor en `map.grid`). Los
+atributos de presentación (`label`, y en el futuro icono/sprite) se resuelven
+por ese id, lo que permite re-tematizar nombre e imagen por ambiente/zona sin
+tocar la lógica del juego.
+
+| id | label | blocking | mueble | pista "encima de" |
+|----|-------|:--------:|:------:|-------------------|
+| `mesa` | mesa | sí | sí | — |
+| `TV` | TV | sí | sí | — |
+| `planta` | planta | sí | no | — |
+| `estantería` | estantería | sí | sí | — |
+| `silla` | silla | no | sí | *Estaba sentado en una silla* |
+| `alfombra` | alfombra | no | no | *Estaba sobre la alfombra* |
+| `cama` | cama | no | sí | *Estaba acostado en la cama* |
+
+- **blocking**: la celda queda inaccesible; ningún personaje puede ocuparla.
+- **mueble**: solo los marcados como mueble cuentan para la pista *"No estaba
+  junto a ningún mueble"*. Planta y alfombra no se consideran muebles.
+- **Todos** los elementos pueden aparecer en pistas de proximidad (*"Estaba
+  junto a una X"*), incluidas planta y alfombra.
+- Listas derivadas: `BLOCKING_ELEMENTS`, `FREE_ELEMENTS`, `MUEBLE_ELEMENTS`,
+  `PROXIMITY_ELEMENTS`, `ON_ELEMENTS`.
+
+### Estructura de archivos
+
 ```
 src/game/
-  constants.js          Mobiliario, dificultades, habitaciones
+  elements.js           Registro central de elementos del mapa (ver tabla arriba)
+  constants.js          Dificultades, habitaciones, parámetros de generación
   random.js             PRNG determinista (semilla reproducible)
   mapGenerator.js       Cuadrícula + habitaciones irregulares + mobiliario + ventanas
   solutionGenerator.js  Coloca personajes (filas/columnas propias) garantizando 1 asesino
