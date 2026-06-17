@@ -147,7 +147,7 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('notNextToFurniture', {})
   add('nextToWindow', {})
   add('onChair', {})
-  add('onRug', {})
+  // onRug no se genera como pista (solo alfombra interna en el mapa)
   add('onBed', {})
 
   // Absolutas

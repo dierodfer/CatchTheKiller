@@ -9,9 +9,9 @@ export const FREE_FURNITURE = ['silla', 'alfombra', 'cama']
 // Conjunto completo de mobiliario interior.
 export const FURNITURE = [...BLOCKING_FURNITURE, ...FREE_FURNITURE]
 
-// Mobiliario candidato para pistas de proximidad ("Estaba junto a una X"): todo
-// el mobiliario interior. Es la misma lista que FURNITURE (fuente única).
-export const FURNITURE_FOR_PROXIMITY = FURNITURE
+// Mobiliario candidato para pistas de proximidad ("Estaba junto a una X"):
+// solo los 5 muebles de referencia (sin planta ni alfombra en pistas).
+export const FURNITURE_FOR_PROXIMITY = ['mesa', 'TV', 'estantería', 'silla', 'cama']
 
 // Nombres de habitaciones disponibles (sección 11 del documento).
 export const ROOM_NAMES = [

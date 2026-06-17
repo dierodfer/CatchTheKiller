@@ -177,13 +177,12 @@ export const CLUE_TYPES = {
     unary: true,
     // Solo cuenta el mueble si está en la MISMA habitación que el personaje: una
     // celda contigua puede pertenecer a otra habitación y su mobiliario no debe
-    // referenciarse ("estaba junto a la alfombra" siempre es de su propio cuarto).
+    // referenciarse.
     //
     // Además, "junto a" excluye "encima de": si el personaje ocupa una celda del
-    // mismo tipo de mueble (alfombra, silla o cama), la pista no aplica aunque
-    // haya otra contigua igual — la redacción correcta sería "estaba sobre la
-    // alfombra", no "junto a una alfombra". Sin este filtro la pista resultaría
-    // engañosa para el jugador.
+    // mismo tipo de mueble (silla o cama), la pista no aplica aunque haya otra
+    // contigua igual — la redacción correcta sería "estaba sobre la silla", no
+    // "junto a una silla". Sin este filtro la pista resultaría engañosa.
     evaluate: (pos, p, _all, ctx) =>
       ctx.furnitureAt(pos.row, pos.col) !== p.furniture &&
       adjacentHas(
@@ -193,8 +192,8 @@ export const CLUE_TYPES = {
           ctx.furnitureAt(r, c) === p.furniture &&
           ctx.roomAt(r, c) === ctx.roomAt(pos.row, pos.col),
       ),
-    // Todo el mobiliario es femenino en español (mesa, TV, planta, estantería,
-    // silla, alfombra, cama), así que "una" concuerda en todos los casos.
+    // Todos los muebles son femeninos en español (mesa, TV, estantería, silla, cama),
+    // así que "una" concuerda en todos los casos.
     text: (p) => `Estaba junto a una ${p.furniture}`,
   },
   // La ventana forma parte de la pared de su celda: estar "junto a la ventana"
