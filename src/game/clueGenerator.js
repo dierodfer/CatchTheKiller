@@ -93,6 +93,20 @@ function axisRedundant(cand, chosen) {
   return false
 }
 
+// Pistas direccionales: si A ya dice "estoy al norte/sur/izquierda/derecha de B",
+// B no puede decir nada direccional sobre A — sería redundante (la relación es
+// simétrica: si A está al norte de B, B está al sur de A).
+const DIRECTIONAL_KINDS = new Set(['rowAbove', 'rowBelow', 'colLeft', 'colRight'])
+
+function directionalDuplicate(cand, chosen) {
+  if (!DIRECTIONAL_KINDS.has(cand.kind)) return false
+  const other = cand.params?.other
+  if (!other) return false
+  return chosen.some(
+    (c) => DIRECTIONAL_KINDS.has(c.kind) && c.subject === other && c.params?.other === cand.subject,
+  )
+}
+
 const clueId = (c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`
 
 function makeClue(subject, kind, params, ctx) {
@@ -264,6 +278,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
           if (countForSubject(cand.subject) >= limit) continue
           if (rowColCapped && ROWCOL_KINDS.has(cand.kind)) continue
           if (axisRedundant(cand, chosen)) continue
+          if (directionalDuplicate(cand, chosen)) continue
           chosen.push(cand)
           const c = count(chosen, CAP)
           chosen.pop()
@@ -319,7 +334,10 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   // redundantes), pero aportan información adicional para desbloquear.
   const chosenFinalIds = new Set(clues.map(clueId))
   const extraPool = all.filter(
-    (c) => !chosenFinalIds.has(clueId(c)) && !axisRedundant(c, clues),
+    (c) =>
+      !chosenFinalIds.has(clueId(c)) &&
+      !axisRedundant(c, clues) &&
+      !directionalDuplicate(c, clues),
   )
   const numExtra = difficulty.extraClues || 0
   const extraClues = sortAlpha(shuffle(rng, extraPool).slice(0, numExtra))
