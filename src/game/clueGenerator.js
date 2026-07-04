@@ -93,6 +93,20 @@ function axisRedundant(cand, chosen) {
   return false
 }
 
+// Pistas direccionales: si A ya dice "estoy al norte/sur/izquierda/derecha de B",
+// B no puede decir nada direccional sobre A — sería redundante (la relación es
+// simétrica: si A está al norte de B, B está al sur de A).
+const DIRECTIONAL_KINDS = new Set(['rowAbove', 'rowBelow', 'colLeft', 'colRight'])
+
+function directionalDuplicate(cand, chosen) {
+  if (!DIRECTIONAL_KINDS.has(cand.kind)) return false
+  const other = cand.params?.other
+  if (!other) return false
+  return chosen.some(
+    (c) => DIRECTIONAL_KINDS.has(c.kind) && c.subject === other && c.params?.other === cand.subject,
+  )
+}
+
 const clueId = (c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`
 
 function makeClue(subject, kind, params, ctx) {
@@ -264,6 +278,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
           if (countForSubject(cand.subject) >= limit) continue
           if (rowColCapped && ROWCOL_KINDS.has(cand.kind)) continue
           if (axisRedundant(cand, chosen)) continue
+          if (directionalDuplicate(cand, chosen)) continue
           chosen.push(cand)
           const c = count(chosen, CAP)
           chosen.pop()
@@ -317,12 +332,23 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   // 5. Pistas extra de reserva: verdaderas y no incluidas en el set principal,
   // que el jugador puede solicitar a petición. No afectan a la unicidad (son
   // redundantes), pero aportan información adicional para desbloquear.
+  // Se eligen una a una comprobando redundancia contra las principales Y contra
+  // las extras ya elegidas: si no, dos extras podrían ser recíprocas entre sí
+  // ("A a la izquierda de B" + "B a la derecha de A") o mezclar eje absoluto y
+  // relativo para el mismo sujeto.
   const chosenFinalIds = new Set(clues.map(clueId))
-  const extraPool = all.filter(
-    (c) => !chosenFinalIds.has(clueId(c)) && !axisRedundant(c, clues),
-  )
   const numExtra = difficulty.extraClues || 0
-  const extraClues = sortAlpha(shuffle(rng, extraPool).slice(0, numExtra))
+  const extras = []
+  for (const cand of shuffle(rng, all)) {
+    if (extras.length >= numExtra) break
+    if (chosenFinalIds.has(clueId(cand))) continue
+    const context = clues.concat(extras)
+    if (axisRedundant(cand, context)) continue
+    if (directionalDuplicate(cand, context)) continue
+    extras.push(cand)
+    chosenFinalIds.add(clueId(cand))
+  }
+  const extraClues = sortAlpha(extras)
 
   return { clues, extraClues }
 }
