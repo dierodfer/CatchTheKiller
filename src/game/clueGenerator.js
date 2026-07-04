@@ -332,15 +332,23 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   // 5. Pistas extra de reserva: verdaderas y no incluidas en el set principal,
   // que el jugador puede solicitar a petición. No afectan a la unicidad (son
   // redundantes), pero aportan información adicional para desbloquear.
+  // Se eligen una a una comprobando redundancia contra las principales Y contra
+  // las extras ya elegidas: si no, dos extras podrían ser recíprocas entre sí
+  // ("A a la izquierda de B" + "B a la derecha de A") o mezclar eje absoluto y
+  // relativo para el mismo sujeto.
   const chosenFinalIds = new Set(clues.map(clueId))
-  const extraPool = all.filter(
-    (c) =>
-      !chosenFinalIds.has(clueId(c)) &&
-      !axisRedundant(c, clues) &&
-      !directionalDuplicate(c, clues),
-  )
   const numExtra = difficulty.extraClues || 0
-  const extraClues = sortAlpha(shuffle(rng, extraPool).slice(0, numExtra))
+  const extras = []
+  for (const cand of shuffle(rng, all)) {
+    if (extras.length >= numExtra) break
+    if (chosenFinalIds.has(clueId(cand))) continue
+    const context = clues.concat(extras)
+    if (axisRedundant(cand, context)) continue
+    if (directionalDuplicate(cand, context)) continue
+    extras.push(cand)
+    chosenFinalIds.add(clueId(cand))
+  }
+  const extraClues = sortAlpha(extras)
 
   return { clues, extraClues }
 }

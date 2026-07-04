@@ -160,6 +160,34 @@ for (const diff of difficulties) {
       )
     }
 
+    // Invariante: en TODO el set (principales + extras) no hay pistas
+    // direccionales recíprocas (A→B y B→A) ni, para un mismo sujeto, mezcla de
+    // eje absoluto (fila/columna) con el relativo del mismo eje.
+    const directional = new Set(['rowAbove', 'rowBelow', 'colLeft', 'colRight'])
+    const allClues = [...clues, ...extraClues]
+    for (const a of allClues) {
+      if (!directional.has(a.kind)) continue
+      const reciprocal = allClues.some(
+        (b) => directional.has(b.kind) && b.subject === a.params?.other && b.params?.other === a.subject,
+      )
+      assert(
+        !reciprocal,
+        `seed ${seed}: pistas direccionales recíprocas entre ${a.subject} y ${a.params?.other}`,
+      )
+    }
+    const colAbs = new Set(['inColumn', 'notInColumn'])
+    const colRel = new Set(['colLeft', 'colRight'])
+    const rowAbs = new Set(['inRow', 'notInRow'])
+    const rowRel = new Set(['rowAbove', 'rowBelow'])
+    for (const name of allNames) {
+      const kinds = allClues.filter((c) => c.subject === name).map((c) => c.kind)
+      const has = (set) => kinds.some((k) => set.has(k))
+      assert(
+        !(has(colAbs) && has(colRel)) && !(has(rowAbs) && has(rowRel)),
+        `seed ${seed}: ${name} mezcla pista absoluta y relativa del mismo eje`,
+      )
+    }
+
     console.log(
       `  ✓ seed ${seed}: ${map.gridSize}×${map.gridSize}, ${map.rooms.length} hab., ` +
         `asesino=${killer}, extras=${extraClues.length}, ${ms}ms`,
