@@ -22,10 +22,13 @@ const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
 const WINDOW_FRAME_PX = 3
 const GLASS_INSET = 6
 
-export default function MapPreview({ difficulty }) {
+export default function MapPreview({ difficulty, irregular = false }) {
   const [seed] = useState(() => randomSeed())
 
-  const map = useMemo(() => generateMap(makeRng(seed), difficulty), [seed, difficulty])
+  const map = useMemo(
+    () => generateMap(makeRng(seed), difficulty, { irregular }),
+    [seed, difficulty, irregular],
+  )
   const roomLookup = useMemo(() => buildRoomLookup(map), [map])
   const size = map.gridSize
   const cellSize = PREVIEW_CELL_SIZE[size] || 32
@@ -51,6 +54,11 @@ export default function MapPreview({ difficulty }) {
     const cells = []
     for (let c = 0; c < size; c++) {
       const key = cellKey(r, c)
+      // Celda void (mapa irregular): hueco transparente, se ve el marco.
+      if (map.voidCells?.has(key)) {
+        cells.push(<div key={key} style={{ width: cellSize, height: cellSize }} aria-hidden />)
+        continue
+      }
       const furniture = map.grid[r][c]
       const wall = windowByCell[key]
       const margin = Math.max(2, Math.round(cellSize * 0.05))

@@ -64,6 +64,13 @@ function Cell({
     [setNodeRef],
   )
 
+  // Celda void (mapa irregular): hueco del tablero. Ocupa su sitio en la
+  // rejilla pero es transparente (se ve el marco = exterior) y no interactúa.
+  // Va tras los hooks para respetar sus reglas.
+  if (geometry.isVoid) {
+    return <div style={{ width: size, height: size }} aria-hidden />
+  }
+
   const tokenSize = Math.round(size * 0.62)
   const canDrop = occupiable && (isOver || (selectedToken && !occupantName))
   const margin = Math.max(2, Math.round(size * 0.05))

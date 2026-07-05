@@ -89,7 +89,9 @@ export function useBoardGeometry({
     const bordersFor = (r, c) => {
       const room = roomLookup[`${r},${c}`]
       const sideBorder = (nr, nc) => {
+        // Fuera del tablero o celda void (mapa irregular): muro exterior.
         if (nr < 0 || nc < 0 || nr >= size || nc >= size) return BORDER_OUTER
+        if (map.voidCells?.has(`${nr},${nc}`)) return BORDER_OUTER
         if (roomLookup[`${nr},${nc}`] !== room) return BORDER_ROOM
         return BORDER_THIN
       }
@@ -106,6 +108,11 @@ export function useBoardGeometry({
       const row = []
       for (let c = 0; c < size; c++) {
         const key = `${r},${c}`
+        // Celda void (mapa irregular): hueco no jugable, se pinta como exterior.
+        if (map.voidCells?.has(key)) {
+          row.push({ r, c, size: cellSize, isVoid: true, occupiable: false })
+          continue
+        }
         const furniture = map.grid[r][c]
         row.push({
           r,
