@@ -11,23 +11,16 @@
 
 import { ADJACENT, ROOM_ARTICLE, cellKey } from './constants.js'
 import { ELEMENTS, MUEBLE_ELEMENTS, elementPhrase, elementCountPhrase } from './elements.js'
+import { computeExteriorVoid } from './mapShapes.js'
 
 // Frase "el/la <habitación>" con el artículo correcto (concordancia de género).
 const roomPhrase = (room) => `${ROOM_ARTICLE[room] ?? 'el'} ${room}`
-
-function isCorner(pos, size) {
-  return (pos.row === 0 || pos.row === size - 1) && (pos.col === 0 || pos.col === size - 1)
-}
-
-function isBorder(pos, size) {
-  return pos.row === 0 || pos.col === 0 || pos.row === size - 1 || pos.col === size - 1
-}
 
 function adjacentHas(ctx, pos, predicate) {
   for (const [dr, dc] of ADJACENT) {
     const nr = pos.row + dr
     const nc = pos.col + dc
-    if (nr < 0 || nc < 0 || nr >= ctx.gridSize || nc >= ctx.gridSize) continue
+    if (!ctx.cellExists(nr, nc)) continue
     if (predicate(nr, nc)) return true
   }
   return false
@@ -114,25 +107,25 @@ export const CLUE_TYPES = {
   inCorner: {
     tier: 'absolute',
     unary: true,
-    evaluate: (pos, _p, _all, ctx) => isCorner(pos, ctx.gridSize),
+    evaluate: (pos, _p, _all, ctx) => ctx.isCornerCell(pos.row, pos.col),
     text: () => `Estaba en una esquina del mapa`,
   },
   notInCorner: {
     tier: 'absolute',
     unary: true,
-    evaluate: (pos, _p, _all, ctx) => !isCorner(pos, ctx.gridSize),
+    evaluate: (pos, _p, _all, ctx) => !ctx.isCornerCell(pos.row, pos.col),
     text: () => `No estaba en una esquina`,
   },
   inBorder: {
     tier: 'absolute',
     unary: true,
-    evaluate: (pos, _p, _all, ctx) => isBorder(pos, ctx.gridSize),
+    evaluate: (pos, _p, _all, ctx) => ctx.isBorderCell(pos.row, pos.col),
     text: () => `Estaba en el borde del mapa`,
   },
   notInBorder: {
     tier: 'absolute',
     unary: true,
-    evaluate: (pos, _p, _all, ctx) => !isBorder(pos, ctx.gridSize),
+    evaluate: (pos, _p, _all, ctx) => !ctx.isBorderCell(pos.row, pos.col),
     text: () => `No estaba en el borde del mapa`,
   },
 
@@ -301,10 +294,31 @@ export function buildClueContext(map, roomLookup, characters) {
     roomWindowCount[rn] = (roomWindowCount[rn] || 0) + 1
   }
 
+  // Borde y esquina en términos de LADOS EXTERIORES, no de índices: en mapas
+  // irregulares el perímetro real incluye los recortes (una celda junto a una
+  // esquina eliminada sigue "en el borde"), y el hueco de un donut es patio
+  // interior — sus celdas vecinas NO están en el borde del mapa. En tableros
+  // clásicos ambas definiciones coinciden con las fórmulas de índice antiguas.
+  const size = map.gridSize
+  const voidCells = map.voidCells ?? new Set()
+  const exteriorVoid = computeExteriorVoid(size, voidCells)
+  const cellExists = (r, c) =>
+    r >= 0 && c >= 0 && r < size && c < size && !voidCells.has(cellKey(r, c))
+  const sideExterior = (r, c) =>
+    r < 0 || c < 0 || r >= size || c >= size || exteriorVoid.has(cellKey(r, c))
+  const isBorderCell = (r, c) =>
+    sideExterior(r - 1, c) || sideExterior(r + 1, c) || sideExterior(r, c - 1) || sideExterior(r, c + 1)
+  const isCornerCell = (r, c) =>
+    (sideExterior(r - 1, c) || sideExterior(r + 1, c)) &&
+    (sideExterior(r, c - 1) || sideExterior(r, c + 1))
+
   return {
     gridSize: map.gridSize,
     everyone,
     suspects,
+    cellExists,
+    isBorderCell,
+    isCornerCell,
     roomAt: (r, c) => roomLookup[cellKey(r, c)],
     furnitureAt: (r, c) =>
       r >= 0 && c >= 0 && r < map.gridSize && c < map.gridSize ? map.grid[r][c] : null,

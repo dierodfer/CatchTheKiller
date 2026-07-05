@@ -6,6 +6,8 @@
 // todos los actores (no solo el asesino y la víctima). Así el asesino "emerge"
 // al reconstruir la escena.
 
+import { cellExists } from './mapGenerator.js'
+
 // placements: { nombre: { row, col } }; ctx aporta `roomAt(r, c)`.
 const roomOf = (ctx, p) => ctx.roomAt(p.row, p.col)
 
@@ -58,9 +60,12 @@ export function identifyKiller(placements, suspects, victim, ctx) {
 
 // Celdas que forman la línea (fila + columna) de una posición. Se usa para
 // resaltar visualmente que las líneas del asesino y la víctima están despejadas.
-export function controlLineCells(pos, gridSize) {
+// Recibe el mapa (no solo gridSize) para saltar las celdas void de los mapas
+// irregulares: la marca de control no se pinta sobre huecos.
+export function controlLineCells(pos, map) {
   const cells = []
-  for (let c = 0; c < gridSize; c++) cells.push([pos.row, c])
-  for (let r = 0; r < gridSize; r++) if (r !== pos.row) cells.push([r, pos.col])
+  for (let c = 0; c < map.gridSize; c++) if (cellExists(map, pos.row, c)) cells.push([pos.row, c])
+  for (let r = 0; r < map.gridSize; r++)
+    if (r !== pos.row && cellExists(map, r, pos.col)) cells.push([r, pos.col])
   return cells
 }

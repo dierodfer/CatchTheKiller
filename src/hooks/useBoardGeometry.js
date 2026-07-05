@@ -141,10 +141,10 @@ export function useBoardGeometry({
     const set = new Set()
     for (const name of Object.keys(placements)) {
       if (name === draggingName) continue
-      for (const [r, c] of controlLineCells(placements[name], size)) set.add(`${r},${c}`)
+      for (const [r, c] of controlLineCells(placements[name], map)) set.add(`${r},${c}`)
     }
     return set
-  }, [placements, size, draggingName])
+  }, [placements, map, draggingName])
 
   // En la revelación, la habitación donde el asesino estaba a solas con la
   // víctima (resaltada para explicar visualmente la regla).
