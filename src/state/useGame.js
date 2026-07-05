@@ -2,6 +2,8 @@
 
 import { useCallback, useReducer } from 'react'
 import { generatePuzzle } from '@/game/puzzleGenerator.js'
+import { isOccupiable } from '@/game/mapGenerator.js'
+import { decodeShareCode, indicesToPlacements } from '@/game/shareCode.js'
 import { validatePlayerSolution } from '@/game/solver.js'
 
 export const STATUS = {
@@ -142,6 +144,35 @@ export function useGame() {
     [state.difficulty, state.irregular],
   )
 
+  // Carga una partida desde un código compartido. Un código malformado pasa el
+  // estado a ERROR con mensaje amable (se muestra en la pantalla de inicio).
+  // Las fichas recibidas se validan contra el mapa regenerado: fuera de rango,
+  // no ocupables o duplicadas se descartan sin romper la partida.
+  const loadFromCode = useCallback((codeString) => {
+    dispatch({ type: 'GENERATE_START' })
+    setTimeout(() => {
+      try {
+        const { difficultyId, seed, irregular, placementIndices } = decodeShareCode(codeString)
+        const puzzle = generatePuzzle(difficultyId, seed, { irregular })
+        let initialPlacements
+        if (placementIndices) {
+          const raw = indicesToPlacements(placementIndices, puzzle.characters, puzzle.map.gridSize)
+          const taken = new Set()
+          initialPlacements = {}
+          for (const [name, p] of Object.entries(raw)) {
+            const key = `${p.row},${p.col}`
+            if (!isOccupiable(puzzle.map, p.row, p.col) || taken.has(key)) continue
+            taken.add(key)
+            initialPlacements[name] = p
+          }
+        }
+        dispatch({ type: 'GENERATE_SUCCESS', puzzle, initialPlacements })
+      } catch (e) {
+        dispatch({ type: 'GENERATE_ERROR', error: e.message })
+      }
+    }, 30)
+  }, [])
+
   const place = useCallback((name, row, col) => dispatch({ type: 'PLACE', name, row, col }), [])
   const unplace = useCallback((name) => dispatch({ type: 'UNPLACE', name }), [])
 
@@ -167,6 +198,7 @@ export function useGame() {
     selectDifficulty,
     setIrregular,
     generate,
+    loadFromCode,
     place,
     unplace,
     check,

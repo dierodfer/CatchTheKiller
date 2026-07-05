@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Loader2, Skull } from 'lucide-react'
+import { Loader2, Skull, Ticket } from 'lucide-react'
 import { DIFFICULTIES } from '@/game/constants.js'
 import { SUSPECT_COLORS } from './palette.js'
 import { PixelAvatar } from './pixelArt.jsx'
@@ -16,10 +17,12 @@ export default function StartScreen({
   error,
   irregular,
   onToggleIrregular,
+  onLoadCode,
 }) {
   const diff = DIFFICULTIES[difficulty]
   const levelIndex = LEVELS.findIndex((d) => d.id === difficulty)
   const reduce = useReducedMotion()
+  const [shareCode, setShareCode] = useState('')
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6">
@@ -171,6 +174,40 @@ export default function StartScreen({
             'Empezar investigación'
           )}
         </motion.button>
+
+        {/* Partida compartida: pegar un código reconstruye el caso exacto. */}
+        <form
+          className="mt-5 flex w-full max-w-md items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (shareCode.trim()) onLoadCode(shareCode)
+          }}
+        >
+          <div className="relative flex-1">
+            <Ticket
+              size={15}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400"
+            />
+            <input
+              type="text"
+              value={shareCode}
+              onChange={(e) => setShareCode(e.target.value)}
+              placeholder="¿Tienes un código de caso?"
+              aria-label="Código de caso compartido"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              className="w-full rounded-full border border-gold/20 bg-cream-100/70 py-2.5 pl-9 pr-3 text-center font-pixel text-[15px] tracking-wider text-plum-900 placeholder:font-sans placeholder:text-[13px] placeholder:tracking-normal placeholder:text-plum-500 focus:border-gold/50 focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!shareCode.trim() || generating}
+            className="shrink-0 rounded-full border border-gold/20 bg-cream-200/70 px-4 py-2.5 text-[13px] font-semibold text-plum-800 transition enabled:hover:bg-cream-300/70 disabled:opacity-40"
+          >
+            Cargar caso
+          </button>
+        </form>
 
         {error && <p className="mt-4 text-sm text-rose-deep">Error: {error}</p>}
       </motion.div>

@@ -2,7 +2,7 @@
 // Encabeza una píldora de estado que guía al jugador (cuántos faltan por
 // situar) o confirma que la escena está lista para resolverse.
 
-import { BookOpen, CheckCircle2, Eye, Gavel, MapPin, RotateCcw } from 'lucide-react'
+import { BookOpen, CheckCircle2, Eye, Gavel, MapPin, RotateCcw, Share2 } from 'lucide-react'
 
 export default function Toolbar({
   allPlaced,
@@ -12,6 +12,7 @@ export default function Toolbar({
   onReveal,
   onNewGame,
   onShowRules,
+  onShare,
 }) {
   const remaining = Math.max(totalCount - placedCount, 0)
 
@@ -68,6 +69,12 @@ export default function Toolbar({
           className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
           <BookOpen size={15} /> Reglas
+        </button>
+        <button
+          onClick={onShare}
+          className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
+        >
+          <Share2 size={15} /> Compartir
         </button>
       </div>
     </div>
