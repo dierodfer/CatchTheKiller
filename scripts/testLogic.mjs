@@ -3,9 +3,11 @@
 
 import { generatePuzzle } from '../src/game/puzzleGenerator.js'
 import { solve, validatePlayerSolution } from '../src/game/solver.js'
-import { freeCells, isOccupiable } from '../src/game/mapGenerator.js'
-import { findKillers } from '../src/game/killerRule.js'
+import { freeCells, isOccupiable, cellExists } from '../src/game/mapGenerator.js'
+import { findKillers, controlLineCells } from '../src/game/killerRule.js'
 import { buildClueContext, evalClue } from '../src/game/clues.js'
+import { hasPerfectMatching, shapeIsViable, computeExteriorVoid } from '../src/game/mapShapes.js'
+import { IRREGULAR, cellKey } from '../src/game/constants.js'
 import {
   encodeShareCode,
   decodeShareCode,
@@ -25,15 +27,20 @@ function assert(cond, msg) {
   }
 }
 
+// Media de tiempos por (dificultad, modo) para vigilar el coste del irregular.
+const avgMs = {}
+
+for (const irregular of [false, true]) {
 for (const diff of difficulties) {
-  console.log(`\n=== Dificultad: ${diff} ===`)
+  console.log(`\n=== Dificultad: ${diff}${irregular ? ' (irregular)' : ''} ===`)
   let totalMs = 0
   for (let i = 0; i < perDifficulty; i++) {
-    const seed = 1000 * (difficulties.indexOf(diff) + 1) + i
+    // Seeds distintas por modo para muestrear formas variadas.
+    const seed = 1000 * (difficulties.indexOf(diff) + 1) + i + (irregular ? 7000 : 0)
     const t0 = Date.now()
     let puzzle
     try {
-      puzzle = generatePuzzle(diff, seed)
+      puzzle = generatePuzzle(diff, seed, { irregular })
     } catch (e) {
       failures++
       console.error(`  ✗ seed ${seed}: ${e.message}`)
@@ -195,12 +202,102 @@ for (const diff of difficulties) {
       )
     }
 
+    // ── Invariantes de mapas irregulares ─────────────────────────────────
+    const size = map.gridSize
+    const voidCells = map.voidCells ?? new Set()
+    if (!irregular) {
+      assert(voidCells.size === 0, `seed ${seed}: clásico sin celdas void`)
+    } else {
+      // Void disjunto de habitaciones, roomLookup, freeCells y solución
+      // (solución ya cubierta por isOccupiable arriba; se re-asserta el resto).
+      for (const room of map.rooms) {
+        for (const [r, c] of room.cells) {
+          assert(!voidCells.has(cellKey(r, c)), `seed ${seed}: celda void en sala ${room.name}`)
+        }
+      }
+      for (const key of voidCells) {
+        assert(!(key in roomLookup), `seed ${seed}: celda void en roomLookup (${key})`)
+      }
+
+      // Presupuesto de la forma, conectividad y matching sobre existentes.
+      assert(
+        voidCells.size > 0 && voidCells.size <= IRREGULAR[size].maxVoid,
+        `seed ${seed}: nº de void (${voidCells.size}) dentro del presupuesto`,
+      )
+      assert(shapeIsViable(size, voidCells), `seed ${seed}: forma conexa y con transversal`)
+
+      // Toda fila y columna con ≥1 ocupable + matching perfecto sobre ocupables
+      // (la garantía que necesita la permutación del solutionGenerator).
+      const free = freeCells(map)
+      const rowsWith = new Set(free.map(([r]) => r))
+      const colsWith = new Set(free.map(([, c]) => c))
+      assert(rowsWith.size === size, `seed ${seed}: toda fila tiene celda ocupable`)
+      assert(colsWith.size === size, `seed ${seed}: toda columna tiene celda ocupable`)
+      assert(hasPerfectMatching(free, size), `seed ${seed}: matching perfecto sobre ocupables`)
+
+      // Ventanas: nunca en void y siempre con su pared hacia el exterior
+      // (el hueco de un donut es patio interior: sin ventanas hacia él).
+      const exteriorVoid = computeExteriorVoid(size, voidCells)
+      const sideExt = (r, c) =>
+        r < 0 || c < 0 || r >= size || c >= size || exteriorVoid.has(cellKey(r, c))
+      const WALL_DELTA = { norte: [-1, 0], sur: [1, 0], oeste: [0, -1], este: [0, 1] }
+      for (const w of map.windows) {
+        assert(!voidCells.has(cellKey(w.row, w.col)), `seed ${seed}: ventana en celda void`)
+        const [dr, dc] = WALL_DELTA[w.wall]
+        assert(
+          sideExt(w.row + dr, w.col + dc),
+          `seed ${seed}: ventana en ${w.row},${w.col} con pared ${w.wall} que no da al exterior`,
+        )
+      }
+
+      // La línea de control nunca pisa huecos.
+      for (const name of allNames) {
+        for (const [r, c] of controlLineCells(solution[name], map)) {
+          assert(cellExists(map, r, c), `seed ${seed}: línea de control sobre void (${r},${c})`)
+        }
+      }
+    }
+
+    // Borde/esquina: en clásico la definición por lados exteriores debe
+    // coincidir con las fórmulas de índice históricas (retrocompatibilidad).
+    if (!irregular) {
+      for (const [r, c] of freeCells(map)) {
+        const oldBorder = r === 0 || c === 0 || r === size - 1 || c === size - 1
+        const oldCorner = (r === 0 || r === size - 1) && (c === 0 || c === size - 1)
+        assert(ctx.isBorderCell(r, c) === oldBorder, `seed ${seed}: borde clásico en ${r},${c}`)
+        assert(ctx.isCornerCell(r, c) === oldCorner, `seed ${seed}: esquina clásica en ${r},${c}`)
+      }
+    }
+
     console.log(
-      `  ✓ seed ${seed}: ${map.gridSize}×${map.gridSize}, ${map.rooms.length} hab., ` +
-        `asesino=${killer}, extras=${extraClues.length}, ${ms}ms`,
+      `  ✓ seed ${seed}: ${map.gridSize}×${map.gridSize}${irregular ? ` (${map.shape}, ${voidCells.size} void)` : ''}, ` +
+        `${map.rooms.length} hab., asesino=${killer}, extras=${extraClues.length}, ${ms}ms`,
     )
   }
-  console.log(`  media ${(totalMs / perDifficulty).toFixed(0)}ms/puzzle`)
+  const avg = totalMs / perDifficulty
+  avgMs[`${diff}${irregular ? ':irregular' : ':clasico'}`] = avg
+  console.log(`  media ${avg.toFixed(0)}ms/puzzle`)
+}
+}
+
+// Vigilancia de coste: el modo irregular no debería multiplicar los tiempos.
+for (const diff of difficulties) {
+  const cls = avgMs[`${diff}:clasico`]
+  const irr = avgMs[`${diff}:irregular`]
+  if (cls > 30 && irr > cls * 3) {
+    console.warn(`  ⚠ ${diff} irregular tarda ${(irr / cls).toFixed(1)}× el clásico (${irr.toFixed(0)}ms)`)
+  }
+}
+
+// Regresión de determinismo clásico: seeds fijadas deben producir siempre el
+// mismo caso. Si esto falla, un cambio ha alterado el consumo de rng en modo
+// clásico y TODAS las partidas/códigos compartidos previos cambiarían.
+{
+  const FIXED = { facil: [7, 'Sofía'], media: [12345, 'Bruno'], dificil: [999999, 'Carla'], experto: [3000, 'Rubén'] }
+  for (const [diff, [seed, expected]] of Object.entries(FIXED)) {
+    const got = generatePuzzle(diff, seed).killer
+    assert(got === expected, `determinismo clásico ${diff}:${seed} — asesino ${got}, esperado ${expected}`)
+  }
 }
 
 // ─── Código compartible: roundtrip, tolerancia y errores ────────────────────
