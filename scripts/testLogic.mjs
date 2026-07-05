@@ -6,6 +6,13 @@ import { solve, validatePlayerSolution } from '../src/game/solver.js'
 import { freeCells, isOccupiable } from '../src/game/mapGenerator.js'
 import { findKillers } from '../src/game/killerRule.js'
 import { buildClueContext, evalClue } from '../src/game/clues.js'
+import {
+  encodeShareCode,
+  decodeShareCode,
+  placementsToIndices,
+  indicesToPlacements,
+  ShareCodeError,
+} from '../src/game/shareCode.js'
 
 const difficulties = ['facil', 'media', 'dificil', 'experto']
 const perDifficulty = 8
@@ -195,6 +202,96 @@ for (const diff of difficulties) {
   }
   console.log(`  media ${(totalMs / perDifficulty).toFixed(0)}ms/puzzle`)
 }
+
+// ─── Código compartible: roundtrip, tolerancia y errores ────────────────────
+
+console.log('\n=== Código compartible ===')
+
+// Roundtrip de campos (con y sin fichas, incluidos sentinels parciales).
+for (const difficultyId of difficulties) {
+  for (const irregular of [false, true]) {
+    for (const seed of [0, 1, 0xffffffff, 123456789]) {
+      const p = generatePuzzle(difficultyId, seed, { irregular })
+      const size = p.map.gridSize
+
+      // Sin fichas.
+      const plain = decodeShareCode(encodeShareCode({ difficultyId, seed, irregular }))
+      assert(
+        plain.difficultyId === difficultyId &&
+          plain.seed === seed &&
+          plain.irregular === irregular &&
+          plain.placementIndices === null,
+        `sharecode ${difficultyId}/${irregular}/${seed}: roundtrip sin fichas`,
+      )
+
+      // Con fichas parciales: la solución real menos un personaje (sentinel).
+      const partial = { ...p.solution }
+      delete partial[p.characters.suspects[0]]
+      const indices = placementsToIndices(partial, p.characters, size)
+      const dec = decodeShareCode(
+        encodeShareCode({ difficultyId, seed, irregular, placementIndices: indices }),
+      )
+      assert(
+        JSON.stringify(dec.placementIndices) === JSON.stringify(indices),
+        `sharecode ${difficultyId}/${irregular}/${seed}: roundtrip de fichas`,
+      )
+      const back = indicesToPlacements(dec.placementIndices, p.characters, size)
+      const sortedEntries = (o) => JSON.stringify(Object.entries(o).sort())
+      assert(
+        sortedEntries(back) === sortedEntries(partial),
+        `sharecode ${difficultyId}/${irregular}/${seed}: fichas → índices → fichas`,
+      )
+
+      // Roundtrip integral: regenerar desde lo decodificado da el mismo caso.
+      const p2 = generatePuzzle(dec.difficultyId, dec.seed, { irregular: dec.irregular })
+      assert(
+        p2.killer === p.killer &&
+          JSON.stringify(p2.solution) === JSON.stringify(p.solution) &&
+          JSON.stringify([...p2.map.voidCells].sort()) ===
+            JSON.stringify([...p.map.voidCells].sort()),
+        `sharecode ${difficultyId}/${irregular}/${seed}: puzzle regenerado idéntico`,
+      )
+    }
+  }
+}
+
+// Tolerancia de entrada: guiones, minúsculas y caracteres ambiguos (O/I/L).
+{
+  const code = encodeShareCode({ difficultyId: 'media', seed: 987654321, irregular: true })
+  const messy = code.toLowerCase().replace(/0/g, 'o').replace(/1/g, 'i')
+  const dec = decodeShareCode(messy)
+  assert(
+    dec.seed === 987654321 && dec.difficultyId === 'media' && dec.irregular === true,
+    'sharecode: tolera minúsculas, guiones y O/I/L',
+  )
+}
+
+// Malformados: error legible (ShareCodeError), nunca un crash ni un falso OK.
+{
+  const good = encodeShareCode({ difficultyId: 'experto', seed: 42 }).replace(/-/g, '')
+  const mutate = (s, i) => s.slice(0, i) + (s[i] === 'A' ? 'B' : 'A') + s.slice(i + 1)
+  const bad = [
+    '',
+    '2AAAAAAAAA', // versión desconocida
+    good.slice(0, 5), // truncado
+    mutate(good, 3), // checksum corrupto
+    good + 'AAAA', // longitud incorrecta
+  ]
+  for (const b of bad) {
+    let threw = null
+    try {
+      decodeShareCode(b)
+    } catch (e) {
+      threw = e
+    }
+    assert(
+      threw instanceof ShareCodeError && typeof threw.message === 'string' && threw.message.length > 5,
+      `sharecode: entrada malformada rechazada con mensaje legible (${JSON.stringify(b.slice(0, 12))})`,
+    )
+  }
+}
+
+console.log(failures === 0 ? '  ✓ roundtrip, tolerancia y errores OK' : '  (ver fallos arriba)')
 
 console.log(`\n${failures === 0 ? '✅ TODO OK' : `❌ ${failures} fallos`}`)
 process.exit(failures === 0 ? 0 : 1)
