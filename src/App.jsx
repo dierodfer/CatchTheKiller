@@ -5,9 +5,9 @@ import PWAUpdatePrompt from '@/components/PWAUpdatePrompt.jsx'
 
 export default function App() {
   const game = useGame()
-  const { state, selectDifficulty, generate } = game
+  const { state, selectDifficulty, setIrregular, generate } = game
 
-  const onStart = (difficulty) => generate(difficulty)
+  const onStart = (difficulty) => generate({ difficulty })
 
   if (state.status === STATUS.PLAYING || state.status === STATUS.WIN || state.status === STATUS.FAIL) {
     return (
@@ -26,6 +26,8 @@ export default function App() {
         onStart={onStart}
         generating={state.status === STATUS.GENERATING}
         error={state.status === STATUS.ERROR ? state.error : null}
+        irregular={state.irregular}
+        onToggleIrregular={setIrregular}
       />
       <PWAUpdatePrompt />
     </>

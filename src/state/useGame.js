@@ -16,6 +16,7 @@ export const STATUS = {
 const initialState = {
   status: STATUS.IDLE,
   difficulty: 'facil',
+  irregular: false, // toggle "mapa irregular" de la pantalla de inicio
   puzzle: null,
   placements: {}, // { nombre: { row, col } } colocados por el jugador
   revealedExtras: 0, // pistas extra solicitadas por el jugador
@@ -28,15 +29,21 @@ function reducer(state, action) {
     case 'SELECT_DIFFICULTY':
       return { ...state, difficulty: action.difficulty }
 
+    case 'SET_IRREGULAR':
+      return { ...state, irregular: action.irregular }
+
     case 'GENERATE_START':
       return { ...state, status: STATUS.GENERATING, error: null }
 
     case 'GENERATE_SUCCESS':
       return {
         ...initialState,
-        difficulty: state.difficulty,
+        difficulty: action.puzzle.difficulty,
+        irregular: action.puzzle.irregular ?? state.irregular,
         status: STATUS.PLAYING,
         puzzle: action.puzzle,
+        // Fichas iniciales (partida compartida "con estado"): ya validadas.
+        placements: action.initialPlacements || {},
       }
 
     case 'GENERATE_ERROR':
@@ -94,7 +101,7 @@ function reducer(state, action) {
       return { ...state, status: STATUS.PLAYING, result: null }
 
     case 'NEW_GAME':
-      return { ...initialState, difficulty: state.difficulty }
+      return { ...initialState, difficulty: state.difficulty, irregular: state.irregular }
 
     default:
       return state
@@ -109,21 +116,30 @@ export function useGame() {
     [],
   )
 
+  const setIrregular = useCallback(
+    (irregular) => dispatch({ type: 'SET_IRREGULAR', irregular }),
+    [],
+  )
+
+  // Genera una partida. Sin opciones usa la dificultad y el toggle del estado;
+  // con `seed` (partida compartida) reproduce el puzzle exacto, y
+  // `initialPlacements` precoloca fichas ({ nombre: { row, col } }, validadas).
   const generate = useCallback(
-    (difficulty) => {
+    ({ difficulty, seed, irregular, initialPlacements } = {}) => {
       const diff = difficulty || state.difficulty
+      const irr = irregular ?? state.irregular
       dispatch({ type: 'GENERATE_START' })
       // Diferido para que el spinner se pinte antes del trabajo síncrono.
       setTimeout(() => {
         try {
-          const puzzle = generatePuzzle(diff)
-          dispatch({ type: 'GENERATE_SUCCESS', puzzle })
+          const puzzle = generatePuzzle(diff, seed ?? undefined, { irregular: irr })
+          dispatch({ type: 'GENERATE_SUCCESS', puzzle, initialPlacements })
         } catch (e) {
           dispatch({ type: 'GENERATE_ERROR', error: e.message })
         }
       }, 30)
     },
-    [state.difficulty],
+    [state.difficulty, state.irregular],
   )
 
   const place = useCallback((name, row, col) => dispatch({ type: 'PLACE', name, row, col }), [])
@@ -149,6 +165,7 @@ export function useGame() {
   return {
     state,
     selectDifficulty,
+    setIrregular,
     generate,
     place,
     unplace,
