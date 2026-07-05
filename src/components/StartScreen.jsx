@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Loader2, Skull } from 'lucide-react'
+import { Loader2, Skull, Ticket } from 'lucide-react'
 import { DIFFICULTIES } from '@/game/constants.js'
 import { SUSPECT_COLORS } from './palette.js'
 import { PixelAvatar } from './pixelArt.jsx'
@@ -8,10 +9,20 @@ import MapPreview from './MapPreview.jsx'
 
 const LEVELS = Object.values(DIFFICULTIES)
 
-export default function StartScreen({ difficulty, onSelect, onStart, generating, error }) {
+export default function StartScreen({
+  difficulty,
+  onSelect,
+  onStart,
+  generating,
+  error,
+  irregular,
+  onToggleIrregular,
+  onLoadCode,
+}) {
   const diff = DIFFICULTIES[difficulty]
   const levelIndex = LEVELS.findIndex((d) => d.id === difficulty)
   const reduce = useReducedMotion()
+  const [shareCode, setShareCode] = useState('')
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6">
@@ -108,10 +119,41 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
                     </button>
                   ))}
                 </div>
+
+                <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-gold/15 bg-cream-100/70 px-3.5 py-2.5">
+                  <span className="text-left">
+                    <span className="block text-[13px] font-semibold text-plum-800">
+                      Mapa irregular
+                    </span>
+                    <span className="block text-[11px] text-plum-500">
+                      Esquinas recortadas, patios y huecos en el tablero
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={!!irregular}
+                    aria-label="Mapa irregular"
+                    onClick={() => onToggleIrregular(!irregular)}
+                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                      irregular ? 'bg-gold-deep' : 'bg-cream-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                        irregular ? 'left-[22px]' : 'left-0.5'
+                      }`}
+                    />
+                  </button>
+                </label>
               </div>
 
               <div className="flex justify-center sm:shrink-0">
-                <MapPreview key={diff.id} difficulty={diff} />
+                <MapPreview
+                  key={`${diff.id}${irregular ? '-i' : ''}`}
+                  difficulty={diff}
+                  irregular={irregular}
+                />
               </div>
             </div>
           </div>
@@ -132,6 +174,40 @@ export default function StartScreen({ difficulty, onSelect, onStart, generating,
             'Empezar investigación'
           )}
         </motion.button>
+
+        {/* Partida compartida: pegar un código reconstruye el caso exacto. */}
+        <form
+          className="mt-5 flex w-full max-w-md items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (shareCode.trim()) onLoadCode(shareCode)
+          }}
+        >
+          <div className="relative flex-1">
+            <Ticket
+              size={15}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-plum-400"
+            />
+            <input
+              type="text"
+              value={shareCode}
+              onChange={(e) => setShareCode(e.target.value)}
+              placeholder="¿Tienes un código de caso?"
+              aria-label="Código de caso compartido"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              className="w-full rounded-full border border-gold/20 bg-cream-100/70 py-2.5 pl-9 pr-3 text-center font-pixel text-[15px] tracking-wider text-plum-900 placeholder:font-sans placeholder:text-[13px] placeholder:tracking-normal placeholder:text-plum-500 focus:border-gold/50 focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!shareCode.trim() || generating}
+            className="shrink-0 rounded-full border border-gold/20 bg-cream-200/70 px-4 py-2.5 text-[13px] font-semibold text-plum-800 transition enabled:hover:bg-cream-300/70 disabled:opacity-40"
+          >
+            Cargar caso
+          </button>
+        </form>
 
         {error && <p className="mt-4 text-sm text-rose-deep">Error: {error}</p>}
       </motion.div>

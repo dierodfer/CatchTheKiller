@@ -16,6 +16,7 @@ import Toolbar from './Toolbar.jsx'
 import ResultBanner from './ResultBanner.jsx'
 import RevealConfirmModal from './RevealConfirmModal.jsx'
 import RulesModal from './RulesModal.jsx'
+import ShareModal from './ShareModal.jsx'
 import { TokenChip } from './CharacterToken.jsx'
 import { zoneForSeed } from './zones.js'
 import { DIFFICULTIES } from '@/game/constants.js'
@@ -27,6 +28,7 @@ export default function GameScreen({ game }) {
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
   const [showRules, setShowRules] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [dismissedResult, setDismissedResult] = useState(null)
   const [marks, setMarks] = useState({})
   const [markingCell, setMarkingCell] = useState(null)
@@ -191,6 +193,7 @@ export default function GameScreen({ game }) {
               onReveal={() => setConfirmReveal(true)}
               onNewGame={newGame}
               onShowRules={() => setShowRules(true)}
+              onShare={() => setShowShare(true)}
             />
           </div>
         </div>
@@ -213,6 +216,13 @@ export default function GameScreen({ game }) {
       )}
 
       <RulesModal open={showRules} onClose={() => setShowRules(false)} />
+
+      <ShareModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        puzzle={puzzle}
+        placements={placements}
+      />
 
       <RevealConfirmModal
         open={confirmReveal}

@@ -1,0 +1,149 @@
+// Código compartible de partida (v1). Puro, sin dependencias de React.
+//
+// La generación es 100% determinista (mulberry32): basta transportar
+// (dificultad, irregular, seed) para que el receptor reconstruya tablero,
+// personajes y pistas idénticos con generatePuzzle. Opcionalmente viajan las
+// fichas colocadas por el emisor, como índice de celda por personaje.
+//
+// Formato (bitstream MSB-first, relleno con ceros a múltiplo de 5):
+//   char 0      : versión, literal '1'
+//   bits 0-1    : dificultad (0=facil, 1=media, 2=dificil, 3=experto)
+//   bit  2      : irregular
+//   bit  3      : hasPlacements
+//   bits 4-35   : seed (uint32)
+//   [N × 6 bits]: si hasPlacements, celda de cada personaje en orden canónico
+//                 (sospechosos en orden alfabético + víctima al final);
+//                 valor = fila*gridSize+columna, 63 = sin colocar.
+//   último char : checksum — valor base32 de la suma de los valores de todos
+//                 los chars anteriores (incluida la versión) mod 32.
+//
+// Alfabeto Base32 Crockford (sin I, L, O, U): apto para dictarse en voz alta;
+// el decodificador acepta minúsculas y corrige O→0, I/L→1.
+
+import { DIFFICULTIES } from './constants.js'
+
+const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+const VERSION_CHAR = '1'
+// El orden es parte del FORMATO: no cambiarlo aunque cambie constants.js.
+const DIFF_ORDER = ['facil', 'media', 'dificil', 'experto']
+const UNPLACED = 63 // sentinel de "sin colocar" (6 bits)
+
+// Error de decodificación con mensaje apto para mostrar al jugador.
+export class ShareCodeError extends Error {}
+
+const charValue = (ch) => ALPHABET.indexOf(ch)
+
+// ── Bitstream ────────────────────────────────────────────────────────────────
+
+function bitsToChars(bits) {
+  let out = ''
+  for (let i = 0; i < bits.length; i += 5) {
+    const chunk = bits.slice(i, i + 5).padEnd(5, '0')
+    out += ALPHABET[parseInt(chunk, 2)]
+  }
+  return out
+}
+
+const toBits = (value, width) => value.toString(2).padStart(width, '0')
+
+// ── Codificación ─────────────────────────────────────────────────────────────
+
+// `placementIndices`: array de N índices de celda (o null si no se comparten
+// fichas), en el orden canónico de personajes. Devuelve el código formateado
+// en grupos de 4 con guiones.
+export function encodeShareCode({ difficultyId, seed, irregular = false, placementIndices = null }) {
+  const diffIdx = DIFF_ORDER.indexOf(difficultyId)
+  if (diffIdx < 0) throw new Error(`Dificultad desconocida: ${difficultyId}`)
+
+  let bits = toBits(diffIdx, 2) + (irregular ? '1' : '0') + (placementIndices ? '1' : '0')
+  bits += toBits(seed >>> 0, 32)
+  if (placementIndices) {
+    for (const idx of placementIndices) bits += toBits(idx, 6)
+  }
+
+  const body = VERSION_CHAR + bitsToChars(bits)
+  const sum = [...body].reduce((acc, ch) => acc + charValue(ch), 0)
+  const raw = body + ALPHABET[sum % 32]
+  return raw.replace(/(.{4})(?=.)/g, '$1-')
+}
+
+// Convierte las fichas del emisor a índices en el orden canónico.
+export function placementsToIndices(placements, characters, gridSize) {
+  const order = [...characters.suspects, characters.victim]
+  return order.map((name) => {
+    const p = placements[name]
+    return p ? p.row * gridSize + p.col : UNPLACED
+  })
+}
+
+// ── Decodificación ───────────────────────────────────────────────────────────
+
+// Normaliza la entrada del usuario: guiones/espacios fuera, mayúsculas y
+// sustitución de los caracteres ambiguos que Crockford excluye del alfabeto.
+function normalize(str) {
+  return str
+    .replace(/[-\s]/g, '')
+    .toUpperCase()
+    .replace(/O/g, '0')
+    .replace(/[IL]/g, '1')
+}
+
+export function decodeShareCode(str) {
+  const code = normalize(String(str ?? ''))
+  if (code.length === 0) throw new ShareCodeError('El código está vacío')
+  if (code[0] !== VERSION_CHAR) {
+    throw new ShareCodeError('Código de una versión no compatible')
+  }
+  if (code.length < 3 || [...code].some((ch) => charValue(ch) < 0)) {
+    throw new ShareCodeError('El código contiene caracteres no válidos o está incompleto')
+  }
+
+  const body = code.slice(0, -1)
+  const sum = [...body].reduce((acc, ch) => acc + charValue(ch), 0)
+  if (ALPHABET[sum % 32] !== code[code.length - 1]) {
+    throw new ShareCodeError('El código tiene una errata: revisa que esté copiado entero')
+  }
+
+  const bits = [...body.slice(1)].map((ch) => toBits(charValue(ch), 5)).join('')
+  const read = (from, width) => parseInt(bits.slice(from, from + width), 2)
+
+  if (bits.length < 36) throw new ShareCodeError('El código está incompleto')
+  const difficultyId = DIFF_ORDER[read(0, 2)]
+  const irregular = read(2, 1) === 1
+  const hasPlacements = read(3, 1) === 1
+  const seed = read(4, 32) >>> 0
+
+  const gridSize = DIFFICULTIES[difficultyId].gridSize
+  const expectedBits = 36 + (hasPlacements ? gridSize * 6 : 0)
+  const expectedChars = 1 + Math.ceil(expectedBits / 5) + 1
+  if (code.length !== expectedChars) {
+    throw new ShareCodeError('El código no tiene la longitud esperada')
+  }
+
+  let placementIndices = null
+  if (hasPlacements) {
+    placementIndices = []
+    for (let i = 0; i < gridSize; i++) {
+      const idx = read(36 + i * 6, 6)
+      if (idx !== UNPLACED && idx >= gridSize * gridSize) {
+        throw new ShareCodeError('El código contiene una posición fuera del tablero')
+      }
+      placementIndices.push(idx)
+    }
+  }
+
+  return { difficultyId, seed, irregular, placementIndices }
+}
+
+// Convierte los índices decodificados a fichas { nombre: { row, col } } en el
+// orden canónico. Ignora los sentinels; la validación de ocupabilidad y
+// duplicados la hace el caller con el mapa ya regenerado.
+export function indicesToPlacements(indices, characters, gridSize) {
+  const order = [...characters.suspects, characters.victim]
+  const placements = {}
+  indices.forEach((idx, i) => {
+    if (idx === UNPLACED || i >= order.length) return
+    placements[order[i]] = { row: Math.floor(idx / gridSize), col: idx % gridSize }
+  })
+  return placements
+}

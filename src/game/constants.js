@@ -72,6 +72,17 @@ export const DIFFICULTIES = {
   },
 }
 
+// Presupuestos de formas irregulares por tamaño de tablero (ver mapShapes.js).
+// `kinds`: formas disponibles; `maxVoid`: tope de celdas eliminadas;
+// `donutHole`: lado del hueco central. En 4×4 el margen es mínimo (4 personajes
+// + 3-4 bloqueantes en 16 celdas), así que solo se recortan esquinas.
+export const IRREGULAR = {
+  4: { kinds: ['corners'], maxVoid: 2 },
+  5: { kinds: ['corners', 'donut', 'nibble'], maxVoid: 3, donutHole: 1 },
+  6: { kinds: ['corners', 'donut', 'nibble'], maxVoid: 5, donutHole: 2 },
+  7: { kinds: ['corners', 'donut', 'nibble'], maxVoid: 6, donutHole: 2 },
+}
+
 // Tipos de celda según su ocupabilidad.
 export const CELL = {
   FREE: 'free',
