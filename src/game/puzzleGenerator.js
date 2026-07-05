@@ -29,7 +29,7 @@ function pickDistinctNames(rng, count) {
 const byName = (a, b) => a.localeCompare(b, 'es')
 const byInitial = (a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase(), 'es')
 
-export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
+export function generatePuzzle(difficultyId = 'facil', seed = randomSeed(), { irregular = false } = {}) {
   const difficulty = DIFFICULTIES[difficultyId]
   if (!difficulty) throw new Error(`Dificultad desconocida: ${difficultyId}`)
 
@@ -37,7 +37,7 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
 
   for (let attempt = 0; attempt < GENERATION.PUZZLE_ATTEMPTS; attempt++) {
     // 1. MAPA
-    const map = generateMap(rng, difficulty)
+    const map = generateMap(rng, difficulty, { irregular })
     map.difficulty = difficulty.id
     const roomLookup = buildRoomLookup(map)
 
@@ -80,6 +80,7 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed()) {
     return {
       seed,
       difficulty: difficulty.id,
+      irregular: !!irregular,
       map,
       roomLookup,
       characters,

@@ -3,26 +3,23 @@
 
 import { ROOM_NAMES, ADJACENT, GENERATION, cellKey } from './constants.js'
 import { BLOCKING_ELEMENTS, FREE_ELEMENTS } from './elements.js'
+import { generateShape, computeExteriorVoid, hasPerfectMatching } from './mapShapes.js'
 import { randInt, pick, shuffle } from './random.js'
 
-const WALL_BY_BORDER = (size) => (r, c) => {
-  if (r === 0) return 'norte'
-  if (r === size - 1) return 'sur'
-  if (c === 0) return 'oeste'
-  if (c === size - 1) return 'este'
-  return null
-}
-
-// Particiona la cuadrícula en habitaciones irregulares contiguas mediante
-// expansión multi-fuente (BFS con frontera barajada).
-function partitionRooms(rng, size, numRooms) {
-  const total = size * size
-  const owner = new Array(total).fill(-1)
+// Particiona las celdas existentes (no void) en habitaciones irregulares
+// contiguas mediante expansión multi-fuente (BFS con frontera barajada).
+function partitionRooms(rng, size, numRooms, voidCells) {
+  const owner = new Array(size * size).fill(-1)
   const idx = (r, c) => r * size + c
+  for (const key of voidCells) {
+    const [r, c] = key.split(',').map(Number)
+    owner[idx(r, c)] = -2 // void: fuera de toda habitación
+  }
 
   // Semillas únicas.
   const allCells = []
-  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) allCells.push([r, c])
+  for (let r = 0; r < size; r++)
+    for (let c = 0; c < size; c++) if (owner[idx(r, c)] === -1) allCells.push([r, c])
   const seeds = shuffle(rng, allCells).slice(0, numRooms)
 
   let frontier = []
@@ -59,7 +56,7 @@ function partitionRooms(rng, size, numRooms) {
             const nr = r + dr
             const nc = c + dc
             if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue
-            if (owner[idx(nr, nc)] !== -1) {
+            if (owner[idx(nr, nc)] >= 0) {
               owner[idx(r, c)] = owner[idx(nr, nc)]
               break
             }
@@ -83,13 +80,31 @@ function partitionRooms(rng, size, numRooms) {
   return rooms.filter((room) => room.cells.length > 0)
 }
 
-export function generateMap(rng, config) {
+export function generateMap(rng, config, { irregular = false } = {}) {
   const { gridSize: size, numCharacters, blockingRange } = config
   const numRooms = randInt(rng, size - 2, size - 1)
 
   let attempt = 0
   while (attempt++ < GENERATION.MAP_ATTEMPTS) {
-    const rooms = partitionRooms(rng, size, numRooms)
+    // Forma del tablero. En clásico NO se consume rng (guard estricto): la
+    // misma seed produce exactamente el mismo puzzle que antes de esta feature.
+    const { kind, voidCells } = irregular
+      ? generateShape(rng, size)
+      : { kind: 'classic', voidCells: new Set() }
+    const exteriorVoid = computeExteriorVoid(size, voidCells)
+    const isExterior = (r, c) =>
+      r < 0 || c < 0 || r >= size || c >= size || exteriorVoid.has(cellKey(r, c))
+    // Pared exterior de una celda (misma prioridad que el clásico
+    // norte>sur>oeste>este); el hueco de un donut NO cuenta: es patio interior.
+    const outerWallOf = (r, c) => {
+      if (isExterior(r - 1, c)) return 'norte'
+      if (isExterior(r + 1, c)) return 'sur'
+      if (isExterior(r, c - 1)) return 'oeste'
+      if (isExterior(r, c + 1)) return 'este'
+      return null
+    }
+
+    const rooms = partitionRooms(rng, size, numRooms, voidCells)
     const grid = Array.from({ length: size }, () => new Array(size).fill(null))
     const windows = []
 
@@ -97,8 +112,8 @@ export function generateMap(rng, config) {
     const borderCells = []
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
-        const isBorder = r === 0 || c === 0 || r === size - 1 || c === size - 1
-        if (isBorder) borderCells.push([r, c])
+        if (voidCells.has(cellKey(r, c))) continue
+        if (outerWallOf(r, c) !== null) borderCells.push([r, c])
         interiorCells.push([r, c])
       }
     }
@@ -113,7 +128,8 @@ export function generateMap(rng, config) {
     // Mobiliario libre (silla, cama) sobre celdas aún libres.
     const stillFree = []
     for (let r = 0; r < size; r++)
-      for (let c = 0; c < size; c++) if (grid[r][c] === null) stillFree.push([r, c])
+      for (let c = 0; c < size; c++)
+        if (grid[r][c] === null && !voidCells.has(cellKey(r, c))) stillFree.push([r, c])
     const shuffledFree = shuffle(rng, stillFree)
     const numChairs = randInt(rng, 1, 2)
     for (let i = 0; i < numChairs && i < shuffledFree.length; i++) {
@@ -127,25 +143,29 @@ export function generateMap(rng, config) {
     }
 
     // Alfombra: una región rectangular contigua de 2 a 6 celdas, sin cruzar
-    // entre habitaciones.
+    // entre habitaciones (ni pisar celdas void: no pertenecen a ninguna sala).
     placeRug(rng, grid, size, rooms)
 
-    // Ventanas sobre celdas de borde libres (ahora son ocupables). Cuanto
-    // mayor el mapa, más ventanas mínimas (entre 2 y 4).
-    const wallOf = WALL_BY_BORDER(size)
+    // Ventanas sobre celdas libres con pared exterior (siguen siendo
+    // ocupables). Cuanto mayor el mapa, más ventanas mínimas (entre 2 y 4).
     const freeBorder = shuffle(rng, borderCells).filter(([r, c]) => grid[r][c] === null)
     const minWindows = Math.min(2 + Math.max(0, size - 4), 4)
     const numWindows = randInt(rng, minWindows, 4)
     for (let i = 0; i < numWindows && i < freeBorder.length; i++) {
       const [r, c] = freeBorder[i]
-      windows.push({ row: r, col: c, wall: wallOf(r, c) })
+      windows.push({ row: r, col: c, wall: outerWallOf(r, c) })
     }
 
-    const map = { gridSize: size, rooms, grid, windows }
+    const map = { gridSize: size, rooms, grid, windows, voidCells, irregular: !!irregular, shape: kind }
 
-    // Validación: celdas ocupables >= numCharacters, con holgura.
+    // Validación: celdas ocupables >= numCharacters con holgura. En irregular,
+    // además, matching perfecto filas→columnas sobre las ocupables — el
+    // solutionGenerator exige una permutación (nadie comparte fila ni columna)
+    // y comprobarlo aquí evita quemar sus 3000 intentos en mapas sin
+    // transversal. En clásico NO se aplica: alteraría el flujo de reintentos
+    // de seeds existentes (el determinismo clásico debe quedar intacto).
     const free = freeCells(map)
-    if (free.length >= numCharacters + 2) {
+    if (free.length >= numCharacters + 2 && (!irregular || hasPerfectMatching(free, size))) {
       return map
     }
   }
@@ -164,9 +184,18 @@ export function freeCells(map) {
   return cells
 }
 
+// ¿Forma la celda parte del tablero? Falso fuera de rango y en celdas void de
+// mapas irregulares. (voidCells es un Set no serializable a JSON; irrelevante
+// hoy: el mapa se regenera siempre desde la seed.)
+export function cellExists(map, r, c) {
+  if (r < 0 || c < 0 || r >= map.gridSize || c >= map.gridSize) return false
+  return !map.voidCells?.has(cellKey(r, c))
+}
+
 // Las ventanas son ocupables: un personaje (incluido el asesino) puede estar
 // junto a la pared, frente a la ventana.
 export function isOccupiable(map, r, c) {
+  if (!cellExists(map, r, c)) return false
   const v = map.grid[r][c]
   return v === null || FREE_ELEMENTS.includes(v)
 }
@@ -198,6 +227,7 @@ function placeRug(rng, grid, size, rooms) {
     for (const [r0, c0] of shuffle(rng, positions)) {
       let fits = true
       const room0 = roomOf[cellKey(r0, c0)]
+      if (room0 === undefined) continue // celda void o sin sala: no anclar aquí
       for (let dr = 0; dr < h && fits; dr++) {
         for (let dc = 0; dc < w && fits; dc++) {
           const r = r0 + dr
