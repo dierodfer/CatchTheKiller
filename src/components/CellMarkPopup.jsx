@@ -66,13 +66,18 @@ export default function CellMarkPopup({
   const cols = allNames.length <= 4 ? 2 : 3
 
   return createPortal(
-    <div
+    // <dialog open> es el elemento nativo con rol "dialog", no modal (no ocupa
+    // la top layer, así que sigue mandando el z-50). `margin`/`right` anulan
+    // los estilos de agente de usuario, que lo centrarían por su cuenta.
+    <dialog
       ref={ref}
-      role="dialog"
+      open
       aria-label={`Marcar casilla fila ${r + 1}, columna ${c + 1}`}
       className="fixed z-50 rounded-lg border border-gold/20 bg-cream-50 p-2 shadow-xl"
       style={{
         minWidth: Math.max(cellSize * 1.5, 120),
+        margin: 0,
+        right: 'auto',
         left: pos?.left ?? 0,
         top: pos?.top ?? 0,
         visibility: pos ? 'visible' : 'hidden',
@@ -138,7 +143,7 @@ export default function CellMarkPopup({
           Quitar a {occupantName}
         </button>
       )}
-    </div>,
+    </dialog>,
     document.body,
   )
 }
