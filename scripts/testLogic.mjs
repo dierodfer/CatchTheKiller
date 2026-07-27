@@ -174,7 +174,7 @@ for (const diff of difficulties) {
       )
     }
 
-    // Invariante: en TODO el set (principales + extras) no hay pistas
+    // Invariante: en el set completo (principales + extras) no hay pistas
     // direccionales recíprocas (A→B y B→A) ni, para un mismo sujeto, mezcla de
     // eje absoluto (fila/columna) con el relativo del mismo eje.
     const directional = new Set(['rowAbove', 'rowBelow', 'colLeft', 'colRight'])
@@ -269,8 +269,9 @@ for (const diff of difficulties) {
       }
     }
 
+    const shapeInfo = irregular ? ` (${map.shape}, ${voidCells.size} void)` : ''
     console.log(
-      `  ✓ seed ${seed}: ${map.gridSize}×${map.gridSize}${irregular ? ` (${map.shape}, ${voidCells.size} void)` : ''}, ` +
+      `  ✓ seed ${seed}: ${map.gridSize}×${map.gridSize}${shapeInfo}, ` +
         `${map.rooms.length} hab., asesino=${killer}, extras=${extraClues.length}, ${ms}ms`,
     )
   }
@@ -333,7 +334,8 @@ for (const difficultyId of difficulties) {
         `sharecode ${difficultyId}/${irregular}/${seed}: roundtrip de fichas`,
       )
       const back = indicesToPlacements(dec.placementIndices, p.characters, size)
-      const sortedEntries = (o) => JSON.stringify(Object.entries(o).sort())
+      const sortedEntries = (o) =>
+        JSON.stringify(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)))
       assert(
         sortedEntries(back) === sortedEntries(partial),
         `sharecode ${difficultyId}/${irregular}/${seed}: fichas → índices → fichas`,
@@ -341,11 +343,11 @@ for (const difficultyId of difficulties) {
 
       // Roundtrip integral: regenerar desde lo decodificado da el mismo caso.
       const p2 = generatePuzzle(dec.difficultyId, dec.seed, { irregular: dec.irregular })
+      const sortedKeys = (cells) => JSON.stringify([...cells].sort((a, b) => a.localeCompare(b)))
       assert(
         p2.killer === p.killer &&
           JSON.stringify(p2.solution) === JSON.stringify(p.solution) &&
-          JSON.stringify([...p2.map.voidCells].sort()) ===
-            JSON.stringify([...p.map.voidCells].sort()),
+          sortedKeys(p2.map.voidCells) === sortedKeys(p.map.voidCells),
         `sharecode ${difficultyId}/${irregular}/${seed}: puzzle regenerado idéntico`,
       )
     }
@@ -355,7 +357,7 @@ for (const difficultyId of difficulties) {
 // Tolerancia de entrada: guiones, minúsculas y caracteres ambiguos (O/I/L).
 {
   const code = encodeShareCode({ difficultyId: 'media', seed: 987654321, irregular: true })
-  const messy = code.toLowerCase().replace(/0/g, 'o').replace(/1/g, 'i')
+  const messy = code.toLowerCase().replaceAll('0', 'o').replaceAll('1', 'i')
   const dec = decodeShareCode(messy)
   assert(
     dec.seed === 987654321 && dec.difficultyId === 'media' && dec.irregular === true,
@@ -365,7 +367,7 @@ for (const difficultyId of difficulties) {
 
 // Malformados: error legible (ShareCodeError), nunca un crash ni un falso OK.
 {
-  const good = encodeShareCode({ difficultyId: 'experto', seed: 42 }).replace(/-/g, '')
+  const good = encodeShareCode({ difficultyId: 'experto', seed: 42 }).replaceAll('-', '')
   const mutate = (s, i) => s.slice(0, i) + (s[i] === 'A' ? 'B' : 'A') + s.slice(i + 1)
   const bad = [
     '',
@@ -390,5 +392,6 @@ for (const difficultyId of difficulties) {
 
 console.log(failures === 0 ? '  ✓ roundtrip, tolerancia y errores OK' : '  (ver fallos arriba)')
 
-console.log(`\n${failures === 0 ? '✅ TODO OK' : `❌ ${failures} fallos`}`)
+const verdict = failures === 0 ? '✅ TODO OK' : `❌ ${failures} fallos`
+console.log(`\n${verdict}`)
 process.exit(failures === 0 ? 0 : 1)

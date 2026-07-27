@@ -106,6 +106,7 @@ export default function StartScreen({
                 <div className="mt-2.5 flex justify-between">
                   {LEVELS.map((lvl, i) => (
                     <button
+                      type="button"
                       key={lvl.id}
                       onClick={() => onSelect(lvl.id)}
                       className={`-mx-1 px-1 text-[11px] transition-colors ${
@@ -120,7 +121,10 @@ export default function StartScreen({
                   ))}
                 </div>
 
-                <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-gold/15 bg-cream-100/70 px-3.5 py-2.5">
+                {/* No es un <label>: el control es un botón con role="switch",
+                    que no es un elemento etiquetable (lleva su propio
+                    aria-label). */}
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-gold/15 bg-cream-100/70 px-3.5 py-2.5">
                   <span className="text-left">
                     <span className="block text-[13px] font-semibold text-plum-800">
                       Mapa irregular
@@ -145,7 +149,7 @@ export default function StartScreen({
                       }`}
                     />
                   </button>
-                </label>
+                </div>
               </div>
 
               <div className="flex justify-center sm:shrink-0">

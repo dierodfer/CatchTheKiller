@@ -68,6 +68,8 @@ export default function CellMarkPopup({
   return createPortal(
     <div
       ref={ref}
+      role="dialog"
+      aria-label={`Marcar casilla fila ${r + 1}, columna ${c + 1}`}
       className="fixed z-50 rounded-lg border border-gold/20 bg-cream-50 p-2 shadow-xl"
       style={{
         minWidth: Math.max(cellSize * 1.5, 120),
@@ -75,7 +77,6 @@ export default function CellMarkPopup({
         top: pos?.top ?? 0,
         visibility: pos ? 'visible' : 'hidden',
       }}
-      onClick={(e) => e.stopPropagation()}
     >
       <div
         className="grid gap-1"
@@ -88,6 +89,7 @@ export default function CellMarkPopup({
           return (
             <button
               key={name}
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 onToggle(r, c, name)
@@ -120,6 +122,7 @@ export default function CellMarkPopup({
       {/* Quitar la ficha colocada (a ancho completo, bajo los personajes). */}
       {occupantName && (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation()
             onRemove(occupantName)

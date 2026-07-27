@@ -83,8 +83,8 @@ export default function MapPreview({ difficulty, irregular = false }) {
           {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
           <div className="pointer-events-none absolute inset-0" style={floorPatternStyle(cellSize)} />
           {furniture === 'alfombra' &&
-            rugLayerStyles(edges, margin, 6).map((style, i) => (
-              <div key={i} className="pointer-events-none absolute" style={style} />
+            rugLayerStyles(edges, margin, 6).map(({ id, style }) => (
+              <div key={id} className="pointer-events-none absolute" style={style} />
             ))}
           {furniture && furniture !== 'alfombra' && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-70">

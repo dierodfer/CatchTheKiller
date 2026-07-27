@@ -57,6 +57,7 @@ export function floorPatternStyle(size) {
 
 // Estilos de las dos capas de la alfombra (trama + dither) dados los bordes
 // (qué lados son frontera de la alfombra), el margen y el radio de esquina.
+// Cada capa lleva un `id` estable para usarlo como key de React al renderizar.
 export function rugLayerStyles(edges, margin, radius = 8) {
   const box = {
     top: edges.top ? margin : 0,
@@ -69,13 +70,16 @@ export function rugLayerStyles(edges, margin, radius = 8) {
     borderBottomRightRadius: edges.bottom && edges.right ? radius : 0,
   }
   return [
-    { ...box, background: RUG_PATTERN, opacity: 0.85 },
+    { id: 'trama', style: { ...box, background: RUG_PATTERN, opacity: 0.85 } },
     {
-      ...box,
-      backgroundImage: RUG_NOISE,
-      backgroundSize: RUG_NOISE_SIZE,
-      mixBlendMode: 'soft-light',
-      opacity: 0.25,
+      id: 'dither',
+      style: {
+        ...box,
+        backgroundImage: RUG_NOISE,
+        backgroundSize: RUG_NOISE_SIZE,
+        mixBlendMode: 'soft-light',
+        opacity: 0.25,
+      },
     },
   ]
 }

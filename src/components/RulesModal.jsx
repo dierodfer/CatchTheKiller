@@ -32,6 +32,7 @@ export default function RulesModal({ open, onClose }) {
             onClick={(e) => e.stopPropagation()}
           >
             <button
+              type="button"
               onClick={onClose}
               className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-gold/20 bg-cream-200/70 text-plum-700 hover:bg-cream-300/70"
               aria-label="Cerrar"

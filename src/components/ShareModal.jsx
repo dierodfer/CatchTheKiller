@@ -7,25 +7,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Copy, Link2, Share2, X } from 'lucide-react'
 import { encodeShareCode, placementsToIndices } from '@/game/shareCode.js'
 
-// Copia con Clipboard API y fallback a execCommand (contextos sin permiso).
+// Copia con la Clipboard API. Si falla (contexto sin permiso), no hay plan B:
+// el código sigue visible y seleccionable en el propio modal, así que el
+// jugador puede copiarlo a mano.
 async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text)
     return true
   } catch {
-    try {
-      const ta = document.createElement('textarea')
-      ta.value = text
-      ta.style.position = 'fixed'
-      ta.style.opacity = '0'
-      document.body.appendChild(ta)
-      ta.select()
-      const ok = document.execCommand('copy')
-      document.body.removeChild(ta)
-      return ok
-    } catch {
-      return false
-    }
+    return false
   }
 }
 
@@ -111,6 +101,7 @@ export default function ShareModal({ open, onClose, puzzle, placements }) {
 
             <div className="mt-5 flex justify-center gap-2">
               <button
+                type="button"
                 onClick={() => handleCopy('code')}
                 className="flex items-center gap-2 rounded-full border border-gold/20 bg-cream-200/70 px-5 py-2.5 text-sm font-medium text-plum-900 hover:bg-cream-300/70"
               >
@@ -118,6 +109,7 @@ export default function ShareModal({ open, onClose, puzzle, placements }) {
                 {copied === 'code' ? 'Copiado' : 'Copiar código'}
               </button>
               <button
+                type="button"
                 onClick={() => handleCopy('link')}
                 className="flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-plum-950 transition hover:bg-gold-soft"
               >
@@ -127,6 +119,7 @@ export default function ShareModal({ open, onClose, puzzle, placements }) {
             </div>
 
             <button
+              type="button"
               onClick={onClose}
               className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-plum-600 hover:text-plum-800"
             >

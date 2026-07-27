@@ -96,13 +96,13 @@ export const CLUE_TYPES = {
     tier: 'absolute',
     unary: true,
     evaluate: (pos, p) => pos.col === p.col,
-    text: (p) => `Estaba en la columna ${String.fromCharCode(65 + p.col)}`,
+    text: (p) => `Estaba en la columna ${String.fromCodePoint(65 + p.col)}`,
   },
   notInColumn: {
     tier: 'absolute',
     unary: true,
     evaluate: (pos, p) => pos.col !== p.col,
-    text: (p) => `No estaba en la columna ${String.fromCharCode(65 + p.col)}`,
+    text: (p) => `No estaba en la columna ${String.fromCodePoint(65 + p.col)}`,
   },
   inCorner: {
     tier: 'absolute',
@@ -254,10 +254,11 @@ export const CLUE_TYPES = {
     unary: true,
     evaluate: (pos, p, _all, ctx) =>
       ctx.roomWindows(ctx.roomAt(pos.row, pos.col)) === p.count,
-    text: (p) =>
-      p.count === 0
-        ? `Mi habitación no tenía ventanas`
-        : `Mi habitación tenía ${p.count} ventana${p.count > 1 ? 's' : ''}`,
+    text: (p) => {
+      if (p.count === 0) return 'Mi habitación no tenía ventanas'
+      const plural = p.count > 1 ? 's' : ''
+      return `Mi habitación tenía ${p.count} ventana${plural}`
+    },
   },
 
 }

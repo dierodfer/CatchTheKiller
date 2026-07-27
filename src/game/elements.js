@@ -1,7 +1,7 @@
 // Registro central de "elementos del mapa" (antes "mobiliario").
 //
 // Única fuente de verdad: cada elemento declara su comportamiento en el tablero
-// y su semántica para las pistas. Todo lo demás (generador de mapa, pistas,
+// y su semántica para las pistas. El resto (generador de mapa, pistas,
 // Solver, render) se deriva de aquí, así que añadir, quitar o re-tematizar un
 // elemento es un cambio en un solo sitio.
 //

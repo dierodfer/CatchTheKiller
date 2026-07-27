@@ -67,7 +67,7 @@ const SEED_WEIGHT = {
 }
 
 // Pistas de posición absoluta en fila/columna ("Estaba en la fila 2", "No
-// estaba en la columna 3"): se permite como máximo una en todo el puzzle
+// estaba en la columna 3"): se permite como máximo una en el puzzle completo
 // (GENERATION.MAX_ROWCOL_CLUES) para no saturarlo de coordenadas — las pistas
 // de habitación, mobiliario y dirección relativa llevan el peso del razonamiento.
 const ROWCOL_KINDS = new Set(['inRow', 'notInRow', 'inColumn', 'notInColumn'])
@@ -301,7 +301,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
         // menos usado hasta ahora: así el refuerzo aporta variedad, no más
         // `inRoom`/`nextToElement`.
         if (ties.length) {
-          best = ties.reduce((a, b) => (kindUsage(b) < kindUsage(a) ? b : a))
+          best = ties.reduce((a, b) => (kindUsage(b) < kindUsage(a) ? b : a), ties[0])
           break
         }
       }

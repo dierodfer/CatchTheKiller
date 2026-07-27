@@ -42,6 +42,7 @@ export function DraggableToken({ name, characters, size, onClick, selected }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: name })
   return (
     <button
+      type="button"
       ref={setNodeRef}
       {...listeners}
       {...attributes}

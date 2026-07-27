@@ -14,12 +14,14 @@ export default function PWAUpdatePrompt() {
         Hay una nueva versión disponible.
       </p>
       <button
+        type="button"
         onClick={() => updateServiceWorker(true)}
         className="rounded bg-amber-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-amber-500"
       >
         Actualizar
       </button>
       <button
+        type="button"
         onClick={() => setNeedRefresh(false)}
         className="rounded px-3 py-1 text-xs text-amber-200/70 transition-colors hover:text-amber-100"
       >
