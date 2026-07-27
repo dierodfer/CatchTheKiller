@@ -43,6 +43,7 @@ export default function Toolbar({
 
       {/* Acción principal. */}
       <button
+        type="button"
         onClick={onCheck}
         disabled={!allPlaced}
         className="flex w-full items-center justify-center gap-2 rounded-full bg-gold px-4 py-3 text-sm font-semibold text-plum-950 shadow-[0_8px_22px_-8px_rgba(203,163,92,0.7)] transition enabled:hover:bg-gold-soft disabled:cursor-not-allowed disabled:opacity-35"
@@ -53,24 +54,28 @@ export default function Toolbar({
       {/* Acciones secundarias. */}
       <div className="mt-2 flex flex-wrap gap-2">
         <button
+          type="button"
           onClick={onReveal}
           className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
           <Eye size={15} /> Resolución
         </button>
         <button
+          type="button"
           onClick={onNewGame}
           className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
           <RotateCcw size={15} /> Nuevo
         </button>
         <button
+          type="button"
           onClick={onShowRules}
           className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
           <BookOpen size={15} /> Reglas
         </button>
         <button
+          type="button"
           onClick={onShare}
           className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >

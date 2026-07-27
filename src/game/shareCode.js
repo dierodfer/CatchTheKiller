@@ -39,7 +39,7 @@ function bitsToChars(bits) {
   let out = ''
   for (let i = 0; i < bits.length; i += 5) {
     const chunk = bits.slice(i, i + 5).padEnd(5, '0')
-    out += ALPHABET[parseInt(chunk, 2)]
+    out += ALPHABET[Number.parseInt(chunk, 2)]
   }
   return out
 }
@@ -84,7 +84,7 @@ function normalize(str) {
   return str
     .replace(/[-\s]/g, '')
     .toUpperCase()
-    .replace(/O/g, '0')
+    .replaceAll('O', '0')
     .replace(/[IL]/g, '1')
 }
 
@@ -104,8 +104,8 @@ export function decodeShareCode(str) {
     throw new ShareCodeError('El código tiene una errata: revisa que esté copiado entero')
   }
 
-  const bits = [...body.slice(1)].map((ch) => toBits(charValue(ch), 5)).join('')
-  const read = (from, width) => parseInt(bits.slice(from, from + width), 2)
+  const bits = Array.from(body.slice(1), (ch) => toBits(charValue(ch), 5)).join('')
+  const read = (from, width) => Number.parseInt(bits.slice(from, from + width), 2)
 
   if (bits.length < 36) throw new ShareCodeError('El código está incompleto')
   const difficultyId = DIFF_ORDER[read(0, 2)]

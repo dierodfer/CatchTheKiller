@@ -1,5 +1,5 @@
 // Orquestación de la generación (sección 6 del documento).
-// Orden estricto: MAPA -> SOLUCIÓN -> PISTAS -> VALIDACIÓN. Todo local.
+// Orden estricto: MAPA -> SOLUCIÓN -> PISTAS -> VALIDACIÓN. Se ejecuta en local.
 
 import { DIFFICULTIES, GENERATION } from './constants.js'
 import { generateMap, buildRoomLookup } from './mapGenerator.js'
@@ -7,9 +7,8 @@ import { generateSolution } from './solutionGenerator.js'
 import { generateClues } from './clueGenerator.js'
 import { hasUniqueSolution, identifyKiller } from './solver.js'
 import { buildClueContext } from './clues.js'
-import { makeRng, randomSeed } from './random.js'
+import { makeRng, randomSeed, shuffle } from './random.js'
 import { NAMES } from './names.js'
-import { shuffle } from './random.js'
 
 // Selecciona `count` nombres con inicial distinta entre sí (incluida la
 // víctima), para que ningún personaje se confunda por compartir letra inicial.
@@ -48,7 +47,7 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed(), { ir
     const sortedByInitial = [...names].sort(byInitial)
     const characters = {
       suspects: sortedByInitial.slice(0, -1),
-      victim: sortedByInitial[sortedByInitial.length - 1],
+      victim: sortedByInitial.at(-1),
     }
     const ctx = buildClueContext(map, roomLookup, characters)
 

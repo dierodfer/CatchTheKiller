@@ -16,7 +16,7 @@ export default function App() {
   useEffect(() => {
     if (hashHandled.current) return
     hashHandled.current = true
-    const match = window.location.hash.match(/^#c=(.+)$/)
+    const match = /^#c=(.+)$/.exec(window.location.hash)
     if (!match) return
     window.history.replaceState(null, '', window.location.pathname + window.location.search)
     loadFromCode(decodeURIComponent(match[1]))

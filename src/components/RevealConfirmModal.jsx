@@ -34,12 +34,14 @@ export default function RevealConfirmModal({ open, onCancel, onConfirm }) {
 
             <div className="mt-6 flex justify-center gap-2">
               <button
+                type="button"
                 onClick={onCancel}
                 className="flex items-center gap-2 rounded-full border border-gold/20 bg-cream-200/70 px-5 py-2.5 text-sm font-medium text-plum-900 hover:bg-cream-300/70"
               >
                 <X size={16} /> Cancelar
               </button>
               <button
+                type="button"
                 onClick={onConfirm}
                 className="flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-plum-950 transition hover:bg-gold-soft"
               >

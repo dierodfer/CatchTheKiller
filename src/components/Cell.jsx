@@ -79,8 +79,12 @@ function Cell({
   const cellMarks = marks?.[`${r},${c}`] || []
   const isMarkingThis = markingCell?.r === r && markingCell?.c === c
 
+  const occupantSuffix = occupantName ? `, ${occupantName}` : ''
+  const cellLabel = `Casilla fila ${r + 1}, columna ${c + 1}${occupantSuffix}`
+
+  // Solo se invoca desde la diana de interacción, que únicamente se renderiza
+  // cuando `clickable`; no hace falta volver a comprobarlo aquí.
   const handleClick = () => {
-    if (!occupiable || revealMode) return
     if (selectedToken && !occupantName) {
       onCellClick(r, c)
     } else if (isMarkingThis) {
@@ -94,10 +98,6 @@ function Cell({
     <div
       ref={setRefs}
       data-rc={`${r}-${c}`}
-      onClick={handleClick}
-      role={occupiable ? 'button' : undefined}
-      tabIndex={clickable ? 0 : undefined}
-      aria-label={`Casilla fila ${r + 1}, columna ${c + 1}${occupantName ? `, ${occupantName}` : ''}`}
       className="relative flex items-center justify-center"
       style={{
         width: size,
@@ -113,6 +113,18 @@ function Cell({
         outlineOffset: -2,
       }}
     >
+      {/* Diana de interacción: botón nativo que cubre la celda (teclado y ratón
+          gratis). Va primero en el DOM para que la ficha arrastrable y el resto
+          de capas queden por encima y reciban sus propios clicks. */}
+      {clickable && (
+        <button
+          type="button"
+          onClick={handleClick}
+          aria-label={cellLabel}
+          className="absolute inset-0 cursor-pointer bg-transparent"
+        />
+      )}
+
       {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
       <div className="pointer-events-none absolute inset-0" style={floorPatternStyle(size)} />
 
@@ -126,8 +138,8 @@ function Cell({
       {/* Alfombra: relleno de fondo, puede abarcar varias celdas contiguas. */}
       {furniture === 'alfombra' &&
         rugEdges &&
-        rugLayerStyles(rugEdges, margin).map((style, i) => (
-          <div key={i} className="pointer-events-none absolute" style={style} />
+        rugLayerStyles(rugEdges, margin).map(({ id, style }) => (
+          <div key={id} className="pointer-events-none absolute" style={style} />
         ))}
 
       {/* Mobiliario (excepto alfombra), oculto si hay una ficha encima. */}

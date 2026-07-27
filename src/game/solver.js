@@ -8,7 +8,7 @@
 
 import { freeCells } from './mapGenerator.js'
 import { evalClue, buildClueContext } from './clues.js'
-import { identifyKiller, findKillers } from './killerRule.js'
+import { findKillers } from './killerRule.js'
 import { cellKey } from './constants.js'
 
 // Participantes de una pista: el sujeto más los personajes referenciados.
@@ -42,7 +42,8 @@ export function solve(map, characters, clues, opts = {}) {
 
   const cluesBySubject = {}
   for (const clue of clues) {
-    ;(cluesBySubject[clue.subject] ||= []).push(clue)
+    cluesBySubject[clue.subject] ||= []
+    cluesBySubject[clue.subject].push(clue)
   }
 
   // Dominio inicial por personaje, filtrado por pistas unarias.
@@ -160,4 +161,4 @@ export function validatePlayerSolution(map, characters, clues, placements, roomL
   }
 }
 
-export { identifyKiller }
+export { identifyKiller } from './killerRule.js'

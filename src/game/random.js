@@ -3,6 +3,9 @@
 export function makeRng(seed) {
   let a = seed >>> 0
   return function rng() {
+    // Los `| 0` son coerción a int32 con desbordamiento (parte del algoritmo
+    // mulberry32): NO son truncados. Sustituirlos por Math.trunc cambiaría la
+    // secuencia y rompería la reproducibilidad de los códigos compartidos.
     a |= 0
     a = (a + 0x6d2b79f5) | 0
     let t = Math.imul(a ^ (a >>> 15), 1 | a)
@@ -11,8 +14,12 @@ export function makeRng(seed) {
   }
 }
 
+// Semilla inicial de un caso nuevo. Se toma del CSPRNG de la plataforma para
+// no depender de la calidad (ni del sesgo) de Math.random.
 export function randomSeed() {
-  return Math.floor(Math.random() * 0xffffffff)
+  const buf = new Uint32Array(1)
+  globalThis.crypto.getRandomValues(buf)
+  return buf[0]
 }
 
 export function randInt(rng, min, max) {

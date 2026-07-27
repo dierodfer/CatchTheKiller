@@ -44,7 +44,7 @@ export default function Board({
       <div style={{ width: GUTTER, height: GUTTER }} />
       {Array.from({ length: size }, (_, c) => (
         <div key={c} className={axisLabel} style={{ width: cellSize, height: GUTTER }} aria-hidden>
-          {String.fromCharCode(65 + c)}
+          {String.fromCodePoint(65 + c)}
         </div>
       ))}
     </div>
@@ -115,9 +115,12 @@ export default function Board({
     ) : null
 
   return (
-    <div
+    // <fieldset> es el elemento nativo con rol "group". `minInlineSize: auto`
+    // anula su ancho mínimo por defecto (min-content), que descuadraría la
+    // rejilla.
+    <fieldset
       className="pixel-frame relative inline-block overflow-hidden rounded-lg bg-cream-100/75 p-2.5 shadow-2xl"
-      role="group"
+      style={{ minInlineSize: 'auto' }}
       aria-label="Tablero del caso"
     >
       {/* Textura ambiental propia de la zona. */}
@@ -133,6 +136,6 @@ export default function Board({
         {rows}
         {celebrationLayer}
       </div>
-    </div>
+    </fieldset>
   )
 }

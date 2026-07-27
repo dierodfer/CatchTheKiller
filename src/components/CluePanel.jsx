@@ -95,22 +95,22 @@ export default function CluePanel({ puzzle, revealedExtras = 0, onRequestExtra }
           return (
             <li key={subject} className="flex justify-center">
               <div
-                role="button"
-                tabIndex={0}
-                aria-pressed={isStruck}
-                aria-label={`${subject}${isVictim ? ' (víctima)' : ''}. ${isStruck ? 'Descartado' : 'Toca para descartar'}.`}
-                onClick={() => toggleStruck(subject)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    toggleStruck(subject)
-                  }
-                }}
                 className={`relative flex w-full max-w-md cursor-pointer select-none items-center gap-3 rounded-[4px] border border-plum-950/10 bg-cream-50 py-3 pl-3 pr-3.5 shadow-[0_5px_14px_-6px_rgba(30,19,34,0.45)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_9px_20px_-7px_rgba(30,19,34,0.5)] ${
                   isStruck ? 'opacity-45 saturate-[0.35]' : ''
                 }`}
                 style={{ transform: `rotate(${noteTilt(i)}deg)` }}
               >
+                {/* Diana de interacción: botón nativo que cubre la ficha. El
+                    contenido (párrafos, retrato) no puede ir dentro de un
+                    <button>, así que se superpone en lugar de envolverlo. */}
+                <button
+                  type="button"
+                  aria-pressed={isStruck}
+                  aria-label={`${subject}${isVictim ? ' (víctima)' : ''}. ${isStruck ? 'Descartado' : 'Toca para descartar'}.`}
+                  onClick={() => toggleStruck(subject)}
+                  className="absolute inset-0 z-10 cursor-pointer rounded-[4px] bg-transparent"
+                />
+
                 {/* Chincheta que sujeta la ficha. */}
                 <span className="absolute -top-2 left-1/2 -translate-x-1/2">
                   <Pushpin victim={isVictim} />
@@ -142,8 +142,8 @@ export default function CluePanel({ puzzle, revealedExtras = 0, onRequestExtra }
                     )}
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    {texts.map((text, j) => (
-                      <p key={j} className="font-serif text-[15px] italic leading-snug text-plum-700">
+                    {texts.map((text) => (
+                      <p key={text} className="font-serif text-[15px] italic leading-snug text-plum-700">
                         <span className="mr-0.5 align-[-0.15em] text-base not-italic text-gold-deep">{'“'}</span>
                         {text}
                         <span className="ml-0.5 align-[-0.15em] text-base not-italic text-gold-deep">{'”'}</span>
@@ -205,8 +205,8 @@ function ExtraCluesSlot({ extraClues, revealedExtras, onRequestExtra, characters
                     {subject}
                   </span>
                 </div>
-                {texts.map((text, j) => (
-                  <p key={j} className="font-serif text-[14px] italic leading-snug text-plum-700">
+                {texts.map((text) => (
+                  <p key={text} className="font-serif text-[14px] italic leading-snug text-plum-700">
                     <span className="mr-0.5 align-[-0.15em] text-sm not-italic text-gold-deep">{'“'}</span>
                     {text}
                     <span className="ml-0.5 align-[-0.15em] text-sm not-italic text-gold-deep">{'”'}</span>
@@ -220,6 +220,7 @@ function ExtraCluesSlot({ extraClues, revealedExtras, onRequestExtra, characters
 
       {remaining > 0 ? (
         <button
+          type="button"
           onClick={onRequestExtra}
           className="flex w-full items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-100 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-gold/15 hover:text-plum-900"
         >
