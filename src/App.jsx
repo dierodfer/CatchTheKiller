@@ -56,7 +56,6 @@ export default function App() {
       />
       <ResumeGameModal
         open={!!pendingResume}
-        difficulty={pendingResume?.difficulty}
         onDiscard={() => {
           clearSavedGame()
           setPendingResume(null)

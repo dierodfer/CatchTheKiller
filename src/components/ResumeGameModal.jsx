@@ -4,11 +4,8 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { RotateCcw, Sparkles } from 'lucide-react'
-import { DIFFICULTIES } from '@/game/constants.js'
 
-export default function ResumeGameModal({ open, difficulty, onDiscard, onResume }) {
-  const diff = DIFFICULTIES[difficulty]
-
+export default function ResumeGameModal({ open, onDiscard, onResume }) {
   return (
     <AnimatePresence>
       {open && (
@@ -30,12 +27,9 @@ export default function ResumeGameModal({ open, difficulty, onDiscard, onResume 
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sage/15">
               <RotateCcw size={28} className="text-sage-deep" />
             </div>
-            <h2 className="font-serif text-3xl font-semibold text-plum-900">
-              ¿Continuar la partida anterior?
-            </h2>
+            <h2 className="font-serif text-3xl font-semibold text-plum-900">¿Continuar partida?</h2>
             <p className="mt-3 text-[15px] leading-relaxed text-plum-800">
-              Tienes un caso de dificultad {diff?.label ?? difficulty} sin terminar. Puedes
-              continuar donde lo dejaste o empezar una investigación nueva.
+              Tienes un caso sin terminar.
             </p>
 
             <div className="mt-6 flex justify-center gap-2">
