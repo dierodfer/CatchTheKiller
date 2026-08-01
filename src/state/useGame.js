@@ -1,10 +1,11 @@
 // Máquina de estados de la aplicación (sección 13 del documento), con useReducer.
 
-import { useCallback, useReducer } from 'react'
+import { useCallback, useEffect, useReducer } from 'react'
 import { generatePuzzle } from '@/game/puzzleGenerator.js'
-import { isOccupiable } from '@/game/mapGenerator.js'
 import { decodeShareCode, indicesToPlacements } from '@/game/shareCode.js'
+import { filterValidPlacements } from '@/game/placements.js'
 import { validatePlayerSolution } from '@/game/solver.js'
+import { saveGame, clearSavedGame } from './gameStorage.js'
 
 export const STATUS = {
   IDLE: 'idle',
@@ -50,6 +51,19 @@ function reducer(state, action) {
 
     case 'GENERATE_ERROR':
       return { ...state, status: STATUS.ERROR, error: action.error }
+
+    // Reanuda una partida guardada localmente: a diferencia de GENERATE_SUCCESS,
+    // conserva el estado (playing/fail) y las pistas extra ya reveladas.
+    case 'RESTORE_GAME':
+      return {
+        ...initialState,
+        difficulty: action.puzzle.difficulty,
+        irregular: action.puzzle.irregular ?? state.irregular,
+        status: action.status,
+        puzzle: action.puzzle,
+        placements: action.placements,
+        revealedExtras: action.revealedExtras,
+      }
 
     case 'PLACE': {
       const { name, row, col } = action
@@ -157,14 +171,7 @@ export function useGame() {
         let initialPlacements
         if (placementIndices) {
           const raw = indicesToPlacements(placementIndices, puzzle.characters, puzzle.map.gridSize)
-          const taken = new Set()
-          initialPlacements = {}
-          for (const [name, p] of Object.entries(raw)) {
-            const key = `${p.row},${p.col}`
-            if (!isOccupiable(puzzle.map, p.row, p.col) || taken.has(key)) continue
-            taken.add(key)
-            initialPlacements[name] = p
-          }
+          initialPlacements = filterValidPlacements(raw, puzzle)
         }
         dispatch({ type: 'GENERATE_SUCCESS', puzzle, initialPlacements })
       } catch (e) {
@@ -172,6 +179,49 @@ export function useGame() {
       }
     }, 30)
   }, [])
+
+  // Reanuda una partida guardada en localStorage (ver gameStorage.js). Regenera
+  // el puzzle desde (difficulty, seed, irregular) y valida las fichas contra
+  // el mapa recién generado, igual que loadFromCode, por si el guardado quedó
+  // desactualizado o corrupto.
+  const resumeGame = useCallback((saved) => {
+    dispatch({ type: 'GENERATE_START' })
+    setTimeout(() => {
+      try {
+        const puzzle = generatePuzzle(saved.difficulty, saved.seed, { irregular: saved.irregular })
+        const placements = filterValidPlacements(saved.placements, puzzle)
+        dispatch({
+          type: 'RESTORE_GAME',
+          puzzle,
+          placements,
+          revealedExtras: Math.min(saved.revealedExtras || 0, puzzle.extraClues?.length || 0),
+          status: saved.status === STATUS.FAIL ? STATUS.FAIL : STATUS.PLAYING,
+        })
+      } catch (e) {
+        clearSavedGame()
+        dispatch({ type: 'GENERATE_ERROR', error: e.message })
+      }
+    }, 30)
+  }, [])
+
+  // Guarda la partida en curso (playing/fail) tras cada cambio relevante, y la
+  // borra al ganar. IDLE nunca dispara el borrado aquí (evitaría una carrera
+  // con la lectura inicial en App.jsx, ya que IDLE es también el estado de
+  // montaje): NEW_GAME borra explícitamente en su propio callback más abajo.
+  useEffect(() => {
+    if (state.status === STATUS.PLAYING || state.status === STATUS.FAIL) {
+      saveGame({
+        status: state.status,
+        difficulty: state.puzzle.difficulty,
+        irregular: state.puzzle.irregular,
+        seed: state.puzzle.seed,
+        placements: state.placements,
+        revealedExtras: state.revealedExtras,
+      })
+    } else if (state.status === STATUS.WIN) {
+      clearSavedGame()
+    }
+  }, [state.status, state.puzzle, state.placements, state.revealedExtras])
 
   const place = useCallback((name, row, col) => dispatch({ type: 'PLACE', name, row, col }), [])
   const unplace = useCallback((name) => dispatch({ type: 'UNPLACE', name }), [])
@@ -191,7 +241,10 @@ export function useGame() {
   const reveal = useCallback(() => dispatch({ type: 'REVEAL' }), [])
   const requestExtraClue = useCallback(() => dispatch({ type: 'REQUEST_EXTRA_CLUE' }), [])
   const backToPlay = useCallback(() => dispatch({ type: 'BACK_TO_PLAY' }), [])
-  const newGame = useCallback(() => dispatch({ type: 'NEW_GAME' }), [])
+  const newGame = useCallback(() => {
+    clearSavedGame()
+    dispatch({ type: 'NEW_GAME' })
+  }, [])
 
   return {
     state,
@@ -199,6 +252,7 @@ export function useGame() {
     setIrregular,
     generate,
     loadFromCode,
+    resumeGame,
     place,
     unplace,
     check,

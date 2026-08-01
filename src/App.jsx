@@ -1,12 +1,22 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGame, STATUS } from '@/state/useGame.js'
+import { loadSavedGame, clearSavedGame } from '@/state/gameStorage.js'
 import StartScreen from '@/components/StartScreen.jsx'
 import GameScreen from '@/components/GameScreen.jsx'
+import ResumeGameModal from '@/components/ResumeGameModal.jsx'
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt.jsx'
 
 export default function App() {
   const game = useGame()
-  const { state, selectDifficulty, setIrregular, generate, loadFromCode } = game
+  const { state, selectDifficulty, setIrregular, generate, loadFromCode, resumeGame } = game
+  // Un enlace compartido (#c=CODIGO) siempre gana sobre una partida guardada
+  // (intención explícita y más reciente del jugador), así que si hay hash no
+  // se ofrece continuar nada. Se calcula en el estado inicial (no en un
+  // efecto) porque es una lectura síncrona de localStorage sin efectos
+  // secundarios sobre otros sistemas.
+  const [pendingResume, setPendingResume] = useState(() =>
+    /^#c=/.test(window.location.hash) ? null : loadSavedGame(),
+  )
 
   const onStart = (difficulty) => generate({ difficulty })
 
@@ -19,6 +29,7 @@ export default function App() {
     const match = /^#c=(.+)$/.exec(window.location.hash)
     if (!match) return
     window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    clearSavedGame()
     loadFromCode(decodeURIComponent(match[1]))
   }, [loadFromCode])
 
@@ -42,6 +53,18 @@ export default function App() {
         irregular={state.irregular}
         onToggleIrregular={setIrregular}
         onLoadCode={loadFromCode}
+      />
+      <ResumeGameModal
+        open={!!pendingResume}
+        difficulty={pendingResume?.difficulty}
+        onDiscard={() => {
+          clearSavedGame()
+          setPendingResume(null)
+        }}
+        onResume={() => {
+          resumeGame(pendingResume)
+          setPendingResume(null)
+        }}
       />
       <PWAUpdatePrompt />
     </>
