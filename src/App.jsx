@@ -15,7 +15,7 @@ export default function App() {
   // efecto) porque es una lectura síncrona de localStorage sin efectos
   // secundarios sobre otros sistemas.
   const [pendingResume, setPendingResume] = useState(() =>
-    /^#c=/.test(window.location.hash) ? null : loadSavedGame(),
+    window.location.hash.startsWith('#c=') ? null : loadSavedGame(),
   )
 
   const onStart = (difficulty) => generate({ difficulty })

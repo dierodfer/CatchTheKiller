@@ -29,7 +29,7 @@ export function loadSavedGame() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const data = JSON.parse(raw)
-    if (!data || data.version !== STORAGE_VERSION) return null
+    if (data?.version !== STORAGE_VERSION) return null
     if (data.status !== 'playing' && data.status !== 'fail') return null
     if (typeof data.difficulty !== 'string' || typeof data.seed !== 'number') return null
     return data
