@@ -19,6 +19,12 @@ empieza por la letra alfabéticamente más alta de todos los presentes.
 > y el Solver son lógica interna en JavaScript puro. No se llama a ninguna IA ni
 > servicio externo.
 
+<p align="center">
+  <img src="docs/screenshots/tablero-dificil.png" width="720" alt="Tablero de un caso en dificultad Difícil (6×6), con mapa irregular tipo donut" />
+</p>
+
+<p align="center"><sub>Caso en dificultad <strong>Difícil</strong> (6×6) con mapa irregular (forma "donut", con patio interior).</sub></p>
+
 ## Stack
 
 | Componente        | Tecnología            | Por qué |
@@ -173,5 +179,8 @@ quiere delegar la generación de solución/pistas a un modelo, basta con
 sustituir `solutionGenerator` + `clueGenerator` respetando el contrato de
 datos (sección 10 del diseño), manteniendo el Solver como autoridad final.
 
+La partida en curso se guarda localmente (`localStorage`) y se ofrece
+continuarla si se recarga la página a mitad de un caso.
+
 Cuestiones aún abiertas del diseño (sección 15): revelado progresivo de pistas,
-sistema de puntuación, multijugador y persistencia entre sesiones.
+sistema de puntuación y multijugador.
