@@ -23,7 +23,7 @@ export const STATUS = {
 const initialState = {
   status: STATUS.IDLE,
   difficulty: 'facil',
-  irregular: false, // toggle "mapa irregular" de la pantalla de inicio
+  irregular: true, // toggle "mapa irregular" de la pantalla de inicio (activo por defecto)
   puzzle: null,
   placements: {}, // { nombre: { row, col } } colocados por el jugador
   marks: {}, // { 'fila,col': [nombre] } anotaciones de candidatos del jugador
