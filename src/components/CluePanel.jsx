@@ -4,7 +4,7 @@
 // Tocar una ficha la "descarta" (sello DESCARTADO) — ayuda de anotación para
 // el jugador; no altera la lógica del caso.
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Lightbulb, Skull } from 'lucide-react'
 import { colorForCharacter } from './palette.js'
 import { PixelAvatar } from './pixelArt.jsx'
@@ -57,17 +57,16 @@ function groupBySubject(clues) {
   return order.map((subject) => ({ subject, texts: bySubject.get(subject) }))
 }
 
-export default function CluePanel({ puzzle, revealedExtras = 0, onRequestExtra }) {
+export default function CluePanel({
+  puzzle,
+  revealedExtras = 0,
+  onRequestExtra,
+  struckClues = [],
+  onToggleStruck,
+}) {
   const { clues, extraClues = [], characters } = puzzle
   const groups = useMemo(() => groupBySubject(clues), [clues])
-  const [struck, setStruck] = useState(new Set())
-
-  const toggleStruck = (subject) =>
-    setStruck((prev) => {
-      const next = new Set(prev)
-      next.has(subject) ? next.delete(subject) : next.add(subject)
-      return next
-    })
+  const struck = useMemo(() => new Set(struckClues), [struckClues])
 
   return (
     <div
@@ -107,7 +106,7 @@ export default function CluePanel({ puzzle, revealedExtras = 0, onRequestExtra }
                   type="button"
                   aria-pressed={isStruck}
                   aria-label={`${subject}${isVictim ? ' (víctima)' : ''}. ${isStruck ? 'Descartado' : 'Toca para descartar'}.`}
-                  onClick={() => toggleStruck(subject)}
+                  onClick={() => onToggleStruck(subject)}
                   className="absolute inset-0 z-10 cursor-pointer rounded-[4px] bg-transparent"
                 />
 

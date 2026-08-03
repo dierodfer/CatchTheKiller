@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useReducer } from 'react'
 import { generatePuzzle } from '@/game/puzzleGenerator.js'
 import { decodeShareCode, indicesToPlacements } from '@/game/shareCode.js'
-import { filterValidPlacements } from '@/game/placements.js'
+import {
+  filterValidMarks,
+  filterValidPlacements,
+  filterValidStruckClues,
+} from '@/game/placements.js'
 import { validatePlayerSolution } from '@/game/solver.js'
 import { saveGame, clearSavedGame } from './gameStorage.js'
 
@@ -22,6 +26,8 @@ const initialState = {
   irregular: false, // toggle "mapa irregular" de la pantalla de inicio
   puzzle: null,
   placements: {}, // { nombre: { row, col } } colocados por el jugador
+  marks: {}, // { 'fila,col': [nombre] } anotaciones de candidatos del jugador
+  struckClues: [], // sujetos cuyo testimonio ha descartado el jugador
   revealedExtras: 0, // pistas extra solicitadas por el jugador
   result: null,
   error: null,
@@ -62,6 +68,8 @@ function reducer(state, action) {
         status: action.status,
         puzzle: action.puzzle,
         placements: action.placements,
+        marks: action.marks,
+        struckClues: action.struckClues,
         revealedExtras: action.revealedExtras,
       }
 
@@ -80,6 +88,30 @@ function reducer(state, action) {
       const placements = { ...state.placements }
       delete placements[action.name]
       return { ...state, placements, result: null }
+    }
+
+    // Anotación de candidato en una casilla: alterna el personaje y descarta
+    // la entrada cuando se queda sin nombres.
+    case 'TOGGLE_MARK': {
+      const key = `${action.row},${action.col}`
+      const current = state.marks[key] || []
+      const next = current.includes(action.name)
+        ? current.filter((n) => n !== action.name)
+        : [...current, action.name]
+      const marks = { ...state.marks }
+      if (next.length === 0) delete marks[key]
+      else marks[key] = next
+      return { ...state, marks }
+    }
+
+    // Descarta (o recupera) el testimonio de un sujeto en el tablero de
+    // evidencias. Es solo una anotación: no altera la lógica del caso.
+    case 'TOGGLE_STRUCK_CLUE': {
+      const { subject } = action
+      const struckClues = state.struckClues.includes(subject)
+        ? state.struckClues.filter((s) => s !== subject)
+        : [...state.struckClues, subject]
+      return { ...state, struckClues }
     }
 
     case 'CHECK':
@@ -194,6 +226,8 @@ export function useGame() {
           type: 'RESTORE_GAME',
           puzzle,
           placements,
+          marks: filterValidMarks(saved.marks, puzzle),
+          struckClues: filterValidStruckClues(saved.struckClues, puzzle),
           revealedExtras: Math.min(saved.revealedExtras || 0, puzzle.extraClues?.length || 0),
           status: saved.status === STATUS.FAIL ? STATUS.FAIL : STATUS.PLAYING,
         })
@@ -216,15 +250,32 @@ export function useGame() {
         irregular: state.puzzle.irregular,
         seed: state.puzzle.seed,
         placements: state.placements,
+        marks: state.marks,
+        struckClues: state.struckClues,
         revealedExtras: state.revealedExtras,
       })
     } else if (state.status === STATUS.WIN) {
       clearSavedGame()
     }
-  }, [state.status, state.puzzle, state.placements, state.revealedExtras])
+  }, [
+    state.status,
+    state.puzzle,
+    state.placements,
+    state.marks,
+    state.struckClues,
+    state.revealedExtras,
+  ])
 
   const place = useCallback((name, row, col) => dispatch({ type: 'PLACE', name, row, col }), [])
   const unplace = useCallback((name) => dispatch({ type: 'UNPLACE', name }), [])
+  const toggleMark = useCallback(
+    (row, col, name) => dispatch({ type: 'TOGGLE_MARK', row, col, name }),
+    [],
+  )
+  const toggleStruckClue = useCallback(
+    (subject) => dispatch({ type: 'TOGGLE_STRUCK_CLUE', subject }),
+    [],
+  )
 
   const check = useCallback(() => {
     const { puzzle, placements } = state
@@ -255,6 +306,8 @@ export function useGame() {
     resumeGame,
     place,
     unplace,
+    toggleMark,
+    toggleStruckClue,
     check,
     reveal,
     requestExtraClue,

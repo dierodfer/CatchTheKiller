@@ -6,7 +6,16 @@
 export const STORAGE_KEY = 'ctk:savedGame:v1'
 export const STORAGE_VERSION = 1
 
-export function saveGame({ status, difficulty, irregular, seed, placements, revealedExtras }) {
+export function saveGame({
+  status,
+  difficulty,
+  irregular,
+  seed,
+  placements,
+  marks,
+  struckClues,
+  revealedExtras,
+}) {
   try {
     const payload = {
       version: STORAGE_VERSION,
@@ -15,6 +24,8 @@ export function saveGame({ status, difficulty, irregular, seed, placements, reve
       irregular,
       seed,
       placements,
+      marks,
+      struckClues,
       revealedExtras,
       savedAt: Date.now(),
     }
