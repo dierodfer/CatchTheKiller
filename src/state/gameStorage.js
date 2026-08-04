@@ -3,8 +3,11 @@
 // localStorage no está disponible (incógnito, cuota, storage deshabilitado)
 // las funciones se degradan en silencio y la app sigue funcionando.
 
-export const STORAGE_KEY = 'ctk:savedGame:v1'
-export const STORAGE_VERSION = 1
+// v2: `revealedExtras` (contador sobre un array fijo) pasó a `revealedExtraIds`
+// (ids concretos), porque la pista concedida ya no se elige por orden sino
+// según el tablero. Los guardados v1 no son convertibles y se descartan.
+export const STORAGE_KEY = 'ctk:savedGame:v2'
+export const STORAGE_VERSION = 2
 
 export function saveGame({
   status,
@@ -14,7 +17,7 @@ export function saveGame({
   placements,
   marks,
   struckClues,
-  revealedExtras,
+  revealedExtraIds,
 }) {
   try {
     const payload = {
@@ -26,7 +29,7 @@ export function saveGame({
       placements,
       marks,
       struckClues,
-      revealedExtras,
+      revealedExtraIds,
       savedAt: Date.now(),
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))

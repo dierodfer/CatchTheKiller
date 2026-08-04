@@ -109,6 +109,7 @@ export const GENERATION = {
   SOLUTION_ATTEMPTS: 3000, // colocación válida de personajes (solutionGenerator)
   SOLUTION_PROBE_CAP: 14, // tope de soluciones al comparar candidatas (clueGenerator)
   MAX_CLUES_PER_SUBJECT: 2, // pistas máximas por sujeto
+  EXTRAS_PER_SUBJECT: 2, // pistas de reserva por sujeto en el pool de extras
   CANDIDATE_SAMPLE: 48, // candidatas muestreadas por iteración de refuerzo
   MAX_ROWCOL_CLUES: 1, // pistas absolutas de fila/columna por puzzle
 }

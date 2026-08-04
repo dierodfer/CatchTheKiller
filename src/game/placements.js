@@ -3,6 +3,7 @@
 // posiciones no ocupables o duplicadas sin romper la partida.
 
 import { isOccupiable } from './mapGenerator.js'
+import { clueId } from './clues.js'
 
 const castOf = (puzzle) => new Set([...puzzle.characters.suspects, puzzle.characters.victim])
 
@@ -11,6 +12,21 @@ export function filterValidStruckClues(raw, puzzle) {
   if (!Array.isArray(raw)) return []
   const names = castOf(puzzle)
   return raw.filter((name) => names.has(name))
+}
+
+// Valida las pistas adicionales ya reveladas: se queda con los ids que siguen
+// existiendo en el pool del puzzle regenerado, sin duplicados, y recorta al
+// presupuesto de la dificultad.
+export function filterValidRevealedExtras(raw, puzzle) {
+  if (!Array.isArray(raw)) return []
+  const pool = new Set((puzzle.extraClues || []).map(clueId))
+  const seen = new Set()
+  const valid = raw.filter((id) => {
+    if (!pool.has(id) || seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
+  return valid.slice(0, puzzle.extraClueBudget || 0)
 }
 
 // Valida las anotaciones del jugador ({ 'fila,col': [nombre] }): descarta las

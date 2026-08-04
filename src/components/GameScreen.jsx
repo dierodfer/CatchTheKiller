@@ -34,7 +34,7 @@ export default function GameScreen({ game }) {
     backToPlay,
     newGame,
   } = game
-  const { puzzle, placements, marks, struckClues, status, result, revealedExtras } = state
+  const { puzzle, placements, marks, struckClues, status, result, revealedExtraIds } = state
   const [selectedToken, setSelectedToken] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
@@ -178,7 +178,7 @@ export default function GameScreen({ game }) {
           <div className="flex w-full flex-col gap-4 lg:max-w-sm">
             <CluePanel
               puzzle={puzzle}
-              revealedExtras={revealedExtras}
+              revealedExtraIds={revealedExtraIds}
               onRequestExtra={requestExtraClue}
               struckClues={struckClues}
               onToggleStruck={toggleStruckClue}

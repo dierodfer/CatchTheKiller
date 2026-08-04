@@ -8,6 +8,7 @@ import { useMemo } from 'react'
 import { Lightbulb, Skull } from 'lucide-react'
 import { colorForCharacter } from './palette.js'
 import { PixelAvatar } from './pixelArt.jsx'
+import { clueId } from '@/game/clues.js'
 
 // Inclinaciones "al azar" pero estables entre renders (deterministas por
 // índice), para el efecto de papeles fijados a mano de forma irregular.
@@ -59,12 +60,12 @@ function groupBySubject(clues) {
 
 export default function CluePanel({
   puzzle,
-  revealedExtras = 0,
+  revealedExtraIds = [],
   onRequestExtra,
   struckClues = [],
   onToggleStruck,
 }) {
-  const { clues, extraClues = [], characters } = puzzle
+  const { clues, extraClues = [], extraClueBudget = 0, characters } = puzzle
   const groups = useMemo(() => groupBySubject(clues), [clues])
   const struck = useMemo(() => new Set(struckClues), [struckClues])
 
@@ -164,10 +165,11 @@ export default function CluePanel({
       </ul>
 
       {/* Pistas extra: slot independiente con botón "Pedir pista". */}
-      {extraClues.length > 0 && (
+      {extraClueBudget > 0 && extraClues.length > 0 && (
         <ExtraCluesSlot
           extraClues={extraClues}
-          revealedExtras={revealedExtras}
+          revealedExtraIds={revealedExtraIds}
+          extraClueBudget={extraClueBudget}
           onRequestExtra={onRequestExtra}
           characters={characters}
         />
@@ -176,10 +178,25 @@ export default function CluePanel({
   )
 }
 
-function ExtraCluesSlot({ extraClues, revealedExtras, onRequestExtra, characters }) {
-  const revealed = extraClues.slice(0, revealedExtras)
-  const remaining = extraClues.length - revealedExtras
-  const groups = useMemo(() => groupBySubject(revealed), [revealed])
+function ExtraCluesSlot({
+  extraClues,
+  revealedExtraIds,
+  extraClueBudget,
+  onRequestExtra,
+  characters,
+}) {
+  // Las reveladas se muestran en el orden en que se concedieron: cuál toca no
+  // lo decide el orden del pool sino el estado del tablero (ver `hints.js`).
+  const groups = useMemo(() => {
+    const byId = new Map(extraClues.map((c) => [clueId(c), c]))
+    const revealed = revealedExtraIds.map((id) => byId.get(id)).filter(Boolean)
+    return groupBySubject(revealed)
+  }, [extraClues, revealedExtraIds])
+
+  // El pool cubre a todos los personajes, pero solo se desbloquea el
+  // presupuesto de la dificultad (y nunca más de las que existen).
+  const grantable = Math.min(extraClueBudget, extraClues.length)
+  const remaining = Math.max(grantable - revealedExtraIds.length, 0)
 
   return (
     <div className="mt-4 rounded-xl border border-dashed border-gold/25 bg-cream-200/40 p-3">

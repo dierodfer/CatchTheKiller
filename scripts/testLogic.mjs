@@ -5,7 +5,8 @@ import { generatePuzzle } from '../src/game/puzzleGenerator.js'
 import { solve, validatePlayerSolution } from '../src/game/solver.js'
 import { freeCells, isOccupiable, cellExists } from '../src/game/mapGenerator.js'
 import { findKillers, controlLineCells } from '../src/game/killerRule.js'
-import { buildClueContext, evalClue } from '../src/game/clues.js'
+import { buildClueContext, evalClue, clueId } from '../src/game/clues.js'
+import { pickNextHint } from '../src/game/hints.js'
 import { hasPerfectMatching, shapeIsViable, computeExteriorVoid } from '../src/game/mapShapes.js'
 import { IRREGULAR, cellKey } from '../src/game/constants.js'
 import {
@@ -164,14 +165,57 @@ for (const diff of difficulties) {
     assert(freeCells(map).length >= characters.suspects.length + 1, `seed ${seed}: celdas libres`)
 
     // Invariante: pistas extra son verdaderas y no duplican las principales.
-    const mainIds = new Set(clues.map((c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`))
+    const mainIds = new Set(clues.map(clueId))
     for (const ec of extraClues) {
-      const ecId = `${ec.subject}|${ec.kind}|${JSON.stringify(ec.params)}`
-      assert(!mainIds.has(ecId), `seed ${seed}: pista extra no duplica principal`)
+      assert(!mainIds.has(clueId(ec)), `seed ${seed}: pista extra no duplica principal`)
       assert(
         evalClue(ec, solution, ctx),
         `seed ${seed}: pista extra verdadera (${ec.text})`,
       )
+    }
+
+    // Invariante: el pool de extras cubre a TODOS los personajes. Es lo que
+    // permite que la pista concedida hable de quien el jugador necesita.
+    for (const name of allNames) {
+      assert(
+        extraClues.some((ec) => ec.subject === name),
+        `seed ${seed}: el pool de extras cubre a ${name}`,
+      )
+    }
+    assert(
+      extraClues.length >= puzzle.extraClueBudget,
+      `seed ${seed}: pool de extras (${extraClues.length}) cubre el presupuesto (${puzzle.extraClueBudget})`,
+    )
+
+    // La pista concedida depende del tablero: primero personajes sin colocar,
+    // después mal colocados, y solo si no queda nadie, cualquiera.
+    {
+      const needy = allNames[0]
+      // (1) Tablero con todos colocados bien salvo `needy`, sin colocar.
+      const partial = { ...solution }
+      delete partial[needy]
+      const h1 = pickNextHint({ extraClues, revealedIds: [], placements: partial, solution })
+      assert(h1?.subject === needy, `seed ${seed}: pista para el no colocado (${needy})`)
+
+      // (2) Todos colocados, `needy` en la celda de otro → mal colocado.
+      const other = allNames[1]
+      const wrong = { ...solution, [needy]: { ...solution[other] } }
+      const h2 = pickNextHint({ extraClues, revealedIds: [], placements: wrong, solution })
+      assert(h2?.subject === needy, `seed ${seed}: pista para el mal colocado (${needy})`)
+
+      // (3) Solución completa y correcta: se concede igualmente una pista (no
+      // delatar que el tablero ya está bien antes de pulsar "Resolver").
+      const h3 = pickNextHint({ extraClues, revealedIds: [], placements: solution, solution })
+      assert(h3 !== null, `seed ${seed}: pista de reserva con el tablero correcto`)
+
+      // (4) Pool agotado: sin candidatas, devuelve null.
+      const h4 = pickNextHint({
+        extraClues,
+        revealedIds: extraClues.map(clueId),
+        placements: {},
+        solution,
+      })
+      assert(h4 === null, `seed ${seed}: sin extras pendientes devuelve null`)
     }
 
     // Invariante: en el set completo (principales + extras) no hay pistas
