@@ -4,12 +4,13 @@
 
 # Catch the Killer
 
-🔗 **Demo en GitHub Pages:** https://dierodfer.github.io/CatchTheKiller/
+🔗 **Juega ahora en GitHub Pages:** https://dierodfer.github.io/CatchTheKiller/
 
-Puzzle de deducción espacial con temática de crimen. Coloca a cada personaje
-en un mapa cuadriculado a partir de pistas, sin que dos compartan fila ni
-columna. **El asesino emerge solo** al completar el tablero: es el único
-sospechoso que queda a solas con la víctima en su habitación.
+**Reconstruye la escena del crimen, casilla a casilla.** Sitúa a cada
+sospechoso en el mapa siguiendo las pistas, sin repetir fila ni columna con
+nadie más. Cuando el tablero encaja, **el asesino se delata solo**: es quien
+se queda a solas con la víctima en su habitación. Sin azar, sin trampas —
+pura deducción, con cuatro dificultades y mapas irregulares para rejugar.
 
 > Implementación **100% local**: la generación del mapa, la solución, las pistas
 > y el Solver son lógica interna en JavaScript puro. No se llama a ninguna IA ni
