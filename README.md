@@ -4,20 +4,23 @@
 
 # Catch the Killer
 
-🔗 **Demo en GitHub Pages:** https://dierodfer.github.io/CatchTheKiller/
+🔗 **Juega ahora en GitHub Pages:** https://dierodfer.github.io/CatchTheKiller/
 
-Puzzle de deducción espacial con temática de crimen. El jugador reconstruye la
-escena colocando a cada personaje en un mapa cuadriculado (con filas y columnas
-numeradas) a partir de pistas espaciales. **El asesino emerge automáticamente**
-como consecuencia de una reconstrucción correcta del tablero: es el único
-sospechoso que se queda **a solas con la víctima en una misma habitación**;
-además, **ningún personaje comparte fila ni columna con otro**: cada uno ocupa
-una fila y una columna propias. La víctima es siempre el personaje cuyo nombre
-empieza por la letra alfabéticamente más alta de todos los presentes.
+**Reconstruye la escena del crimen, casilla a casilla.** Sitúa a cada
+sospechoso en el mapa siguiendo las pistas, sin repetir fila ni columna con
+nadie más. Cuando el tablero encaja, **el asesino se delata solo**: es quien
+se queda a solas con la víctima en su habitación. Sin azar, sin trampas —
+pura deducción, con cuatro dificultades y mapas irregulares para rejugar.
 
 > Implementación **100% local**: la generación del mapa, la solución, las pistas
 > y el Solver son lógica interna en JavaScript puro. No se llama a ninguna IA ni
 > servicio externo.
+
+<p align="center">
+  <img src="docs/screenshots/tablero-dificil.png" width="720" alt="Tablero de un caso en dificultad Difícil (6×6), con mapa irregular tipo donut" />
+</p>
+
+<p align="center"><sub>Caso en dificultad <strong>Difícil</strong> (6×6) con mapa irregular (forma "donut", con patio interior).</sub></p>
 
 ## Stack
 
@@ -173,5 +176,8 @@ quiere delegar la generación de solución/pistas a un modelo, basta con
 sustituir `solutionGenerator` + `clueGenerator` respetando el contrato de
 datos (sección 10 del diseño), manteniendo el Solver como autoridad final.
 
+La partida en curso se guarda localmente (`localStorage`) y se ofrece
+continuarla si se recarga la página a mitad de un caso.
+
 Cuestiones aún abiertas del diseño (sección 15): revelado progresivo de pistas,
-sistema de puntuación, multijugador y persistencia entre sesiones.
+sistema de puntuación y multijugador.

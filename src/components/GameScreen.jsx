@@ -22,15 +22,27 @@ import { zoneForSeed } from './zones.js'
 import { DIFFICULTIES } from '@/game/constants.js'
 
 export default function GameScreen({ game }) {
-  const { state, place, unplace, check, reveal, requestExtraClue, backToPlay, newGame } = game
-  const { puzzle, placements, status, result, revealedExtras } = state
+  const {
+    state,
+    place,
+    unplace,
+    toggleMark,
+    toggleStruckClue,
+    check,
+    reveal,
+    requestExtraClue,
+    backToPlay,
+    newGame,
+  } = game
+  const { puzzle, placements, marks, struckClues, status, result, revealedExtras } = state
   const [selectedToken, setSelectedToken] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
   const [showRules, setShowRules] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [dismissedResult, setDismissedResult] = useState(null)
-  const [marks, setMarks] = useState({})
+  // Qué casilla tiene abierto el popup de marcado: estado efímero de UI, al
+  // contrario que `marks`, que forma parte de la partida y se persiste.
   const [markingCell, setMarkingCell] = useState(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
@@ -74,22 +86,6 @@ export default function GameScreen({ game }) {
     },
     [revealMode, selectedToken, place],
   )
-
-  const handleMarkToggle = useCallback((r, c, name) => {
-    const key = `${r},${c}`
-    setMarks((prev) => {
-      const current = prev[key] || []
-      const next = current.includes(name)
-        ? current.filter((n) => n !== name)
-        : [...current, name]
-      if (next.length === 0) {
-        const rest = { ...prev }
-        delete rest[key]
-        return rest
-      }
-      return { ...prev, [key]: next }
-    })
-  }, [])
 
   const handleMarkOpen = useCallback((r, c) => {
     setMarkingCell({ r, c })
@@ -171,7 +167,7 @@ export default function GameScreen({ game }) {
                 draggingName={activeId}
                 marks={marks}
                 markingCell={markingCell}
-                onMarkToggle={handleMarkToggle}
+                onMarkToggle={toggleMark}
                 onMarkOpen={handleMarkOpen}
                 onMarkClose={handleMarkClose}
               />
@@ -184,6 +180,8 @@ export default function GameScreen({ game }) {
               puzzle={puzzle}
               revealedExtras={revealedExtras}
               onRequestExtra={requestExtraClue}
+              struckClues={struckClues}
+              onToggleStruck={toggleStruckClue}
             />
             <Toolbar
               allPlaced={allPlaced}
