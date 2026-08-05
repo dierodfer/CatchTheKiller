@@ -263,6 +263,11 @@ export const CLUE_TYPES = {
 
 }
 
+// Identidad estable de una pista: dos pistas con el mismo sujeto, tipo y
+// parámetros son la misma pista. Se usa para deduplicar durante la generación
+// y para referenciar pistas concretas desde el estado y la partida guardada.
+export const clueId = (c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`
+
 // Evalúa una pista concreta sobre un conjunto de posiciones.
 export function evalClue(clue, placements, ctx) {
   const pos = placements[clue.subject]

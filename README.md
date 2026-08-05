@@ -131,6 +131,7 @@ src/game/
   killerRule.js         Regla del asesino (a solas con la víctima en su sala, líneas despejadas)
   clues.js              Catálogo de tipos de pista + evaluador verificable
   clueGenerator.js      Deriva pistas de la solución y busca solución única
+  hints.js              Elige qué pista adicional conceder según el tablero
   solver.js             Autoridad final: unicidad, validación, identifica al asesino
   puzzleGenerator.js    Orquesta: mapa → solución → pistas → validación
 ```
@@ -157,7 +158,10 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
 - `CharacterTray` — fichas sin colocar (orden alfabético), situada justo encima
   del tablero; zona para descolocar.
 - `CluePanel` — pistas agrupadas por personaje (orden alfabético), marcables como
-  usadas. Ninguna pista referencia a la víctima.
+  usadas. Ninguna pista referencia a la víctima. El botón **"Pedir pista"**
+  concede pistas adicionales *en función del tablero*, no al azar: primero
+  sobre los personajes que el jugador aún no ha colocado y después sobre los
+  que están mal colocados (`src/game/hints.js`).
 - `Toolbar` — Resolver, Resolución (revela la solución tras un aviso), Nuevo.
 - `ResultBanner` — WIN revela al asesino y la habitación del crimen (se puede
   cerrar para inspeccionar el tablero); FAIL indica que hay errores **sin revelar

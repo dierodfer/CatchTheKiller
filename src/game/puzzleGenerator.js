@@ -84,7 +84,10 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed(), { ir
       roomLookup,
       characters,
       clues,
+      // Pool de pistas de reserva (cubre a todos los sujetos) y cuántas de
+      // ellas puede llegar a desbloquear el jugador.
       extraClues,
+      extraClueBudget: difficulty.extraClues || 0,
       solution: solution.placements,
       killer,
     }

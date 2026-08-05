@@ -11,7 +11,7 @@
 // "La lógica propone, el Solver decide": ningún conjunto se acepta sin pasar la
 // verificación de unicidad.
 
-import { CLUE_TYPES, evalClue, buildClueContext } from './clues.js'
+import { CLUE_TYPES, evalClue, buildClueContext, clueId } from './clues.js'
 import { GENERATION } from './constants.js'
 import { PROXIMITY_ELEMENTS, ON_ELEMENTS, ELEMENT_IDS } from './elements.js'
 import { solve } from './solver.js'
@@ -106,8 +106,6 @@ function directionalDuplicate(cand, chosen) {
     (c) => DIRECTIONAL_KINDS.has(c.kind) && c.subject === other && c.params?.other === cand.subject,
   )
 }
-
-const clueId = (c) => `${c.subject}|${c.kind}|${JSON.stringify(c.params)}`
 
 function makeClue(subject, kind, params, ctx) {
   return { subject, kind, params, text: CLUE_TYPES[kind].text(params, ctx) }
@@ -329,24 +327,34 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
 
   const clues = sortAlpha(minimized)
 
-  // 5. Pistas extra de reserva: verdaderas y no incluidas en el set principal,
-  // que el jugador puede solicitar a petición. No afectan a la unicidad (son
-  // redundantes), pero aportan información adicional para desbloquear.
-  // Se eligen una a una comprobando redundancia contra las principales Y contra
-  // las extras ya elegidas: si no, dos extras podrían ser recíprocas entre sí
-  // ("A a la izquierda de B" + "B a la derecha de A") o mezclar eje absoluto y
-  // relativo para el mismo sujeto.
+  // 5. Pool de pistas extra de reserva: verdaderas y no incluidas en el set
+  // principal, que el jugador puede solicitar a petición. No afectan a la
+  // unicidad (son redundantes), pero aportan información adicional.
+  //
+  // Se recorre SUJETO A SUJETO, no el pool global: la pista que se concede se
+  // elige al pedirla, en función de qué personajes lleva el jugador sin
+  // colocar o mal colocados (ver `hints.js`), así que el pool debe tener algo
+  // que ofrecer sobre cualquiera de ellos. Cuántas puede desbloquear es otra
+  // cosa — ese presupuesto es `difficulty.extraClues` (`extraClueBudget`).
+  //
+  // Cada candidata se comprueba contra las principales Y contra las extras ya
+  // elegidas: si no, dos extras podrían ser recíprocas entre sí ("A a la
+  // izquierda de B" + "B a la derecha de A") o mezclar eje absoluto y relativo
+  // para el mismo sujeto.
   const chosenFinalIds = new Set(clues.map(clueId))
-  const numExtra = difficulty.extraClues || 0
   const extras = []
-  for (const cand of shuffle(rng, all)) {
-    if (extras.length >= numExtra) break
-    if (chosenFinalIds.has(clueId(cand))) continue
-    const context = clues.concat(extras)
-    if (axisRedundant(cand, context)) continue
-    if (directionalDuplicate(cand, context)) continue
-    extras.push(cand)
-    chosenFinalIds.add(clueId(cand))
+  for (const s of subjects) {
+    let taken = 0
+    for (const cand of shuffle(rng, pools[s])) {
+      if (taken >= GENERATION.EXTRAS_PER_SUBJECT) break
+      if (chosenFinalIds.has(clueId(cand))) continue
+      const context = clues.concat(extras)
+      if (axisRedundant(cand, context)) continue
+      if (directionalDuplicate(cand, context)) continue
+      extras.push(cand)
+      chosenFinalIds.add(clueId(cand))
+      taken++
+    }
   }
   const extraClues = sortAlpha(extras)
 

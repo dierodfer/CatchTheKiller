@@ -6,8 +6,11 @@ import { decodeShareCode, indicesToPlacements } from '@/game/shareCode.js'
 import {
   filterValidMarks,
   filterValidPlacements,
+  filterValidRevealedExtras,
   filterValidStruckClues,
 } from '@/game/placements.js'
+import { clueId } from '@/game/clues.js'
+import { pickNextHint } from '@/game/hints.js'
 import { validatePlayerSolution } from '@/game/solver.js'
 import { saveGame, clearSavedGame } from './gameStorage.js'
 
@@ -28,7 +31,7 @@ const initialState = {
   placements: {}, // { nombre: { row, col } } colocados por el jugador
   marks: {}, // { 'fila,col': [nombre] } anotaciones de candidatos del jugador
   struckClues: [], // sujetos cuyo testimonio ha descartado el jugador
-  revealedExtras: 0, // pistas extra solicitadas por el jugador
+  revealedExtraIds: [], // ids de las pistas extra ya concedidas al jugador
   result: null,
   error: null,
 }
@@ -70,7 +73,7 @@ function reducer(state, action) {
         placements: action.placements,
         marks: action.marks,
         struckClues: action.struckClues,
-        revealedExtras: action.revealedExtras,
+        revealedExtraIds: action.revealedExtraIds,
       }
 
     case 'PLACE': {
@@ -139,10 +142,21 @@ function reducer(state, action) {
       }
     }
 
+    // Concede una pista adicional. Cuál se concede no es aleatorio: depende del
+    // tablero en este momento — primero los personajes sin colocar, después los
+    // mal colocados (ver `hints.js`).
     case 'REQUEST_EXTRA_CLUE': {
-      const max = state.puzzle?.extraClues?.length || 0
-      if (state.revealedExtras >= max) return state
-      return { ...state, revealedExtras: state.revealedExtras + 1 }
+      const { puzzle, revealedExtraIds } = state
+      if (!puzzle) return state
+      if (revealedExtraIds.length >= (puzzle.extraClueBudget || 0)) return state
+      const hint = pickNextHint({
+        extraClues: puzzle.extraClues,
+        revealedIds: revealedExtraIds,
+        placements: state.placements,
+        solution: puzzle.solution,
+      })
+      if (!hint) return state
+      return { ...state, revealedExtraIds: [...revealedExtraIds, clueId(hint)] }
     }
 
     case 'BACK_TO_PLAY':
@@ -228,7 +242,7 @@ export function useGame() {
           placements,
           marks: filterValidMarks(saved.marks, puzzle),
           struckClues: filterValidStruckClues(saved.struckClues, puzzle),
-          revealedExtras: Math.min(saved.revealedExtras || 0, puzzle.extraClues?.length || 0),
+          revealedExtraIds: filterValidRevealedExtras(saved.revealedExtraIds, puzzle),
           status: saved.status === STATUS.FAIL ? STATUS.FAIL : STATUS.PLAYING,
         })
       } catch (e) {
@@ -252,7 +266,7 @@ export function useGame() {
         placements: state.placements,
         marks: state.marks,
         struckClues: state.struckClues,
-        revealedExtras: state.revealedExtras,
+        revealedExtraIds: state.revealedExtraIds,
       })
     } else if (state.status === STATUS.WIN) {
       clearSavedGame()
@@ -263,7 +277,7 @@ export function useGame() {
     state.placements,
     state.marks,
     state.struckClues,
-    state.revealedExtras,
+    state.revealedExtraIds,
   ])
 
   const place = useCallback((name, row, col) => dispatch({ type: 'PLACE', name, row, col }), [])
