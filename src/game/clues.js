@@ -300,7 +300,7 @@ export function buildClueContext(map, roomLookup, characters) {
     roomWindowCount[rn] = (roomWindowCount[rn] || 0) + 1
   }
 
-  // Borde y esquina en términos de LADOS EXTERIORES, no de índices: en mapas
+  // Borde en términos de LADOS EXTERIORES, no de índices: en mapas
   // irregulares el perímetro real incluye los recortes (una celda junto a una
   // esquina eliminada sigue "en el borde"), y el hueco de un donut es patio
   // interior — sus celdas vecinas NO están en el borde del mapa. En tableros
@@ -314,9 +314,22 @@ export function buildClueContext(map, roomLookup, characters) {
     r < 0 || c < 0 || r >= size || c >= size || exteriorVoid.has(cellKey(r, c))
   const isBorderCell = (r, c) =>
     sideExterior(r - 1, c) || sideExterior(r + 1, c) || sideExterior(r, c - 1) || sideExterior(r, c + 1)
-  const isCornerCell = (r, c) =>
-    (sideExterior(r - 1, c) || sideExterior(r + 1, c)) &&
-    (sideExterior(r, c - 1) || sideExterior(r, c + 1))
+  // Esquina: mismo criterio de LADOS EXTERIORES que el borde, salvo en mapas
+  // "nibble". Ahí los mordiscos recortan celdas sueltas en CUALQUIER punto
+  // del perímetro (no solo en las 4 esquinas reales), y ese mismo criterio
+  // convertiría en "esquina" cualquier celda junto a un mordisco en mitad de
+  // un lado — confuso, porque el jugador ve varias esquinas sueltas que no
+  // se corresponden con las esquinas visuales del mapa. En cambio, en la
+  // forma "corners" el recorte SIEMPRE ocurre en una de las 4 esquinas
+  // reales, así que la celda vecina que hereda el hueco sigue siendo,
+  // inequívocamente, esa esquina — igual que en "donut" (que nunca toca el
+  // perímetro) y en el tablero clásico.
+  const isCornerCell =
+    map.shape === 'nibble'
+      ? (r, c) => (r === 0 || r === size - 1) && (c === 0 || c === size - 1) && cellExists(r, c)
+      : (r, c) =>
+          (sideExterior(r - 1, c) || sideExterior(r + 1, c)) &&
+          (sideExterior(r, c - 1) || sideExterior(r, c + 1))
 
   return {
     gridSize: map.gridSize,
