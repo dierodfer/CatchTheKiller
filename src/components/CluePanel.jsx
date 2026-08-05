@@ -5,9 +5,10 @@
 // el jugador; no altera la lógica del caso.
 
 import { useMemo } from 'react'
-import { Lightbulb, Skull } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { Skull } from 'lucide-react'
 import { colorForCharacter } from './palette.js'
-import { PixelAvatar } from './pixelArt.jsx'
+import { PixelAvatar, PixelLupa } from './pixelArt.jsx'
 import { clueId } from '@/game/clues.js'
 
 // Inclinaciones "al azar" pero estables entre renders (deterministas por
@@ -212,7 +213,8 @@ function ExtraCluesSlot({
                 className="rounded-[4px] border border-gold/15 bg-cream-50/80 px-3 py-2"
               >
                 <div className="mb-0.5 flex items-center gap-1.5">
-                  <Lightbulb size={12} className="shrink-0 text-gold-deep" />
+                  {/* Cada testimonio extra viene de haber gastado una lupa. */}
+                  <PixelLupa size={14} className="shrink-0" />
                   <span
                     className="truncate font-serif text-[15px] font-semibold leading-none"
                     style={{ color: color.bg }}
@@ -233,20 +235,65 @@ function ExtraCluesSlot({
         </ul>
       )}
 
-      {remaining > 0 ? (
-        <button
-          type="button"
-          onClick={onRequestExtra}
-          className="flex w-full items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-100 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-gold/15 hover:text-plum-900"
-        >
-          <Lightbulb size={14} className="text-gold-deep" />
-          Pedir pista ({remaining} disponible{remaining > 1 ? 's' : ''})
-        </button>
-      ) : (
-        <p className="text-center text-[12px] text-plum-500">
-          No quedan pistas adicionales.
-        </p>
-      )}
+      <LupaRack total={grantable} spent={grantable - remaining} onUse={onRequestExtra} />
+    </div>
+  )
+}
+
+// Las pistas disponibles se representan como lupas: hay una por cada pista que
+// el jugador puede pedir y se van gastando (aro dorado → gris tachado) según
+// las usa. Es el único control del slot: tocar una lupa entera pide la pista.
+function LupaRack({ total, spent, onUse }) {
+  const reduce = useReducedMotion()
+  const remaining = total - spent
+
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="flex items-center justify-center gap-1.5">
+        {Array.from({ length: total }, (_, i) => {
+          // Se gastan de izquierda a derecha: las primeras `spent` están usadas.
+          const used = i < spent
+          // El "pop" al montarse se reejecuta al cambiar de estado porque la
+          // clave cambia: sirve de acuse de recibo al gastar una lupa.
+          const sprite = (
+            <motion.span
+              key={used ? 'used' : 'ready'}
+              className="block"
+              initial={reduce ? false : { scale: 1.3, rotate: used ? -14 : 0 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 18 }}
+            >
+              <PixelLupa spent={used} size={30} />
+            </motion.span>
+          )
+
+          if (used) {
+            return (
+              <span key={i} className="block opacity-70" title="Pista ya usada">
+                {sprite}
+              </span>
+            )
+          }
+          return (
+            <motion.button
+              key={i}
+              type="button"
+              onClick={onUse}
+              aria-label={`Pedir pista (${remaining} disponible${remaining > 1 ? 's' : ''})`}
+              className="block cursor-pointer rounded-[3px] bg-transparent"
+              whileHover={reduce ? undefined : { scale: 1.15, y: -2 }}
+              whileTap={reduce ? undefined : { scale: 0.92 }}
+            >
+              {sprite}
+            </motion.button>
+          )
+        })}
+      </div>
+      <p className="text-center font-serif text-[12px] italic text-plum-500">
+        {remaining > 0
+          ? `Toca una lupa para pedir una pista (${remaining} de ${total})`
+          : 'Has gastado todas las lupas.'}
+      </p>
     </div>
   )
 }
