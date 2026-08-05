@@ -14,22 +14,41 @@ export const FACE_GRID = [
   [0, 0, 1, 1, 1, 1, 0, 0],
 ]
 
-// Retrato de la víctima: mismo encuadre que un sospechoso, pero revelado en
-// gris con grano de píxeles — efecto de "foto" sin color, para distinguirla
-// de un vistazo sin depender de una forma concreta.
-export const VICTIM_GRID = [
-  [0, 0, 1, 1, 1, 1, 0, 0],
-  [0, 1, 4, 2, 2, 4, 1, 0],
-  [1, 2, 2, 2, 2, 2, 2, 1],
-  [1, 2, 3, 2, 2, 3, 2, 1],
-  [1, 4, 2, 2, 2, 2, 4, 1],
-  [1, 2, 3, 3, 3, 3, 2, 1],
-  [0, 1, 2, 4, 4, 2, 1, 0],
-  [0, 0, 1, 1, 1, 1, 0, 0],
+export const AVATAR_OUTLINE = '#1e1322'
+
+// Retrato de la víctima: calavera de hueso, no una cara gris. La rejilla es
+// 9×9 (no 8×8 como el resto) por un motivo geométrico: con 8 columnas, el
+// contorno ocupa las dos exteriores y las cuencas de 2 px quedan pegadas a él,
+// fundiéndose en una mancha oscura que ya no lee como calavera. Con ancho
+// impar hay columna central para el tabique nasal y queda 1 px de hueso entre
+// cada cuenca y el contorno, así que la silueta se mantiene nítida. Se dibuja
+// en la misma caja que los demás retratos (el viewBox escala), solo cambia la
+// finura del píxel.
+//
+// Anatomía por filas: bóveda craneal (0-2), cuencas (3-4), nariz y pómulos
+// (5), mandíbula (6) y dentadura (7).
+export const SKULL_GRID = [
+  [0, 0, 1, 1, 1, 1, 1, 0, 0],
+  [0, 1, 5, 5, 5, 5, 2, 1, 0],
+  [1, 5, 5, 2, 2, 2, 2, 2, 1],
+  [1, 2, 3, 3, 2, 3, 3, 2, 1],
+  [1, 2, 3, 3, 2, 3, 3, 2, 1],
+  [1, 4, 2, 2, 3, 2, 2, 4, 1],
+  [0, 1, 2, 2, 2, 2, 2, 1, 0],
+  [0, 1, 2, 3, 2, 3, 2, 1, 0],
+  [0, 0, 1, 1, 1, 1, 1, 0, 0],
 ]
 
-export const AVATAR_OUTLINE = '#1e1322'
-export const VICTIM_PALETTE = { 1: AVATAR_OUTLINE, 2: '#9a93a0', 3: AVATAR_OUTLINE, 4: '#6c6571' }
+// 2 hueso · 3 cuenca/nariz/huecos entre dientes · 4 sombra de pómulo ·
+// 5 brillo de frente. La luz entra por arriba a la izquierda, igual que en las
+// chinchetas del expediente.
+export const SKULL_PALETTE = {
+  1: AVATAR_OUTLINE,
+  2: '#e4d8c6',
+  3: AVATAR_OUTLINE,
+  4: '#bfb09b',
+  5: '#f4ece0',
+}
 
 // Mobiliario: sprites 8×8 con paleta propia (tonos del sistema Botanica).
 const MESA_GRID = [

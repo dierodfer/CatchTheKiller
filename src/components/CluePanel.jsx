@@ -130,8 +130,8 @@ export default function CluePanel({
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-1.5">
                     <span
-                      className={`truncate font-serif text-[17px] font-semibold leading-none ${isVictim ? 'text-plum-500' : ''}`}
-                      style={isVictim ? undefined : { color: color.bg }}
+                      className="truncate font-serif text-[17px] font-semibold leading-none"
+                      style={{ color: color.bg }}
                     >
                       {subject}
                     </span>
@@ -206,7 +206,6 @@ function ExtraCluesSlot({
         <ul className="mb-3 flex flex-col gap-2">
           {groups.map(({ subject, texts }) => {
             const color = colorForCharacter(subject, characters)
-            const isVictim = subject === characters.victim
             return (
               <li
                 key={subject}
@@ -215,8 +214,8 @@ function ExtraCluesSlot({
                 <div className="mb-0.5 flex items-center gap-1.5">
                   <Lightbulb size={12} className="shrink-0 text-gold-deep" />
                   <span
-                    className={`truncate font-serif text-[15px] font-semibold leading-none ${isVictim ? 'text-plum-500' : ''}`}
-                    style={isVictim ? undefined : { color: color.bg }}
+                    className="truncate font-serif text-[15px] font-semibold leading-none"
+                    style={{ color: color.bg }}
                   >
                     {subject}
                   </span>
