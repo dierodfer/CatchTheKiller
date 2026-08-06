@@ -1,4 +1,4 @@
-// Datos de sprites "pixel art" (rejillas 8×8 + paletas) usados por
+// Datos de sprites "pixel art" (rejillas + paletas) usados por
 // pixelArt.jsx, Furniture.jsx y Cell.jsx. Separado de los componentes para
 // que ese módulo solo exporte componentes (Fast Refresh).
 
@@ -129,6 +129,57 @@ export const FURNITURE_SPRITES = {
   estantería: { grid: ESTANTERIA_GRID, palette: { 1: '#a07d3c', 2: '#5a3d5f', 3: '#7d9162' } },
   silla: { grid: SILLA_GRID, palette: { 1: '#5a3d5f', 2: '#c98f5a' } },
   cama: { grid: CAMA_GRID, palette: { 1: '#a07d3c', 2: '#fbf6ee', 3: '#cf93ab' } },
+}
+
+// Lupa: cada pista adicional disponible se representa con una lupa que se
+// "gasta" al pedirla. Rejilla 10×10 (no 8×8 como el mobiliario) para que la
+// lente quede redonda y quepa el mango en diagonal.
+//   1 rim · 2 metal · 3 cristal · 4 brillo · 5 mango · 6 aspa (solo gastada)
+export const LUPA_GRID = [
+  [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+  [0, 1, 1, 2, 2, 2, 1, 1, 0, 0],
+  [0, 1, 2, 4, 3, 3, 2, 1, 0, 0],
+  [1, 2, 4, 3, 3, 3, 3, 2, 1, 0],
+  [1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+  [1, 2, 3, 3, 3, 3, 3, 2, 1, 0],
+  [0, 1, 2, 3, 3, 3, 2, 1, 0, 0],
+  [0, 1, 1, 2, 2, 2, 1, 1, 5, 0],
+  [0, 0, 0, 1, 1, 1, 0, 0, 5, 5],
+  [0, 0, 0, 0, 0, 0, 0, 0, 5, 5],
+]
+
+// Lupa gastada: mismo sprite con el cristal tachado por un aspa que llega
+// hasta el aro, para que se lea como "ya usada" de un vistazo.
+export const LUPA_SPENT_GRID = [
+  [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+  [0, 1, 1, 2, 2, 2, 1, 1, 0, 0],
+  [0, 1, 6, 3, 3, 3, 6, 1, 0, 0],
+  [1, 2, 3, 6, 3, 6, 3, 2, 1, 0],
+  [1, 2, 3, 3, 6, 3, 3, 2, 1, 0],
+  [1, 2, 3, 6, 3, 6, 3, 2, 1, 0],
+  [0, 1, 6, 3, 3, 3, 6, 1, 0, 0],
+  [0, 1, 1, 2, 2, 2, 1, 1, 5, 0],
+  [0, 0, 0, 1, 1, 1, 0, 0, 5, 5],
+  [0, 0, 0, 0, 0, 0, 0, 0, 5, 5],
+]
+
+// Disponible: latón dorado y cristal limpio. Gastada: todo desaturado a gris
+// y el aspa en rosa polvoriento (el color de error del sistema).
+export const LUPA_PALETTE = {
+  1: '#a07d3c',
+  2: '#cba35c',
+  3: '#cfe3ee',
+  4: '#ffffff',
+  5: '#5a3d5f',
+}
+
+export const LUPA_SPENT_PALETTE = {
+  1: '#8d8791',
+  2: '#a9a3ad',
+  3: '#ddd9df',
+  4: '#e8e5ea',
+  5: '#79737d',
+  6: '#b97a80',
 }
 
 // Marca de línea de control: aspa de píxeles muy tenue.

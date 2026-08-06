@@ -158,10 +158,12 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
 - `CharacterTray` — fichas sin colocar (orden alfabético), situada justo encima
   del tablero; zona para descolocar.
 - `CluePanel` — pistas agrupadas por personaje (orden alfabético), marcables como
-  usadas. Ninguna pista referencia a la víctima. El botón **"Pedir pista"**
-  concede pistas adicionales *en función del tablero*, no al azar: primero
-  sobre los personajes que el jugador aún no ha colocado y después sobre los
-  que están mal colocados (`src/game/hints.js`).
+  usadas. Ninguna pista referencia a la víctima. Las pistas adicionales se
+  representan como **lupas** en pixel art (una por pista disponible, según la
+  dificultad): tocar una la gasta y su aro dorado pasa a gris tachado. La pista
+  que se concede depende *del tablero*, no del azar: primero sobre los
+  personajes que el jugador aún no ha colocado y después sobre los que están
+  mal colocados (`src/game/hints.js`).
 - `Toolbar` — Resolver, Resolución (revela la solución tras un aviso), Nuevo.
 - `ResultBanner` — WIN revela al asesino y la habitación del crimen (se puede
   cerrar para inspeccionar el tablero); FAIL indica que hay errores **sin revelar
