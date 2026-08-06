@@ -16,6 +16,14 @@ import { computeExteriorVoid } from './mapShapes.js'
 // Frase "el/la <habitación>" con el artículo correcto (concordancia de género).
 const roomPhrase = (room) => `${ROOM_ARTICLE[room] ?? 'el'} ${room}`
 
+// Frase "las N esquinas del mapa" para las pistas de esquina. Las esquinas son
+// los cuatro vértices del tablero (ver `isCornerCell`), así que N vale 4 salvo
+// que un mapa irregular haya recortado alguno. Decir el número es la
+// información que faltaba: sin ella, en un mapa recortado el jugador cuenta
+// cuatro esquinas y busca en un vértice que ya no existe.
+const cornersPhrase = (ctx) =>
+  ctx.cornerCount === 1 ? 'la única esquina del mapa' : `las ${ctx.cornerCount} esquinas del mapa`
+
 function adjacentHas(ctx, pos, predicate) {
   for (const [dr, dc] of ADJACENT) {
     const nr = pos.row + dr
@@ -104,17 +112,26 @@ export const CLUE_TYPES = {
     evaluate: (pos, p) => pos.col !== p.col,
     text: (p) => `No estaba en la columna ${String.fromCodePoint(65 + p.col)}`,
   },
+  // Las pistas de esquina nombran cuántas esquinas tiene el mapa: son los cuatro
+  // vértices del tablero, menos los que un mapa irregular haya recortado (ver
+  // `isCornerCell` y `cornersPhrase`).
   inCorner: {
     tier: 'absolute',
     unary: true,
     evaluate: (pos, _p, _all, ctx) => ctx.isCornerCell(pos.row, pos.col),
-    text: () => `Estaba en una esquina del mapa`,
+    text: (_p, ctx) =>
+      ctx.cornerCount === 1
+        ? `Estaba en ${cornersPhrase(ctx)}`
+        : `Estaba en una de ${cornersPhrase(ctx)}`,
   },
   notInCorner: {
     tier: 'absolute',
     unary: true,
     evaluate: (pos, _p, _all, ctx) => !ctx.isCornerCell(pos.row, pos.col),
-    text: () => `No estaba en una esquina`,
+    text: (_p, ctx) =>
+      ctx.cornerCount === 1
+        ? `No estaba en ${cornersPhrase(ctx)}`
+        : `No estaba en ninguna de ${cornersPhrase(ctx)}`,
   },
   inBorder: {
     tier: 'absolute',
@@ -300,11 +317,11 @@ export function buildClueContext(map, roomLookup, characters) {
     roomWindowCount[rn] = (roomWindowCount[rn] || 0) + 1
   }
 
-  // Borde y esquina en términos de LADOS EXTERIORES, no de índices: en mapas
-  // irregulares el perímetro real incluye los recortes (una celda junto a una
-  // esquina eliminada sigue "en el borde"), y el hueco de un donut es patio
-  // interior — sus celdas vecinas NO están en el borde del mapa. En tableros
-  // clásicos ambas definiciones coinciden con las fórmulas de índice antiguas.
+  // BORDE en términos de LADOS EXTERIORES, no de índices: en mapas irregulares
+  // el perímetro real incluye los recortes (una celda junto a una esquina
+  // eliminada sigue "en el borde"), y el hueco de un donut es patio interior —
+  // sus celdas vecinas NO están en el borde del mapa. En tableros clásicos
+  // ambas definiciones coinciden con la fórmula de índice antigua.
   const size = map.gridSize
   const voidCells = map.voidCells ?? new Set()
   const exteriorVoid = computeExteriorVoid(size, voidCells)
@@ -314,9 +331,25 @@ export function buildClueContext(map, roomLookup, characters) {
     r < 0 || c < 0 || r >= size || c >= size || exteriorVoid.has(cellKey(r, c))
   const isBorderCell = (r, c) =>
     sideExterior(r - 1, c) || sideExterior(r + 1, c) || sideExterior(r, c - 1) || sideExterior(r, c + 1)
+
+  // ESQUINA, en cambio, sí es cuestión de índices: son los cuatro vértices del
+  // tablero y solo esos, nunca más de cuatro. Un recorte puede quitar un vértice
+  // (deja de contar, y quedan menos de cuatro), pero JAMÁS asciende a esquina a
+  // la celda vecina: para quien mira el tablero las esquinas son las del marco,
+  // no cualquier celda que quede en ángulo tras un mordisco del perímetro.
   const isCornerCell = (r, c) =>
-    (sideExterior(r - 1, c) || sideExterior(r + 1, c)) &&
-    (sideExterior(r, c - 1) || sideExterior(r, c + 1))
+    (r === 0 || r === size - 1) && (c === 0 || c === size - 1) && cellExists(r, c)
+
+  // Cuántos de los cuatro vértices siguen en pie. La redacción de las pistas de
+  // esquina lo nombra (ver `cornersPhrase`) para que en un mapa irregular no se
+  // busque en un vértice recortado. Es geometría visible en el tablero: contarla
+  // no filtra nada de la solución.
+  let cornerCount = 0
+  for (const r of [0, size - 1]) {
+    for (const c of [0, size - 1]) {
+      if (isCornerCell(r, c)) cornerCount++
+    }
+  }
 
   return {
     gridSize: map.gridSize,
@@ -325,6 +358,7 @@ export function buildClueContext(map, roomLookup, characters) {
     cellExists,
     isBorderCell,
     isCornerCell,
+    cornerCount,
     roomAt: (r, c) => roomLookup[cellKey(r, c)],
     furnitureAt: (r, c) =>
       r >= 0 && c >= 0 && r < map.gridSize && c < map.gridSize ? map.grid[r][c] : null,

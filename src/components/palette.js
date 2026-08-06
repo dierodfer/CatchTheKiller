@@ -14,8 +14,12 @@ export const SUSPECT_COLORS = [
   { bg: '#cf9d87', ring: '#e6c0ae', name: 'terracota' },
 ]
 
-// La víctima destaca en dorado cálido (cremoso), no como un color "más".
-export const VICTIM_COLOR = { bg: '#e6d2a0', ring: '#f2e4c2', name: 'dorado' }
+// La víctima no entra en la rotación de colores: va en ceniza apagada, a juego
+// con la calavera de hueso de su retrato. El tono es deliberadamente OSCURO
+// porque `bg` cumple dos papeles a la vez — texto sobre crema (nombre en el
+// expediente) y relleno bajo texto blanco (círculo de marca en el tablero) — y
+// ambos necesitan contraste suficiente. Un dorado cremoso fallaba en los dos.
+export const VICTIM_COLOR = { bg: '#6c6571', ring: '#9a93a0', name: 'ceniza' }
 
 // Tintes suaves para habitaciones (se ciclan). Lavados translúcidos en la
 // familia ciruela/dorado/sage/rosa, con hues bien diferenciados entre sí

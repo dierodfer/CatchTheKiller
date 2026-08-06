@@ -302,16 +302,32 @@ for (const diff of difficulties) {
       }
     }
 
-    // Borde/esquina: en clásico la definición por lados exteriores debe
-    // coincidir con las fórmulas de índice históricas (retrocompatibilidad).
+    // Borde: en clásico la definición por lados exteriores debe coincidir con la
+    // fórmula de índice histórica (retrocompatibilidad).
     if (!irregular) {
       for (const [r, c] of freeCells(map)) {
         const oldBorder = r === 0 || c === 0 || r === size - 1 || c === size - 1
-        const oldCorner = (r === 0 || r === size - 1) && (c === 0 || c === size - 1)
         assert(ctx.isBorderCell(r, c) === oldBorder, `seed ${seed}: borde clásico en ${r},${c}`)
-        assert(ctx.isCornerCell(r, c) === oldCorner, `seed ${seed}: esquina clásica en ${r},${c}`)
       }
     }
+
+    // Esquina: SIEMPRE uno de los cuatro vértices del tablero (y como máximo
+    // cuatro), en clásico y en irregular. Un recorte puede quitar vértices, pero
+    // nunca puede ascender a esquina una celda que no lo sea.
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        const isVertex = (r === 0 || r === size - 1) && (c === 0 || c === size - 1)
+        assert(
+          ctx.isCornerCell(r, c) === (isVertex && cellExists(map, r, c)),
+          `seed ${seed}: esquina mal clasificada en ${r},${c}`,
+        )
+      }
+    }
+    assert(ctx.cornerCount <= 4, `seed ${seed}: ${ctx.cornerCount} esquinas (máximo 4)`)
+    assert(
+      irregular || ctx.cornerCount === 4,
+      `seed ${seed}: tablero clásico con ${ctx.cornerCount} esquinas`,
+    )
 
     const shapeInfo = irregular ? ` (${map.shape}, ${voidCells.size} void)` : ''
     console.log(
