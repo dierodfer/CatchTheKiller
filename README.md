@@ -70,19 +70,23 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   sustitución que se salga de su clase o que deje sin frase a un elemento
   pisable.
 
-- **Un suelo por tipo de habitación** (`src/components/floorMaterials.js`): la
-  sala manda el material y la zona manda el color. La Cocina lleva damero, la
-  Biblioteca listones, la Bodega ladrillo a soga, la Terraza losa de piedra, la
-  Galería terrazo… y la misma Cocina pasa de barro cocido a gres según la
-  ambientación. El material se elige por **nombre** de sala, no por el orden en
-  que el generador la creó, así que una cocina se reconoce por su suelo tanto
-  como por su rótulo; el tinte se indexa igual, por coherencia.
+- **Un suelo por tipo de habitación** (`src/components/floorMaterials.js` +
+  `floorSprites.js`): la sala manda el material y la zona manda el tinte. La
+  Cocina lleva damero, la Biblioteca listones, la Bodega ladrillo, la Terraza
+  losa de piedra, la Galería terrazo… diez sprites reales de 16×16 px (Kenney,
+  ver créditos), no patrones CSS dibujados a mano. El material se elige por
+  **nombre** de sala, no por el orden en que el generador la creó, así que una
+  cocina se reconoce por su suelo tanto como por su rótulo; el tinte se indexa
+  igual, por coherencia.
 
-  Todos los materiales son patrones CSS que **escalan con la celda**: uno de
-  periodo fijo se convierte en ruido cuando el tablero se comprime a 36 px en
-  móvil. El ladrillo es la excepción y va en SVG, porque una llaga vertical que
-  solo ocupe media altura del mosaico es un patrón en dos dimensiones y un
-  `linear-gradient` siempre tiñe el alto completo.
+  Cada zona toca el suelo en un único punto: un `filter` CSS (sepia cálido en
+  montaña, gris casi total en el apartamento, ninguno en la mansión 8-bit, fiel
+  a su pixel art a todo color) que se combina en `multiply` con el lavado de la
+  habitación — así el COLOR de una sala lo sigue poniendo la zona, y el sprite
+  solo aporta la textura. Se renderiza con `image-rendering: pixelated` para
+  que el recorte no se difumine al escalar de 16 px a una celda de hasta
+  112 px, y el tamaño del tile se ajusta a la celda para que el grano no se
+  convierta en ruido cuando el tablero se comprime a 36 px en móvil.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.
@@ -228,5 +232,12 @@ sistema de puntuación y multijugador.
   Solo se embebe el dato `d` de cada trazado (`src/components/materialSymbols.js`),
   porque la app es una PWA offline y no puede depender de una descarga en
   tiempo de ejecución.
+- **Roguelike/RPG pack** (Kenney) — los 10 sprites de suelo, uno por tipo de
+  habitación (`src/components/floorSprites.js`). Licencia CC0 1.0 (dominio
+  público, no exige atribución); texto de cortesía en
+  [`LICENSES/kenney-roguelike-rpg-pack-CC0.txt`](LICENSES/kenney-roguelike-rpg-pack-CC0.txt).
+  Cada sprite es un recorte de 16×16 px del spritesheet oficial, embebido como
+  PNG en base64 por el mismo motivo que los iconos: cero peticiones en tiempo
+  de ejecución.
 - El pixel art de la zona «Mansión 8-bit», los retratos de los personajes y la
   lupa son originales del proyecto.

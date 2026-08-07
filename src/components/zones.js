@@ -60,11 +60,15 @@ export const ZONES = {
     frame: { background: 'rgba(244, 235, 220, 0.80)' },
     tints: ROOM_TINTS_MONTANA,
 
+    // `filter` es lo único que la zona toca del sprite de suelo: un sepia
+    // marcado empuja cualquier tile hacia el ámbar cálido de la casa de
+    // montaña, y es el lavado de la habitación (`tints`, debajo, en `multiply`)
+    // el que sigue aportando el matiz concreto de cada sala.
     floor: {
-      ink: { l: 'rgba(232,213,184,0.55)', m: 'rgba(206,172,126,0.55)', d: 'rgba(92,56,26,0.38)' },
+      filter: 'sepia(0.5) saturate(1.35) brightness(0.94) contrast(1.05)',
       fallback: 'parquet',
       blend: 'multiply',
-      opacity: 0.62,
+      opacity: 0.85,
     },
 
     rug: {
@@ -126,11 +130,13 @@ export const ZONES = {
     frame: { background: 'rgba(238, 240, 243, 0.82)' },
     tints: ROOM_TINTS_APARTAMENTO,
 
+    // Desatura casi del todo: el hormigón/acero del apartamento no tiene tono
+    // propio, así que el color lo pone íntegro el lavado de la habitación.
     floor: {
-      ink: { l: 'rgba(228,233,238,0.55)', m: 'rgba(197,208,218,0.60)', d: 'rgba(38,42,48,0.34)' },
+      filter: 'grayscale(0.75) brightness(1.12) contrast(1.05)',
       fallback: 'baldosa',
       blend: 'multiply',
-      opacity: 0.6,
+      opacity: 0.8,
     },
 
     rug: {
@@ -186,14 +192,15 @@ export const ZONES = {
     frame: { background: 'rgba(244, 235, 220, 0.75)' },
     tints: ROOM_TINTS,
 
-    // `multiply`, no `soft-light`: con luz suave las diez salas salían casi
-    // idénticas y el suelo dejaba de distinguir una habitación de otra, que es
-    // justo su cometido.
+    // Sin filtro: la identidad de esta zona es precisamente el pixel art a todo
+    // color, coherente con el resto de su arte. `multiply`, no `soft-light`:
+    // con luz suave las diez salas salían casi idénticas y el suelo dejaba de
+    // distinguir una habitación de otra, que es justo su cometido.
     floor: {
-      ink: { l: 'rgba(244,232,208,0.55)', m: 'rgba(206,174,120,0.6)', d: 'rgba(140,104,44,0.55)' },
+      filter: 'none',
       fallback: 'damero',
       blend: 'multiply',
-      opacity: 0.5,
+      opacity: 0.9,
     },
 
     rug: {

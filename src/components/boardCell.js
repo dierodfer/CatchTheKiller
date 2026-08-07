@@ -58,7 +58,7 @@ export function windowGlassStyle(zone, wall, inset) {
 export function floorPatternStyle(zone, roomName, size) {
   const material = MATERIALS[ROOM_MATERIAL[roomName]] || MATERIALS[zone.floor.fallback]
   return {
-    ...material(zone.floor.ink, size),
+    ...material(zone, size),
     mixBlendMode: zone.floor.blend,
     opacity: zone.floor.opacity,
   }

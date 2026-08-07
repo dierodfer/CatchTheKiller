@@ -1,0 +1,25 @@
+// Sprites de suelo — recortados de "Roguelike/RPG pack" (Kenney, CC0 1.0).
+//
+// Cada valor es un tile de 16×16 px, en PNG, como data URI. Se recorta del
+// spritesheet oficial (`Spritesheet/roguelikeSheet_transparent.png`) y se
+// embebe aquí porque la app es una PWA offline y no puede depender de una
+// descarga en tiempo de ejecución. Licencia CC0: texto íntegro en
+// `LICENSES/kenney-roguelike-rpg-pack-CC0.txt` (cortesía, la CC0 no exige
+// atribución).
+//
+// El nombre de cada entrada es el TIPO DE HABITACIÓN al que se asigna en
+// `floorMaterials.js`, no una descripción del tile — así el mapeo
+// habitación → material queda documentado en un solo sitio.
+
+export const FLOOR_TILES = {
+  salon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiUlEQVR4AaXBoRGDQBBA0X9LCqCDmKh0cOImXDVB0kmQdMPNIOgCC45hBoPamEiCuH3PqSptXSkXmi65tq6UE+7zfqkPkSvj0OND5MyNn22e+Of5uLPNE2cEI8FIMJKmS24cenIV5ZLUh8ixr+QQjKTpkhuHnlxFuST1IXLsKzkEI8FIMBKMBKMvRjwp0xVwl7IAAAAASUVORK5CYII=',
+  cocina: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcUlEQVR4AaXBsREDIQwAwUPvGTqjCxWiBlAhqo4CiOXEIf4A7bbMxN2TF2bW3D05aHPOVFXeRASqysmHn7UW/4wxWGtxIhQJRUKRmFmLCG49vfdUVfbe3BCKxMxaRHDr6b2nqrL35oZQJBQJRUKRUPQFGI8nYmBG5zEAAAAASUVORK5CYII=',
+  dormitorio: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAm0lEQVR4AaXBMWrEQBBE0e/Gndd1fORNfLbKK7BHsAPDoEUCvff18/v644FiiM2Z2FwphpY40xK72KyKE7GJzZmWWBUPFUNsVi3REncUQ0vcFZtVcUNsppZYFZvY7Frik2KIzdQSU2yuFENLnGmJQ2xiM8VmKjaxudIS0zeblti1xCfFQ8VbbFaxmWKzi82heGuJVUtMLbFricM/nOs7jIVqIDMAAAAASUVORK5CYII=',
+  estudio: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAb0lEQVR4AaXB4QnCQAyA0c9wvwOBrOZEruRYgUAWUAo9KIe02Lz3eL+eHxqEJqFJOBFZHEUWkcWRcMJNuTJYRBYbN2XlpqyEpsHCTfmH0CQ0CbvI4o7Bzk35JbKY3JSV0CTcEFlMgwtuyspNmYSmLy8IF+bVoe64AAAAAElFTkSuQmCC',
+  pasillo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAh0lEQVR4AaXBsQ2DMBBA0e8jfRbwAEFKRrD3ClIoKNiFNWAIFqB3QWO54NKkJBS+95yq0vadcmEdRtf2nXLCPT5v9TFwZZsXfAycufGzp8Q/99eTPSXOCEaCkWAk6zC6bV6o1UxHUR8DJWdqCEayDqPb5oVazXQU9TFQcqaGYCQYCUaCkWD0Bd67K9IqT3+OAAAAAElFTkSuQmCC',
+  biblioteca: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhklEQVR4AaXBsQ2DQAxA0X8momecDJAiO5xnILT0oSXMcIzFADQgISFROk1KQnF+L5gZQ9cYF+q2D0PXGCfC5/2yqMqVMSWiKmdu/CzzxD/Px51lnjgjOAlOgpPUbR/GlMhVVOVmUZVjX8khOEnd9mFMiVxFVW4WVTn2lRyCk+AkOAlOgtMX/uYpHGRSgGkAAAAASUVORK5CYII=',
+  comedor: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaUlEQVR4AaXBwQnDQAxE0R+xh1H/TaQCpzTNLSHgBbMEm1jvPZ7b601D0BQ0BSdS4iglUuIoOFE2VwaLlPgqm1XZrIKmwaJs/hE0BU3BLiXuGOzK5peUmMpmFTQFN6TENLhQNquymYKmD1CAGyOzdSqKAAAAAElFTkSuQmCC',
+  terraza: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAqUlEQVR4AaXBwW3DMBREwWeCh/39N5EKnNJ2b4kImABBKLKMzDy+nt8//EPjREnsSqIkdo0TTphKYlcSU2dREisnOGFwwuSEqXEoiSslURJDSawaByfc5YShJIbODU7YOWHoLJzwl5JYOWFonCiJoSRK4kpjURKDE+7qHEpicMLKCe90NiWxcsLghDOdgxPeKYnBCavGS0ncVRJT58UJV5wwOWHqbJzwiV++vkUrNU9RkwAAAABJRU5ErkJggg==',
+  bodega: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR4AaXBoQ2DQBSA4f8eFdWkOVlUc3OcLbuwS1mAKdAMwARIEhQJ5gxBvZpKirj3fU5VaetKudD0s2vrSjnhPu+nxuC5MkwrMXjO3PhZtsQ/r8edZUucEYwEI8FImn52w7SSqyjHTmPwpP0gh2AkTT+7YVrJVZRjpzF40n6QQzASjAQjwUgw+gKvmSkc9GPCYQAAAABJRU5ErkJggg==',
+  galeria: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcUlEQVR4AaXBsQnDQAxA0R9xrUCV9t8ke2SAFKoEGiDB4ANzBJtY7z3er+eHBqFJaBJOVAZHlUFlcCScUHOuDBaVwUbNWak5K6FpsFBz/iE0CU3CrjK4Y7BTc36pDCY1ZyU0CTdUBtPggpqzUnMmoekLCEcY2e1UwaYAAAAASUVORK5CYII=',
+}
