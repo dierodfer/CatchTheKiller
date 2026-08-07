@@ -7,6 +7,7 @@ import { generateSolution } from './solutionGenerator.js'
 import { generateClues } from './clueGenerator.js'
 import { hasUniqueSolution, identifyKiller } from './solver.js'
 import { buildClueContext } from './clues.js'
+import { zoneForSeed } from './zones.js'
 import { makeRng, randomSeed, shuffle } from './random.js'
 import { NAMES } from './names.js'
 
@@ -56,6 +57,8 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed(), { ir
     if (!solution) continue
 
     // 3. PISTAS
+    // La zona sale de la semilla, así que un mismo código compartido reproduce
+    // la misma ambientación y, con ella, los mismos nombres en las pistas.
     const clueResult = generateClues(
       rng,
       map,
@@ -63,6 +66,7 @@ export function generatePuzzle(difficultyId = 'facil', seed = randomSeed(), { ir
       solution.placements,
       roomLookup,
       difficulty,
+      zoneForSeed(seed),
     )
     if (!clueResult) continue
     const { clues, extraClues } = clueResult

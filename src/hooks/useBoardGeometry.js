@@ -7,7 +7,7 @@
 // renderizados innecesarios al colocar/quitar fichas.
 
 import { useEffect, useMemo, useState } from 'react'
-import { ROOM_TINTS } from '@/components/palette.js'
+import { makeBordersFor } from '@/components/boardCell.js'
 import { controlLineCells } from '@/game/killerRule.js'
 import { isOccupiable } from '@/game/mapGenerator.js'
 
@@ -42,16 +42,10 @@ function useViewportWidth() {
   return width
 }
 
-// Muros de habitación: trazo sólido y grueso (estilo pixel art); divisiones
-// interiores apenas visibles, como líneas de rejilla. El borde exterior del
-// tablero es algo más grueso para enmarcar el conjunto.
-const BORDER_OUTER = '5px solid #a07d3c'
-const BORDER_ROOM = '3px solid #a07d3c'
-const BORDER_THIN = '1px solid rgba(39,24,41,0.16)'
-
 export function useBoardGeometry({
   map,
   roomLookup,
+  zone,
   placements,
   revealMode,
   killer,
@@ -86,22 +80,9 @@ export function useBoardGeometry({
     const isRug = (r, c) =>
       r >= 0 && c >= 0 && r < size && c < size && map.grid[r][c] === 'alfombra'
 
-    const bordersFor = (r, c) => {
-      const room = roomLookup[`${r},${c}`]
-      const sideBorder = (nr, nc) => {
-        // Fuera del tablero o celda void (mapa irregular): muro exterior.
-        if (nr < 0 || nc < 0 || nr >= size || nc >= size) return BORDER_OUTER
-        if (map.voidCells?.has(`${nr},${nc}`)) return BORDER_OUTER
-        if (roomLookup[`${nr},${nc}`] !== room) return BORDER_ROOM
-        return BORDER_THIN
-      }
-      return {
-        top: sideBorder(r - 1, c),
-        bottom: sideBorder(r + 1, c),
-        left: sideBorder(r, c - 1),
-        right: sideBorder(r, c + 1),
-      }
-    }
+    // Muros con los colores y grosores de la zona (misma fábrica que usa la
+    // miniatura, para que tablero y preview no se desincronicen).
+    const bordersFor = makeBordersFor(map, roomLookup, size, zone)
 
     const grid = []
     for (let r = 0; r < size; r++) {
@@ -118,7 +99,7 @@ export function useBoardGeometry({
           r,
           c,
           size: cellSize,
-          tint: ROOM_TINTS[roomIndex[roomLookup[key]] % ROOM_TINTS.length],
+          tint: zone.tints[roomIndex[roomLookup[key]] % zone.tints.length],
           borders: bordersFor(r, c),
           label: labelCell[key],
           furniture,
@@ -139,7 +120,7 @@ export function useBoardGeometry({
       grid.push(row)
     }
     return grid
-  }, [map, roomLookup, size, cellSize])
+  }, [map, roomLookup, size, cellSize, zone])
 
   // Celdas bajo línea de control de cualquier ficha colocada. La ficha que se
   // está arrastrando no aporta su línea de control: al "levantarla" del

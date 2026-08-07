@@ -26,6 +26,7 @@ export default function Board({
   const { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt } = useBoardGeometry({
     map,
     roomLookup,
+    zone,
     placements,
     revealMode,
     killer,
@@ -59,6 +60,7 @@ export default function Board({
         <Cell
           key={key}
           geometry={cellGeometry[r][c]}
+          zone={zone}
           characters={characters}
           occupantName={occupantAt[key]}
           controlled={controlled.has(key)}
@@ -88,7 +90,6 @@ export default function Board({
 
   // Celebración: la escena se ilumina habitación por habitación, trazando la
   // forma real de cada sala con un resplandor dorado escalonado.
-  const glowGold = zone?.glow || 'rgba(160, 125, 60, 0.35)'
   const celebrationLayer =
     celebrating && !reduce ? (
       <div className="pointer-events-none absolute inset-0" style={{ top: GUTTER }} aria-hidden>
@@ -102,7 +103,7 @@ export default function Board({
                 left: GUTTER + c * cellSize,
                 width: cellSize,
                 height: cellSize,
-                background: `radial-gradient(circle at 50% 50%, ${glowGold}, transparent 75%)`,
+                background: `radial-gradient(circle at 50% 50%, ${zone.glow}, transparent 75%)`,
                 mixBlendMode: 'multiply',
               }}
               initial={{ opacity: 0, scale: 0.6 }}
@@ -119,18 +120,17 @@ export default function Board({
     // anula su ancho mínimo por defecto (min-content), que descuadraría la
     // rejilla.
     <fieldset
-      className="pixel-frame relative inline-block overflow-hidden rounded-lg bg-cream-100/75 p-2.5 shadow-2xl"
-      style={{ minInlineSize: 'auto' }}
+      className="pixel-frame relative inline-block overflow-hidden rounded-lg p-2.5 shadow-2xl"
+      style={{ minInlineSize: 'auto', background: zone.frame.background }}
       aria-label="Tablero del caso"
     >
-      {/* Textura ambiental propia de la zona. */}
-      {zone && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{ backgroundImage: zone.texture, mixBlendMode: 'multiply' }}
-          aria-hidden
-        />
-      )}
+      {/* Textura ambiental propia de la zona. La opacidad va en el estilo, no en
+          una clase: cada zona calibra la suya. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ ...zone.ambient, opacity: zone.ambientOpacity, mixBlendMode: 'multiply' }}
+        aria-hidden
+      />
       <div className="relative">
         {header}
         {rows}

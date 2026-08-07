@@ -16,7 +16,6 @@ import { colorForCharacter } from './palette.js'
 import CellMarkPopup from './CellMarkPopup.jsx'
 import {
   WINDOW_BORDER_SIDE,
-  WINDOW_GLASS_COLOR,
   REVEAL_TINT,
   REVEAL_HIGHLIGHT,
   DROP_OUTLINE,
@@ -32,6 +31,7 @@ const GLASS_INSET = 8
 
 function Cell({
   geometry,
+  zone,
   characters,
   occupantName,
   controlled,
@@ -107,7 +107,9 @@ function Cell({
         borderRight: borders.right,
         borderBottom: borders.bottom,
         borderLeft: borders.left,
-        ...(isWindow && wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(WINDOW_FRAME_PX) } : null),
+        ...(isWindow && wall
+          ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(zone, WINDOW_FRAME_PX) }
+          : null),
         cursor: clickable ? 'pointer' : 'default',
         outline: canDrop ? DROP_OUTLINE : 'none',
         outlineOffset: -2,
@@ -125,8 +127,8 @@ function Cell({
         />
       )}
 
-      {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
-      <div className="pointer-events-none absolute inset-0" style={floorPatternStyle(size)} />
+      {/* Suelo de la zona, superpuesto al tinte de la habitación. */}
+      <div className="pointer-events-none absolute inset-0" style={floorPatternStyle(zone, size)} />
 
       {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
@@ -138,22 +140,22 @@ function Cell({
       {/* Alfombra: relleno de fondo, puede abarcar varias celdas contiguas. */}
       {furniture === 'alfombra' &&
         rugEdges &&
-        rugLayerStyles(rugEdges, margin).map(({ id, style }) => (
+        rugLayerStyles(zone, rugEdges, margin).map(({ id, style }) => (
           <div key={id} className="pointer-events-none absolute" style={style} />
         ))}
 
       {/* Mobiliario (excepto alfombra), oculto si hay una ficha encima. */}
       {!occupantName && furniture && furniture !== 'alfombra' && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-75">
-          <FurnitureIcon type={furniture} size={Math.round(size * 0.42)} className="text-plum-700/70" />
+          <FurnitureIcon type={furniture} zone={zone} size={Math.round(size * 0.42)} />
         </div>
       )}
 
       {/* Ventana: cristal claro junto al tramo de pared marcado en azul. */}
       {isWindow && wall && (
         <div
-          className="pointer-events-none absolute rounded-full"
-          style={{ background: WINDOW_GLASS_COLOR, ...windowGlassStyle(wall, GLASS_INSET) }}
+          className="pointer-events-none absolute"
+          style={windowGlassStyle(zone, wall, GLASS_INSET)}
         />
       )}
 

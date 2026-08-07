@@ -44,13 +44,27 @@ y **rosa polvoriento** para el error. Tipografía con carácter: serif editorial
 **Cormorant Garamond** para los títulos + **Inter** para la interfaz. Los
 tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4).
 
-- **Dos ambientaciones** (`src/components/zones.js`): cada caso se sitúa en un
-  **Apartamento en la ciudad** (frío-neutro, veteado de lino/mármol mediante
-  ruido SVG) o una **Casa de montaña** (cálido-terroso, veta de madera también
-  con ruido SVG direccional). La zona se deriva de la semilla del puzzle, así
-  que es **puramente visual**: no altera el mapa, las pistas ni la regla del
-  asesino, solo la atmósfera (acento, textura y distintivo). Son distinguibles
-  a golpe de vista pero cohesivas en el sistema.
+- **Tres ambientaciones**, repartidas por la semilla del puzzle:
+  - **Casa de montaña** — roble, hierro y lana; suelo de tarima, muros de
+    nogal y alfombra de kilim.
+  - **Apartamento en la ciudad** — un piso alto de rascacielos: cristal,
+    acero y hormigón, baldosa de gran formato y ventanales de marco fino.
+  - **Mansión 8-bit** — el pixel art original, con su damero, su dorado y sus
+    sprites de 8×8.
+
+  Las dos primeras usan **arte vectorial plano** (`flatArt.jsx` +
+  `flatSprites*.js`); la tercera, el emisor de pixel art (`pixelArt.jsx`). La
+  zona se parte en dos capas: `src/game/zones.js` guarda lo que la lógica
+  necesita —qué zona toca a cada semilla y **cómo se llama cada elemento** en
+  ella— y `src/components/zones.js`, cómo se ve (mobiliario, suelo, muros,
+  ventanas y alfombra).
+
+  Una zona puede **renombrar** elementos: en la casa de montaña la `planta` es
+  una *leñera*, la `TV` un *arcón* y la `silla` un *banco*, y las pistas lo
+  dicen así. Lo que **no** puede cambiar es la lógica: el conjunto de ids y sus
+  marcas `blocking`/`mueble` son del puzzle, no de la ambientación, y una
+  aserción al cargar el módulo rechaza cualquier sustitución que se salga de su
+  clase o que deje sin frase a un elemento pisable.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.

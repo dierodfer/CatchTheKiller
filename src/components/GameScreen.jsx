@@ -18,7 +18,7 @@ import RevealConfirmModal from './RevealConfirmModal.jsx'
 import RulesModal from './RulesModal.jsx'
 import ShareModal from './ShareModal.jsx'
 import { TokenChip } from './CharacterToken.jsx'
-import { zoneForSeed } from './zones.js'
+import { themeForSeed } from './zones.js'
 import { DIFFICULTIES } from '@/game/constants.js'
 
 export default function GameScreen({ game }) {
@@ -48,7 +48,7 @@ export default function GameScreen({ game }) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const revealMode = status === 'win'
   const diff = DIFFICULTIES[puzzle.difficulty]
-  const zone = useMemo(() => zoneForSeed(puzzle.seed), [puzzle.seed])
+  const zone = useMemo(() => themeForSeed(puzzle.seed), [puzzle.seed])
   const showBanner = (status === 'win' || status === 'fail') && result && dismissedResult !== result
   // Celebración solo cuando se resuelve de verdad (no al revelar la solución).
   const celebrating = status === 'win' && result?.solved && !result?.revealed

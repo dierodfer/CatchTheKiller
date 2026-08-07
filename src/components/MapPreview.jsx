@@ -4,16 +4,15 @@ import { useMemo, useState } from 'react'
 import { generateMap, buildRoomLookup } from '@/game/mapGenerator.js'
 import { makeRng, randomSeed } from '@/game/random.js'
 import { cellKey } from '@/game/constants.js'
-import { ROOM_TINTS } from './palette.js'
-import { zoneForSeed } from './zones.js'
+import { themeForSeed } from './zones.js'
 import { FurnitureIcon } from './Furniture.jsx'
 import {
   WINDOW_BORDER_SIDE,
-  WINDOW_GLASS_COLOR,
   windowBorder,
   windowGlassStyle,
   floorPatternStyle,
   rugLayerStyles,
+  makeBordersFor,
 } from './boardCell.js'
 
 const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
@@ -32,7 +31,16 @@ export default function MapPreview({ difficulty, irregular = false }) {
   const roomLookup = useMemo(() => buildRoomLookup(map), [map])
   const size = map.gridSize
   const cellSize = PREVIEW_CELL_SIZE[size] || 32
-  const zone = zoneForSeed(seed)
+  const zone = themeForSeed(seed)
+
+  // Mismos muros que el tablero, con el trazo adelgazado para que 5/3 px no se
+  // coman una celda de 32. Se reutiliza la fábrica en vez del hook completo:
+  // `useBoardGeometry` deriva el tamaño de celda de un listener de resize y
+  // exige fichas, solución y asesino, nada de lo cual existe en la miniatura.
+  const bordersFor = useMemo(
+    () => makeBordersFor(map, roomLookup, size, zone, 0.6),
+    [map, roomLookup, size, zone],
+  )
 
   const roomIndex = useMemo(() => {
     const idx = {}
@@ -61,6 +69,7 @@ export default function MapPreview({ difficulty, irregular = false }) {
       }
       const furniture = map.grid[r][c]
       const wall = windowByCell[key]
+      const borders = bordersFor(r, c)
       const margin = Math.max(2, Math.round(cellSize * 0.05))
       const edges = {
         top: !isRug(r - 1, c),
@@ -75,30 +84,32 @@ export default function MapPreview({ difficulty, irregular = false }) {
           style={{
             width: cellSize,
             height: cellSize,
-            background: ROOM_TINTS[roomIndex[roomLookup[key]] % ROOM_TINTS.length],
-            border: '1px solid rgba(39,24,41,0.16)',
-            ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(WINDOW_FRAME_PX) } : null),
+            background: zone.tints[roomIndex[roomLookup[key]] % zone.tints.length],
+            borderTop: borders.top,
+            borderRight: borders.right,
+            borderBottom: borders.bottom,
+            borderLeft: borders.left,
+            ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(zone, WINDOW_FRAME_PX) } : null),
           }}
         >
-          {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
-          <div className="pointer-events-none absolute inset-0" style={floorPatternStyle(cellSize)} />
+          {/* Suelo de la zona, superpuesto al tinte de la habitación. */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={floorPatternStyle(zone, cellSize)}
+          />
           {furniture === 'alfombra' &&
-            rugLayerStyles(edges, margin, 6).map(({ id, style }) => (
+            rugLayerStyles(zone, edges, margin, 6).map(({ id, style }) => (
               <div key={id} className="pointer-events-none absolute" style={style} />
             ))}
           {furniture && furniture !== 'alfombra' && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-70">
-              <FurnitureIcon
-                type={furniture}
-                size={Math.round(cellSize * 0.5)}
-                className="text-plum-700/70"
-              />
+              <FurnitureIcon type={furniture} zone={zone} size={Math.round(cellSize * 0.5)} />
             </div>
           )}
           {wall && (
             <div
-              className="pointer-events-none absolute rounded-full"
-              style={{ background: WINDOW_GLASS_COLOR, ...windowGlassStyle(wall, GLASS_INSET) }}
+              className="pointer-events-none absolute"
+              style={windowGlassStyle(zone, wall, GLASS_INSET)}
             />
           )}
         </div>,
@@ -113,11 +124,14 @@ export default function MapPreview({ difficulty, irregular = false }) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="pixel-frame relative inline-block overflow-hidden rounded-lg bg-cream-100/80 p-2.5 shadow-2xl">
+      <div
+        className="pixel-frame relative inline-block overflow-hidden rounded-lg p-2.5 shadow-2xl"
+        style={{ background: zone.frame.background }}
+      >
         {/* Textura sutil propia de la zona. */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{ backgroundImage: zone.texture, mixBlendMode: 'multiply' }}
+          className="pointer-events-none absolute inset-0"
+          style={{ ...zone.ambient, opacity: zone.ambientOpacity, mixBlendMode: 'multiply' }}
           aria-hidden
         />
         <div className="relative">{rows}</div>

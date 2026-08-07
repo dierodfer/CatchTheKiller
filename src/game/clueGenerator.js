@@ -222,8 +222,10 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   return out
 }
 
-export function generateClues(rng, map, characters, solution, roomLookup, difficulty) {
-  const ctx = buildClueContext(map, roomLookup, characters)
+// `zoneId` fija la ambientación con la que se redactan las pistas: aquí es donde
+// "silla" pasa a ser "banco" en la casa de montaña. Solo afecta al texto.
+export function generateClues(rng, map, characters, solution, roomLookup, difficulty, zoneId) {
+  const ctx = buildClueContext(map, roomLookup, characters, zoneId)
   ctx.rooms = map.rooms.map((r) => r.name)
   ctx.occupiable = freeCells(map)
   const tiers = difficulty.clueTiers

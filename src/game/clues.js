@@ -10,7 +10,8 @@
 // "la IA propone, el Solver decide" — aquí no hay IA, la lógica es la autoridad.
 
 import { ADJACENT, ROOM_ARTICLE, cellKey } from './constants.js'
-import { ELEMENTS, MUEBLE_ELEMENTS, elementPhrase, elementCountPhrase } from './elements.js'
+import { MUEBLE_ELEMENTS, elementPhrase, elementCountPhrase } from './elements.js'
+import { resolveElements } from './zones.js'
 import { computeExteriorVoid } from './mapShapes.js'
 
 // Frase "el/la <habitación>" con el artículo correcto (concordancia de género).
@@ -208,7 +209,7 @@ export const CLUE_TYPES = {
           ctx.furnitureAt(r, c) === p.element &&
           ctx.roomAt(r, c) === ctx.roomAt(pos.row, pos.col),
       ),
-    text: (p) => `Estaba junto a ${elementPhrase(p.element)}`,
+    text: (p, ctx) => `Estaba junto a ${elementPhrase(ctx.el, p.element)}`,
   },
   // La ventana forma parte de la pared de su celda: estar "junto a la ventana"
   // significa ocupar esa misma celda (no una contigua).
@@ -239,7 +240,7 @@ export const CLUE_TYPES = {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === p.element,
-    text: (p) => ELEMENTS[p.element].onText,
+    text: (p, ctx) => ctx.el[p.element].onText,
   },
 
   // ───────── Propiedades de la habitación ─────────
@@ -262,9 +263,9 @@ export const CLUE_TYPES = {
       const n = ctx.roomElementCount(ctx.roomAt(pos.row, pos.col), p.element)
       return p.op === 'masDe' ? n > p.value : n < p.value
     },
-    text: (p) =>
+    text: (p, ctx) =>
       `En mi habitación había ${p.op === 'masDe' ? 'más' : 'menos'} de ` +
-      `${elementCountPhrase(p.element, p.value)}`,
+      `${elementCountPhrase(ctx.el, p.element, p.value)}`,
   },
   roomWindowCount: {
     tier: 'room',
@@ -293,7 +294,12 @@ export function evalClue(clue, placements, ctx) {
 }
 
 // Construye el contexto compartido por evaluador, generador y Solver.
-export function buildClueContext(map, roomLookup, characters) {
+//
+// `zoneId` solo afecta a la REDACCIÓN (`ctx.el`, los nombres de los elementos en
+// esa ambientación); ningún `evaluate` lo mira. Por eso quien solo evalúa
+// predicados —el Solver, el generador de soluciones, los tests— puede omitirlo
+// y quedarse con los nombres base.
+export function buildClueContext(map, roomLookup, characters, zoneId) {
   const windowSet = new Set(map.windows.map((w) => cellKey(w.row, w.col)))
   const everyone = [...characters.suspects, characters.victim]
   const suspects = [...characters.suspects]
@@ -353,6 +359,8 @@ export function buildClueContext(map, roomLookup, characters) {
 
   return {
     gridSize: map.gridSize,
+    // Nombres de los elementos en esta zona (ver game/zones.js).
+    el: resolveElements(zoneId),
     everyone,
     suspects,
     cellExists,
