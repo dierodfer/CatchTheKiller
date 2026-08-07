@@ -74,16 +74,25 @@ export function floorPatternStyle(zone, roomName, size) {
 // de una sola celda de ancho (donde no existe una fila/columna "central").
 // El grosor del marco es proporcional a la celda para que no quede
 // desproporcionado en un tablero grande ni desaparezca en uno pequeño.
+//
+// El RELLENO no sale del sprite: `border-image-slice` va SIN la palabra
+// clave `fill`, así que el centro queda transparente y dejamos ver, debajo,
+// el propio `background` del elemento — el tejido de `zone.rug.pattern`. El
+// sprite de Kenney es un color plano dentro del marco (una alfombra de un
+// solo tono no se lee como tejida), así que el marco real se lo debemos a
+// Kenney y la trama a un degradado propio, en lugar de forzar un único
+// origen para las dos cosas.
 export function rugFrameStyle(zone, cellSize) {
   const border = Math.max(4, Math.round(cellSize * zone.rug.borderFrac))
   return {
     borderStyle: 'solid',
     borderWidth: border,
     borderImageSource: `url("${RUG_SPRITE}")`,
-    borderImageSlice: '16 fill',
+    borderImageSlice: '16',
     borderImageWidth: `${border}px`,
     borderImageRepeat: 'stretch',
     imageRendering: 'pixelated',
+    backgroundImage: zone.rug.pattern,
     filter: zone.rug.filter,
     opacity: zone.rug.opacity,
   }

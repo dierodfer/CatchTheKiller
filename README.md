@@ -113,6 +113,14 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   celda de ancho. Las celdas de alfombra quedan con fondo transparente para
   que se vea a través; fichas, marcas y línea de control siguen pintándose por
   delante porque van dentro de la celda, más tarde en el documento.
+
+  El RELLENO no sale del sprite —un color plano dentro del marco no se lee
+  como una alfombra tejida—: `border-image-slice` va sin la palabra clave
+  `fill`, así que el centro queda transparente y deja ver el `background`
+  propio del elemento: un kilim de bandas diagonales en montaña, una trama
+  geométrica fría en el apartamento, el dorado/ciruela original en la mansión
+  8-bit. El marco es de Kenney; el tejido, un degradado propio — cada uno
+  resuelve lo que mejor sabe hacer.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.

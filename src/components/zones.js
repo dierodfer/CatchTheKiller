@@ -66,7 +66,13 @@ export const ZONES = {
     // Mismo sprite con marco que las otras zonas (ver rugSprite.js), teñido
     // en cálido: el mismo `filter` que el suelo, para que la alfombra no
     // desentone del resto de la habitación.
+    // Kilim: bandas anchas terracota/arena/musgo con una trama diagonal fina
+    // encima, para que se lea como un tejido y no como un tinte plano.
     rug: {
+      pattern:
+        'repeating-linear-gradient(90deg, rgba(150,74,48,0.55) 0 6px,' +
+        ' rgba(196,142,88,0.50) 6px 12px, rgba(88,96,74,0.50) 12px 16px),' +
+        ' repeating-linear-gradient(45deg, rgba(255,246,232,0.25) 0 2px, transparent 2px 6px)',
       filter: 'sepia(0.5) saturate(1.35) brightness(0.94) contrast(1.05)',
       opacity: 0.95,
       borderFrac: 0.15,
@@ -113,7 +119,13 @@ export const ZONES = {
       opacity: 0.8,
     },
 
+    // Geométrica: bandas frías con una retícula fina encima, en vez del kilim
+    // de montaña — la misma idea de "tejido con dibujo", en otro lenguaje.
     rug: {
+      pattern:
+        'repeating-linear-gradient(90deg, rgba(96,104,118,0.42) 0 10px,' +
+        ' rgba(140,150,166,0.38) 10px 20px),' +
+        ' repeating-linear-gradient(0deg, rgba(28,32,38,0.22) 0 1px, transparent 1px 10px)',
       filter: 'grayscale(0.75) brightness(1.12) contrast(1.05)',
       opacity: 0.92,
       borderFrac: 0.12,
@@ -166,7 +178,16 @@ export const ZONES = {
     },
 
     // Sin filtro, como el suelo: el pixel art va a todo color.
-    rug: { filter: 'none', opacity: 1, borderFrac: 0.16 },
+    // Trama dorada/ciruela: el kilim que llevaba esta zona antes de que
+    // hubiera zonas nuevas — se conserva tal cual, es su identidad.
+    rug: {
+      pattern:
+        'repeating-linear-gradient(0deg, rgba(160,125,60,0.45) 0 4px, rgba(116,82,122,0.4) 4px 8px),' +
+        ' repeating-linear-gradient(90deg, rgba(203,163,92,0.32) 0 4px, transparent 4px 8px)',
+      filter: 'none',
+      opacity: 1,
+      borderFrac: 0.16,
+    },
 
     wall: { color: '#a07d3c', outerPx: 5, roomPx: 3, thinColor: 'rgba(39,24,41,0.16)', thinPx: 1 },
     window: { frame: '#6f9bc9', frameScale: 1, glass: '#eaf3fb', glassRadius: 999 },
