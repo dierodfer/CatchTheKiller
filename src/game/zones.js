@@ -13,8 +13,15 @@
 // son lógica de puzzle: `blocking` decide qué celdas son ocupables y `mueble`
 // alimenta la pista "no estaba junto a ningún mueble". Tampoco cambia el
 // conjunto de ids, que son las claves guardadas en `map.grid`.
+//
+// Las HABITACIONES se superponen con el mismo principio, más abajo
+// (ZONE_ROOMS/resolveRooms): el nombre CANÓNICO (el de `ROOM_NAMES`) sigue
+// siendo la identidad real de la sala — la clave de `roomLookup`, la que
+// indexa su tinte y su material de suelo — y lo único que cambia por zona es
+// cómo se llama en pantalla y en el texto de las pistas.
 
 import { ELEMENTS, ELEMENT_IDS } from './elements.js'
+import { ROOM_NAMES, ROOM_ARTICLE } from './constants.js'
 
 export const ZONE_IDS = ['montana', 'apartamento', 'pixel']
 
@@ -102,3 +109,86 @@ const RESOLVED = Object.fromEntries(
 // desconocida) devuelve los nombres base — es lo que usan el Solver y los tests,
 // que evalúan predicados y nunca leen la redacción.
 export const resolveElements = (zoneId) => RESOLVED[zoneId] ?? ELEMENTS
+
+// ─────────────────────────────────────────────────────────────────────────
+// Habitaciones
+// ─────────────────────────────────────────────────────────────────────────
+
+// Sustituciones de nombre de HABITACIÓN por zona: `nombre canónico -> {label,
+// article}`. Van juntos porque cambiar de nombre casi siempre cambia de
+// género ("la Terraza" -> "el Porche"), y separarlos en dos superposiciones
+// independientes habría dejado fácil olvidar el artículo al renombrar.
+//
+// Una zona ausente —o una sala ausente dentro de una zona— conserva el
+// nombre y el artículo canónicos de `ROOM_NAMES`/`ROOM_ARTICLE`.
+export const ZONE_ROOMS = {
+  montana: {
+    Salón: { label: 'Sala', article: 'la' },
+    Dormitorio: { label: 'Alcoba', article: 'la' },
+    // La ranura de Estudio pasa a ser el cuarto de armas de la cabaña.
+    Estudio: { label: 'Armería', article: 'la' },
+    Terraza: { label: 'Porche', article: 'el' },
+    // No "Leñera": ese nombre ya lo usó una versión anterior de ZONE_ELEMENTS
+    // para el elemento `planta` y se descartó a favor de "chimenea" — libre
+    // para la habitación, sin colisión con ningún elemento actual.
+    Bodega: { label: 'Leñera', article: 'la' },
+    Galería: { label: 'Esquís', article: 'el' },
+    // Cocina, Pasillo, Comedor y Biblioteca se quedan con su nombre base: son
+    // igual de propios de una cabaña que de cualquier otra casa.
+  },
+  apartamento: {
+    Salón: { label: 'Living', article: 'el' },
+    Dormitorio: { label: 'Habitación', article: 'la' },
+    Estudio: { label: 'Despacho', article: 'el' },
+    Terraza: { label: 'Balcón', article: 'el' },
+    Bodega: { label: 'Trastero', article: 'el' },
+    Galería: { label: 'Vestidor', article: 'el' },
+  },
+  // `pixel` conserva los diez nombres canónicos: es la ambientación "de
+  // referencia", la que no re-tematiza ni el vocabulario.
+}
+
+// Tabla de los diez nombres base, en la forma {label, article} — el punto de
+// partida sobre el que cada zona superpone sus cambios.
+const BASE_ROOMS = Object.fromEntries(
+  ROOM_NAMES.map((room) => [room, { label: room, article: ROOM_ARTICLE[room] }]),
+)
+
+// Coherencia de las superposiciones, comprobada una vez al cargar el módulo
+// (igual que `assertZoneElements`): una zona mal definida falla al arrancar,
+// no a mitad de una partida. Dos invariantes:
+//   - la sala existe en `ROOM_NAMES` y el artículo es 'el' o 'la';
+//   - dentro de una misma zona, dos salas nunca terminan con el MISMO nombre
+//     en pantalla (eso confundiría al jugador sobre cuál es cuál).
+function assertZoneRooms() {
+  for (const [zoneId, overlay] of Object.entries(ZONE_ROOMS)) {
+    if (!ZONE_IDS.includes(zoneId)) throw new Error(`ZONE_ROOMS: zona desconocida "${zoneId}"`)
+    for (const [room, over] of Object.entries(overlay)) {
+      if (!ROOM_NAMES.includes(room)) throw new Error(`Zona ${zoneId}: habitación desconocida "${room}"`)
+      if (!over.label) throw new Error(`Zona ${zoneId}: "${room}" no define label`)
+      if (over.article !== 'el' && over.article !== 'la') {
+        throw new Error(`Zona ${zoneId}: "${room}" tiene un artículo inválido ("${over.article}")`)
+      }
+    }
+    const labelOwner = new Map() // nombre en pantalla -> sala canónica que lo usa
+    for (const room of ROOM_NAMES) {
+      const label = overlay[room]?.label ?? room
+      if (labelOwner.has(label)) {
+        throw new Error(
+          `Zona ${zoneId}: "${room}" y "${labelOwner.get(label)}" comparten el nombre "${label}"`,
+        )
+      }
+      labelOwner.set(label, room)
+    }
+  }
+}
+
+assertZoneRooms()
+
+const RESOLVED_ROOMS = Object.fromEntries(
+  ZONE_IDS.map((zoneId) => [zoneId, { ...BASE_ROOMS, ...ZONE_ROOMS[zoneId] }]),
+)
+
+// Tabla de habitaciones con los nombres de la zona aplicados. Sin zona (o con
+// una desconocida) devuelve los nombres base.
+export const resolveRooms = (zoneId) => RESOLVED_ROOMS[zoneId] ?? BASE_ROOMS

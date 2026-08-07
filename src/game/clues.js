@@ -9,13 +9,10 @@
 // El evaluador es la base tanto del generador de pistas como del Solver:
 // "la IA propone, el Solver decide" — aquí no hay IA, la lógica es la autoridad.
 
-import { ADJACENT, ROOM_ARTICLE, cellKey } from './constants.js'
+import { ADJACENT, cellKey, roomPhrase } from './constants.js'
 import { MUEBLE_ELEMENTS, elementPhrase, elementCountPhrase } from './elements.js'
-import { resolveElements } from './zones.js'
+import { resolveElements, resolveRooms } from './zones.js'
 import { computeExteriorVoid } from './mapShapes.js'
-
-// Frase "el/la <habitación>" con el artículo correcto (concordancia de género).
-const roomPhrase = (room) => `${ROOM_ARTICLE[room] ?? 'el'} ${room}`
 
 // Frase "las N esquinas del mapa" para las pistas de esquina. Las esquinas son
 // los cuatro vértices del tablero (ver `isCornerCell`), así que N vale 4 salvo
@@ -41,13 +38,13 @@ export const CLUE_TYPES = {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) => ctx.roomAt(pos.row, pos.col) === p.room,
-    text: (p) => `Estaba en ${roomPhrase(p.room)}`,
+    text: (p, ctx) => `Estaba en ${roomPhrase(ctx.rm, p.room)}`,
   },
   notInRoom: {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) => ctx.roomAt(pos.row, pos.col) !== p.room,
-    text: (p) => `No estaba en ${roomPhrase(p.room)}`,
+    text: (p, ctx) => `No estaba en ${roomPhrase(ctx.rm, p.room)}`,
   },
   // "No compartía habitación con ningún otro sospechoso". A diferencia de
   // "estaba solo", NO excluye a la víctima: el asesino (a solas con la víctima)
@@ -359,8 +356,10 @@ export function buildClueContext(map, roomLookup, characters, zoneId) {
 
   return {
     gridSize: map.gridSize,
-    // Nombres de los elementos en esta zona (ver game/zones.js).
+    // Nombres de los elementos y de las habitaciones en esta zona (ver
+    // game/zones.js). Ninguno de los dos lo mira `evaluate` — solo `text`.
     el: resolveElements(zoneId),
+    rm: resolveRooms(zoneId),
     everyone,
     suspects,
     cellExists,

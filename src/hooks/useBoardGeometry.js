@@ -67,10 +67,15 @@ export function useBoardGeometry({
     const windowByCell = {}
     for (const w of map.windows) windowByCell[`${w.row},${w.col}`] = w.wall
     // Celda que muestra la etiqueta de cada habitación (primera en lectura).
+    // El rótulo es el nombre de la ZONA para esa sala (`zone.rooms`), no el
+    // canónico: es la única pieza de la geometría que varía con la
+    // ambientación sin que la sala cambie de identidad — sigue siendo la
+    // misma "Terraza" a efectos de tinte, material y pistas; en pantalla se
+    // lee "Porche" o "Balcón" según toque.
     const labelCell = {}
     for (const room of map.rooms) {
       const sorted = [...room.cells].sort((a, b) => a[0] - b[0] || a[1] - b[1])
-      labelCell[`${sorted[0][0]},${sorted[0][1]}`] = room.name
+      labelCell[`${sorted[0][0]},${sorted[0][1]}`] = zone.rooms[room.name].label
     }
 
     // Bordes de la alfombra: marca los lados que no continúan en otra celda

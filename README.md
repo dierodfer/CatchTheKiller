@@ -70,6 +70,19 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   sustitución que se salga de su clase o que deje sin frase a un elemento
   pisable.
 
+  **Las habitaciones también se renombran por zona** (`ZONE_ROOMS` en
+  `game/zones.js`, mismo mecanismo): la `Terraza` es el *Porche* en la casa de
+  montaña y el *Balcón* en el apartamento; el `Estudio` pasa a ser la
+  *Armería* o el *Despacho*. El nombre CANÓNICO (el de `ROOM_NAMES`) sigue
+  siendo la identidad real de la sala —la clave de `roomLookup`, la que
+  indexa su tinte y su material de suelo—, así que renombrar una habitación
+  nunca cambia de qué material está hecho su suelo ni qué tinte lleva; solo
+  cambia la palabra que ve el jugador, tanto en el rótulo del tablero como en
+  el texto de las pistas ("Estaba en la Alcoba"). Una aserción impide que dos
+  salas de una misma zona terminen compartiendo nombre. La mansión 8-bit no
+  redefine ninguna: conserva el vocabulario canónico en los diez tipos de
+  habitación y en los seis elementos.
+
 - **Un suelo por tipo de habitación** (`src/components/floorMaterials.js` +
   `floorSprites.js`): la sala manda el material y la zona manda el tinte. La
   Cocina lleva damero, la Biblioteca listones, la Bodega ladrillo, la Terraza

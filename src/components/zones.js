@@ -20,7 +20,7 @@
 // fallo que mantuvo esta capa invisible desde que se escribió.
 
 import { Building2, Gamepad2, Mountain } from 'lucide-react'
-import { ZONE_IDS, zoneForSeed } from '@/game/zones.js'
+import { ZONE_IDS, zoneForSeed, resolveRooms } from '@/game/zones.js'
 import { FURNITURE_SPRITES } from './pixelSprites.js'
 import { ROOM_TINTS, ROOM_TINTS_MONTANA, ROOM_TINTS_APARTAMENTO } from './palette.js'
 
@@ -226,6 +226,12 @@ export const ZONES = {
     window: { frame: '#6f9bc9', frameScale: 1, glass: '#eaf3fb', glassRadius: 999 },
   },
 }
+
+// Nombres de habitación de cada zona (ver ZONE_ROOMS en game/zones.js): lo que
+// se rotula en el tablero y lo que dicen las pistas. Se añaden aquí, y no en
+// el literal de arriba, para no repetir `resolveRooms('montana')` a mano en
+// cada zona — un bucle no puede olvidarse de ninguna.
+for (const id of ZONE_IDS) ZONES[id].rooms = resolveRooms(id)
 
 // En el orden de ZONE_IDS, que es el que usa `zoneForSeed`.
 export const ZONE_LIST = ZONE_IDS.map((id) => ZONES[id])

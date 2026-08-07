@@ -32,6 +32,12 @@ export const ROOM_ARTICLE = {
   Galería: 'la',
 }
 
+// Frase con artículo de una habitación ya resuelta para su zona: "el Salón",
+// "la Alcoba"... `rm` es la tabla que devuelve `resolveRooms` (game/zones.js):
+// nombre canónico -> {label, article}. Punto único de indirección para el
+// nombre mostrado, igual que `elementPhrase` en elements.js.
+export const roomPhrase = (rm, room) => `${rm[room].article} ${rm[room].label}`
+
 // Configuración por dificultad (sección 8 del documento).
 export const DIFFICULTIES = {
   facil: {
