@@ -52,19 +52,37 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   - **Mansión 8-bit** — el pixel art original, con su damero, su dorado y sus
     sprites de 8×8.
 
-  Las dos primeras usan **arte vectorial plano** (`flatArt.jsx` +
-  `flatSprites*.js`); la tercera, el emisor de pixel art (`pixelArt.jsx`). La
-  zona se parte en dos capas: `src/game/zones.js` guarda lo que la lógica
-  necesita —qué zona toca a cada semilla y **cómo se llama cada elemento** en
-  ella— y `src/components/zones.js`, cómo se ve (mobiliario, suelo, muros,
-  ventanas y alfombra).
+  Las dos primeras dibujan el mobiliario con **Material Symbols** de Google
+  (`flatArt.jsx` + `materialSymbols.js`); la tercera, con el emisor de pixel art
+  original (`pixelArt.jsx`). La zona se parte en dos capas:
+  `src/game/zones.js` guarda lo que la lógica necesita —qué zona toca a cada
+  semilla y **cómo se llama cada elemento** en ella— y
+  `src/components/zones.js`, cómo se ve (mobiliario, tintas, muros, ventanas y
+  alfombra).
 
   Una zona puede **renombrar** elementos: en la casa de montaña la `planta` es
-  una *leñera*, la `TV` un *arcón* y la `silla` un *banco*, y las pistas lo
-  dicen así. Lo que **no** puede cambiar es la lógica: el conjunto de ids y sus
-  marcas `blocking`/`mueble` son del puzzle, no de la ambientación, y una
-  aserción al cargar el módulo rechaza cualquier sustitución que se salga de su
-  clase o que deje sin frase a un elemento pisable.
+  una *chimenea* y la `TV` una *cómoda*, y las pistas lo dicen así. Lo que
+  **no** puede cambiar es la lógica: el conjunto de ids y sus marcas
+  `blocking`/`mueble` son del puzzle, no de la ambientación. La chimenea encaja
+  precisamente porque comparte clase con la planta —estorba el paso y no es
+  mobiliario—, así que la pista "no estaba junto a ningún mueble" sigue siendo
+  cierta a su lado. Una aserción al cargar el módulo rechaza cualquier
+  sustitución que se salga de su clase o que deje sin frase a un elemento
+  pisable.
+
+- **Un suelo por tipo de habitación** (`src/components/floorMaterials.js`): la
+  sala manda el material y la zona manda el color. La Cocina lleva damero, la
+  Biblioteca listones, la Bodega ladrillo a soga, la Terraza losa de piedra, la
+  Galería terrazo… y la misma Cocina pasa de barro cocido a gres según la
+  ambientación. El material se elige por **nombre** de sala, no por el orden en
+  que el generador la creó, así que una cocina se reconoce por su suelo tanto
+  como por su rótulo; el tinte se indexa igual, por coherencia.
+
+  Todos los materiales son patrones CSS que **escalan con la celda**: uno de
+  periodo fijo se convierte en ruido cuando el tablero se comprime a 36 px en
+  móvil. El ladrillo es la excepción y va en SVG, porque una llaga vertical que
+  solo ocupe media altura del mosaico es un patrón en dos dimensiones y un
+  `linear-gradient` siempre tiñe el alto completo.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.
@@ -201,3 +219,14 @@ continuarla si se recarga la página a mitad de un caso.
 
 Cuestiones aún abiertas del diseño (sección 15): revelado progresivo de pistas,
 sistema de puntuación y multijugador.
+
+## Créditos y licencias de terceros
+
+- **Material Symbols** (Google) — iconos del mobiliario de las zonas «Casa de
+  montaña» y «Apartamento en la ciudad». Licencia Apache 2.0; texto íntegro en
+  [`LICENSES/material-symbols-Apache-2.0.txt`](LICENSES/material-symbols-Apache-2.0.txt).
+  Solo se embebe el dato `d` de cada trazado (`src/components/materialSymbols.js`),
+  porque la app es una PWA offline y no puede depender de una descarga en
+  tiempo de ejecución.
+- El pixel art de la zona «Mansión 8-bit», los retratos de los personajes y la
+  lupa son originales del proyecto.

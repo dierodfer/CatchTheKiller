@@ -38,20 +38,13 @@ const PRESENTATION_FIELDS = ['label', 'plural', 'article', 'onText']
 // mueble tiene que seguir pareciendo mobiliario.
 export const ZONE_ELEMENTS = {
   montana: {
-    // Bloqueante y NO mueble, igual que la planta: un montón de leña estorba,
-    // pero nadie lo llamaría mobiliario.
-    planta: { label: 'leñera', plural: 'leñeras', article: 'una' },
-    // Bloqueante y mueble. Un arcón, no una chimenea: la chimenea no es
-    // mobiliario, y al conservar `mueble: true` la pista "no estaba junto a
-    // ningún mueble" saldría falsa a su lado, que se lee mal.
-    TV: { label: 'arcón', plural: 'arcones', article: 'un' },
-    // Ocupable: al cambiar de nombre hay que redactar de nuevo el "encima de".
-    silla: {
-      label: 'banco',
-      plural: 'bancos',
-      article: 'un',
-      onText: 'Estaba sentado en un banco',
-    },
+    // La ranura de `planta` es "bloqueante y NO mueble", y una chimenea encaja
+    // ahí exactamente: estorba el paso y nadie la llamaría mobiliario, así que
+    // la pista "no estaba junto a ningún mueble" sigue siendo cierta a su lado.
+    planta: { label: 'chimenea', plural: 'chimeneas', article: 'una' },
+    // Bloqueante y mueble: la cómoda ocupa el hueco del televisor sin alterar
+    // ninguna de las dos marcas.
+    TV: { label: 'cómoda', plural: 'cómodas', article: 'una' },
   },
   // `apartamento` y `pixel` usan los nombres base: mesa, TV, planta, silla…
   // describen igual de bien un piso moderno y una mansión de 8 bits.

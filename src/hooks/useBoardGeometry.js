@@ -8,6 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { makeBordersFor } from '@/components/boardCell.js'
+import { roomIndexByName } from '@/components/floorMaterials.js'
 import { controlLineCells } from '@/game/killerRule.js'
 import { isOccupiable } from '@/game/mapGenerator.js'
 
@@ -65,9 +66,6 @@ export function useBoardGeometry({
   const cellGeometry = useMemo(() => {
     const windowByCell = {}
     for (const w of map.windows) windowByCell[`${w.row},${w.col}`] = w.wall
-    const roomIndex = {}
-    map.rooms.forEach((room, i) => (roomIndex[room.name] = i))
-
     // Celda que muestra la etiqueta de cada habitación (primera en lectura).
     const labelCell = {}
     for (const room of map.rooms) {
@@ -95,11 +93,16 @@ export function useBoardGeometry({
           continue
         }
         const furniture = map.grid[r][c]
+        const roomName = roomLookup[key]
         row.push({
           r,
           c,
           size: cellSize,
-          tint: zone.tints[roomIndex[roomLookup[key]] % zone.tints.length],
+          roomName,
+          // Tinte indexado por el NOMBRE de la sala, no por el orden en que el
+          // generador la creó: así la Cocina sale siempre del mismo tono, a
+          // juego con su suelo de baldosa.
+          tint: zone.tints[roomIndexByName(roomName) % zone.tints.length],
           borders: bordersFor(r, c),
           label: labelCell[key],
           furniture,

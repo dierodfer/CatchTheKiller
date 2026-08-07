@@ -7,6 +7,8 @@
 // por el que la ambientación entra en el tablero, así que un material nuevo se
 // define una vez en zones.js y aparece a la vez en el tablero y en la miniatura.
 
+import { MATERIALS, ROOM_MATERIAL } from './floorMaterials.js'
+
 // Tinte dorado y contornos del tablero (resaltado de revelado, soltar ficha).
 // NO se tematizan: son señales de interacción, no decorado. Que el destino de
 // soltado o la habitación revelada cambien de color según la zona debilitaría
@@ -50,19 +52,15 @@ export function windowGlassStyle(zone, wall, inset) {
   }
 }
 
-// Estilo del suelo de la zona, teselado en función del tamaño de celda. Los
-// divisores dicen cuántas veces se repite el motivo dentro de la celda: 1 = una
-// losa por celda, 4 = damero de 4×4.
-export function floorPatternStyle(zone, size) {
-  const { image, tileXDiv, tileYDiv, minTile, blend, opacity } = zone.floor
+// Estilo del suelo de una celda: el MATERIAL lo decide la habitación y el COLOR
+// la zona. Una sala sin material declarado (no debería pasar: ROOM_MATERIAL
+// cubre los 10 nombres) cae en el material por defecto de la zona.
+export function floorPatternStyle(zone, roomName, size) {
+  const material = MATERIALS[ROOM_MATERIAL[roomName]] || MATERIALS[zone.floor.fallback]
   return {
-    backgroundImage: image,
-    backgroundSize: `${Math.max(minTile, Math.round(size / tileXDiv))}px ${Math.max(
-      minTile,
-      Math.round(size / tileYDiv),
-    )}px`,
-    mixBlendMode: blend,
-    opacity,
+    ...material(zone.floor.ink, size),
+    mixBlendMode: zone.floor.blend,
+    opacity: zone.floor.opacity,
   }
 }
 

@@ -14,6 +14,6 @@ export function FurnitureIcon({ type, zone, size = 20, className }) {
   return zone.art === 'pixel' ? (
     <PixelGrid grid={art.grid} palette={art.palette} size={size} className={className} />
   ) : (
-    <FlatShape shape={art} size={size} className={className} />
+    <FlatShape name={art} ink={zone.ink} size={size} className={className} />
   )
 }

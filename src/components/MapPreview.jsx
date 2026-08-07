@@ -5,6 +5,7 @@ import { generateMap, buildRoomLookup } from '@/game/mapGenerator.js'
 import { makeRng, randomSeed } from '@/game/random.js'
 import { cellKey } from '@/game/constants.js'
 import { themeForSeed } from './zones.js'
+import { roomIndexByName } from './floorMaterials.js'
 import { FurnitureIcon } from './Furniture.jsx'
 import {
   WINDOW_BORDER_SIDE,
@@ -42,12 +43,6 @@ export default function MapPreview({ difficulty, irregular = false }) {
     [map, roomLookup, size, zone],
   )
 
-  const roomIndex = useMemo(() => {
-    const idx = {}
-    map.rooms.forEach((room, i) => (idx[room.name] = i))
-    return idx
-  }, [map])
-
   const windowByCell = useMemo(() => {
     const m = {}
     for (const w of map.windows) m[cellKey(w.row, w.col)] = w.wall
@@ -70,6 +65,7 @@ export default function MapPreview({ difficulty, irregular = false }) {
       const furniture = map.grid[r][c]
       const wall = windowByCell[key]
       const borders = bordersFor(r, c)
+      const roomName = roomLookup[key]
       const margin = Math.max(2, Math.round(cellSize * 0.05))
       const edges = {
         top: !isRug(r - 1, c),
@@ -84,7 +80,7 @@ export default function MapPreview({ difficulty, irregular = false }) {
           style={{
             width: cellSize,
             height: cellSize,
-            background: zone.tints[roomIndex[roomLookup[key]] % zone.tints.length],
+            background: zone.tints[roomIndexByName(roomName) % zone.tints.length],
             borderTop: borders.top,
             borderRight: borders.right,
             borderBottom: borders.bottom,
@@ -92,10 +88,10 @@ export default function MapPreview({ difficulty, irregular = false }) {
             ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(zone, WINDOW_FRAME_PX) } : null),
           }}
         >
-          {/* Suelo de la zona, superpuesto al tinte de la habitación. */}
+          {/* Suelo: el material lo pone la habitación, el color la zona. */}
           <div
             className="pointer-events-none absolute inset-0"
-            style={floorPatternStyle(zone, cellSize)}
+            style={floorPatternStyle(zone, roomName, cellSize)}
           />
           {furniture === 'alfombra' &&
             rugLayerStyles(zone, edges, margin, 6).map(({ id, style }) => (

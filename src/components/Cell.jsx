@@ -48,6 +48,7 @@ function Cell({
 }) {
   const { r, c, size, tint, borders, label, furniture, isWindow, wall, rugEdges, occupiable } =
     geometry
+  const { roomName } = geometry
 
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${r}-${c}`,
@@ -127,8 +128,11 @@ function Cell({
         />
       )}
 
-      {/* Suelo de la zona, superpuesto al tinte de la habitación. */}
-      <div className="pointer-events-none absolute inset-0" style={floorPatternStyle(zone, size)} />
+      {/* Suelo: el material lo pone la habitación, el color la zona. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={floorPatternStyle(zone, roomName, size)}
+      />
 
       {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
