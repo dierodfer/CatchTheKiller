@@ -1,7 +1,7 @@
 // Previsualización (solo lectura) del tipo de mapa que generará una dificultad.
 
 import { useMemo, useState } from 'react'
-import { generateMap, buildRoomLookup } from '@/game/mapGenerator.js'
+import { generateMap, buildRoomLookup, rugBoundsOf } from '@/game/mapGenerator.js'
 import { makeRng, randomSeed } from '@/game/random.js'
 import { cellKey } from '@/game/constants.js'
 import { themeForSeed } from './zones.js'
@@ -12,7 +12,7 @@ import {
   windowBorder,
   windowGlassStyle,
   floorPatternStyle,
-  rugLayerStyles,
+  rugFrameStyle,
   makeBordersFor,
 } from './boardCell.js'
 
@@ -49,8 +49,9 @@ export default function MapPreview({ difficulty, irregular = false }) {
     return m
   }, [map])
 
-  const isRug = (r, c) =>
-    r >= 0 && c >= 0 && r < size && c < size && map.grid[r][c] === 'alfombra'
+  // Misma alfombra que el tablero: una sola capa con `border-image`, no una
+  // por celda (ver rugBounds en useBoardGeometry.js / rugFrameStyle).
+  const rugBounds = useMemo(() => rugBoundsOf(map), [map])
 
   const rows = []
   for (let r = 0; r < size; r++) {
@@ -66,13 +67,7 @@ export default function MapPreview({ difficulty, irregular = false }) {
       const wall = windowByCell[key]
       const borders = bordersFor(r, c)
       const roomName = roomLookup[key]
-      const margin = Math.max(2, Math.round(cellSize * 0.05))
-      const edges = {
-        top: !isRug(r - 1, c),
-        bottom: !isRug(r + 1, c),
-        left: !isRug(r, c - 1),
-        right: !isRug(r, c + 1),
-      }
+      const isRug = furniture === 'alfombra'
       cells.push(
         <div
           key={key}
@@ -80,7 +75,8 @@ export default function MapPreview({ difficulty, irregular = false }) {
           style={{
             width: cellSize,
             height: cellSize,
-            background: zone.tints[roomIndexByName(roomName) % zone.tints.length],
+            // Transparente bajo la alfombra: la cubre la capa de más abajo.
+            background: isRug ? 'transparent' : zone.tints[roomIndexByName(roomName) % zone.tints.length],
             borderTop: borders.top,
             borderRight: borders.right,
             borderBottom: borders.bottom,
@@ -88,16 +84,15 @@ export default function MapPreview({ difficulty, irregular = false }) {
             ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(zone, WINDOW_FRAME_PX) } : null),
           }}
         >
-          {/* Suelo: el material lo pone la habitación, el color la zona. */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={floorPatternStyle(zone, roomName, cellSize)}
-          />
-          {furniture === 'alfombra' &&
-            rugLayerStyles(zone, edges, margin, 6).map(({ id, style }) => (
-              <div key={id} className="pointer-events-none absolute" style={style} />
-            ))}
-          {furniture && furniture !== 'alfombra' && (
+          {/* Suelo: el material lo pone la habitación, el color la zona. Se
+              omite bajo la alfombra, que la cubre por completo. */}
+          {!isRug && (
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={floorPatternStyle(zone, roomName, cellSize)}
+            />
+          )}
+          {furniture && !isRug && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-70">
               <FurnitureIcon type={furniture} zone={zone} size={Math.round(cellSize * 0.5)} />
             </div>
@@ -130,6 +125,21 @@ export default function MapPreview({ difficulty, irregular = false }) {
           style={{ ...zone.ambient, opacity: zone.ambientOpacity, mixBlendMode: 'multiply' }}
           aria-hidden
         />
+        {/* Alfombra: misma capa única con marco que en el tablero real (ver
+            Board.jsx), posicionada antes que `rows` para pintar por detrás. */}
+        {rugBounds && (
+          <div
+            className="pointer-events-none absolute box-border"
+            style={{
+              top: rugBounds.r0 * cellSize,
+              left: rugBounds.c0 * cellSize,
+              width: (rugBounds.c1 - rugBounds.c0 + 1) * cellSize,
+              height: (rugBounds.r1 - rugBounds.r0 + 1) * cellSize,
+              ...rugFrameStyle(zone, cellSize),
+            }}
+            aria-hidden
+          />
+        )}
         <div className="relative">{rows}</div>
         <span
           className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-plum-950/55 px-2 py-0.5 font-pixel text-[13px] font-medium text-cream-100 backdrop-blur-sm"

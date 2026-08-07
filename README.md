@@ -52,9 +52,11 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   - **Mansión 8-bit** — el pixel art original, con su damero, su dorado y sus
     sprites de 8×8.
 
-  Las dos primeras dibujan el mobiliario con **Material Symbols** de Google
-  (`flatArt.jsx` + `materialSymbols.js`); la tercera, con el emisor de pixel art
-  original (`pixelArt.jsx`). La zona se parte en dos capas:
+  Las dos primeras dibujan el mobiliario con sprites reales de Kenney
+  (`furnitureSprites.js` — mesa, cómoda/TV, chimenea/planta, estantería, silla
+  y cama, un set propio por zona, sin compartir dibujo entre sí); la tercera,
+  con el emisor de pixel art original (`pixelArt.jsx`). La zona se parte en
+  dos capas:
   `src/game/zones.js` guarda lo que la lógica necesita —qué zona toca a cada
   semilla y **cómo se llama cada elemento** en ella— y
   `src/components/zones.js`, cómo se ve (mobiliario, tintas, muros, ventanas y
@@ -100,6 +102,17 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   que el recorte no se difumine al escalar de 16 px a una celda de hasta
   112 px, y el tamaño del tile se ajusta a la celda para que el grano no se
   convierta en ruido cuando el tablero se comprime a 36 px en móvil.
+- **Alfombra con marco real** (`rugSprite.js` + `rugFrameStyle`): un sprite de
+  Kenney de 48×48 px (3×3 tiles) reensamblado sin costuras, aplicado con
+  `border-image`. La alfombra no se dibuja por celda — es UNA capa a nivel de
+  tablero, posicionada sobre el rectángulo exacto que ocupa (de una tira de
+  1×6 a un bloque de 3×2, ver `placeRug` en `mapGenerator.js`), porque
+  `border-image-slice` reparte el sprite en 9 regiones (4 esquinas fijas, 4
+  bordes que se estiran en un eje, un centro que se estira en los dos) y así
+  el marco no se deforma sea cual sea la forma, incluida una tira de una sola
+  celda de ancho. Las celdas de alfombra quedan con fondo transparente para
+  que se vea a través; fichas, marcas y línea de control siguen pintándose por
+  delante porque van dentro de la celda, más tarde en el documento.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.
@@ -239,18 +252,14 @@ sistema de puntuación y multijugador.
 
 ## Créditos y licencias de terceros
 
-- **Material Symbols** (Google) — iconos del mobiliario de las zonas «Casa de
-  montaña» y «Apartamento en la ciudad». Licencia Apache 2.0; texto íntegro en
-  [`LICENSES/material-symbols-Apache-2.0.txt`](LICENSES/material-symbols-Apache-2.0.txt).
-  Solo se embebe el dato `d` de cada trazado (`src/components/materialSymbols.js`),
-  porque la app es una PWA offline y no puede depender de una descarga en
-  tiempo de ejecución.
-- **Roguelike/RPG pack** (Kenney) — los 10 sprites de suelo, uno por tipo de
-  habitación (`src/components/floorSprites.js`). Licencia CC0 1.0 (dominio
-  público, no exige atribución); texto de cortesía en
-  [`LICENSES/kenney-roguelike-rpg-pack-CC0.txt`](LICENSES/kenney-roguelike-rpg-pack-CC0.txt).
-  Cada sprite es un recorte de 16×16 px del spritesheet oficial, embebido como
-  PNG en base64 por el mismo motivo que los iconos: cero peticiones en tiempo
-  de ejecución.
+- **Roguelike/RPG pack** (Kenney) — los 10 sprites de suelo
+  (`src/components/floorSprites.js`), el sprite de la alfombra
+  (`rugSprite.js`) y los 12 sprites de mobiliario de «Casa de montaña» y
+  «Apartamento en la ciudad» (`furnitureSprites.js`, 6 elementos × 2 zonas).
+  Licencia CC0 1.0 (dominio público, no exige atribución); texto de cortesía
+  en [`LICENSES/kenney-roguelike-rpg-pack-CC0.txt`](LICENSES/kenney-roguelike-rpg-pack-CC0.txt).
+  Cada sprite es un recorte de 16×16 px (la alfombra, un bloque de 3×3 tiles)
+  del spritesheet oficial, embebido como PNG en base64: cero peticiones en
+  tiempo de ejecución, porque la app es una PWA offline.
 - El pixel art de la zona «Mansión 8-bit», los retratos de los personajes y la
   lupa son originales del proyecto.

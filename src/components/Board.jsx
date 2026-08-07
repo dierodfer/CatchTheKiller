@@ -4,6 +4,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { cellKey } from '@/game/constants.js'
 import Cell from './Cell.jsx'
+import { rugFrameStyle } from './boardCell.js'
 import { GUTTER, useBoardGeometry } from '@/hooks/useBoardGeometry.js'
 
 export default function Board({
@@ -23,7 +24,7 @@ export default function Board({
   onMarkClose,
 }) {
   const { map, roomLookup, characters, solution, killer } = puzzle
-  const { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt } = useBoardGeometry({
+  const { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt, rugBounds } = useBoardGeometry({
     map,
     roomLookup,
     zone,
@@ -88,6 +89,28 @@ export default function Board({
     )
   }
 
+  // Alfombra: UNA capa a nivel de tablero, no por celda — así su marco
+  // (`rugFrameStyle`, un `border-image`) se estira sin deformarse sea cual
+  // sea la forma, de una tira de 1×6 a un bloque de 3×2. Va ANTES que `rows`
+  // a propósito: pinta por detrás, y las celdas de alfombra dejan su fondo
+  // transparente (ver Cell.jsx) para que se vea a través; el resto de celdas
+  // no se entera, pintan encima como siempre. Así la ficha o la marca que
+  // caiga sobre la alfombra sigue quedando por delante sin ningún z-index.
+  const rugLayer = rugBounds ? (
+    <div className="pointer-events-none absolute inset-0" style={{ top: GUTTER }} aria-hidden>
+      <div
+        className="absolute box-border"
+        style={{
+          top: rugBounds.r0 * cellSize,
+          left: GUTTER + rugBounds.c0 * cellSize,
+          width: (rugBounds.c1 - rugBounds.c0 + 1) * cellSize,
+          height: (rugBounds.r1 - rugBounds.r0 + 1) * cellSize,
+          ...rugFrameStyle(zone, cellSize),
+        }}
+      />
+    </div>
+  ) : null
+
   // Celebración: la escena se ilumina habitación por habitación, trazando la
   // forma real de cada sala con un resplandor dorado escalonado.
   const celebrationLayer =
@@ -133,6 +156,7 @@ export default function Board({
       />
       <div className="relative">
         {header}
+        {rugLayer}
         {rows}
         {celebrationLayer}
       </div>

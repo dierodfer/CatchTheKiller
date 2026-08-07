@@ -253,3 +253,25 @@ export function buildRoomLookup(map) {
   }
   return lookup
 }
+
+// Rectángulo (inclusive) que ocupa la alfombra, o `null` si `placeRug` no
+// encontró hueco para ninguna (el mapa se queda sin alfombra ese caso — no
+// es un error). Válido porque `placeRug` solo escribe rectángulos sólidos:
+// basta con el min/max de las celdas 'alfombra', no hace falta comprobar
+// contigüidad.
+export function rugBoundsOf(map) {
+  let r0 = Infinity,
+    c0 = Infinity,
+    r1 = -Infinity,
+    c1 = -Infinity
+  for (let r = 0; r < map.gridSize; r++) {
+    for (let c = 0; c < map.gridSize; c++) {
+      if (map.grid[r][c] !== 'alfombra') continue
+      if (r < r0) r0 = r
+      if (c < c0) c0 = c
+      if (r > r1) r1 = r
+      if (c > c1) c1 = c
+    }
+  }
+  return r1 < 0 ? null : { r0, c0, r1, c1 }
+}

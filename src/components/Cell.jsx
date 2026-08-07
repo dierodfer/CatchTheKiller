@@ -22,7 +22,6 @@ import {
   windowBorder,
   windowGlassStyle,
   floorPatternStyle,
-  rugLayerStyles,
 } from './boardCell.js'
 
 // Grosor del marco de ventana (px) e inset del cristal en el tablero de juego.
@@ -46,9 +45,9 @@ function Cell({
   onMarkOpen,
   onMarkClose,
 }) {
-  const { r, c, size, tint, borders, label, furniture, isWindow, wall, rugEdges, occupiable } =
-    geometry
+  const { r, c, size, tint, borders, label, furniture, isWindow, wall, occupiable } = geometry
   const { roomName } = geometry
+  const isRug = furniture === 'alfombra'
 
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${r}-${c}`,
@@ -74,7 +73,6 @@ function Cell({
 
   const tokenSize = Math.round(size * 0.62)
   const canDrop = occupiable && (isOver || (selectedToken && !occupantName))
-  const margin = Math.max(2, Math.round(size * 0.05))
   const clickable = occupiable && !revealMode
 
   const cellMarks = marks?.[`${r},${c}`] || []
@@ -103,7 +101,10 @@ function Cell({
       style={{
         width: size,
         height: size,
-        background: revealCell ? REVEAL_TINT : tint,
+        // Sin tinte propio bajo la alfombra: la cubre por completo la capa de
+        // Board.jsx (ver `rugBounds`), y un tinte por debajo solo se notaría
+        // como un halo asomando por los bordes del marco.
+        background: revealCell ? REVEAL_TINT : isRug ? 'transparent' : tint,
         borderTop: borders.top,
         borderRight: borders.right,
         borderBottom: borders.bottom,
@@ -128,11 +129,15 @@ function Cell({
         />
       )}
 
-      {/* Suelo: el material lo pone la habitación, el color la zona. */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={floorPatternStyle(zone, roomName, size)}
-      />
+      {/* Suelo: el material lo pone la habitación, el color la zona. Se omite
+          bajo la alfombra — la cubre por completo, no tendría sentido que
+          asomara un suelo que en realidad no se ve. */}
+      {!isRug && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={floorPatternStyle(zone, roomName, size)}
+        />
+      )}
 
       {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
@@ -141,15 +146,12 @@ function Cell({
         </span>
       )}
 
-      {/* Alfombra: relleno de fondo, puede abarcar varias celdas contiguas. */}
-      {furniture === 'alfombra' &&
-        rugEdges &&
-        rugLayerStyles(zone, rugEdges, margin).map(({ id, style }) => (
-          <div key={id} className="pointer-events-none absolute" style={style} />
-        ))}
+      {/* La alfombra no se dibuja aquí: es una única capa a nivel de tablero
+          (ver Board.jsx) para que su marco no se deforme sea cual sea la
+          forma — esta celda solo le deja hueco (fondo transparente arriba). */}
 
       {/* Mobiliario (excepto alfombra), oculto si hay una ficha encima. */}
-      {!occupantName && furniture && furniture !== 'alfombra' && (
+      {!occupantName && furniture && !isRug && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-75">
           <FurnitureIcon type={furniture} zone={zone} size={Math.round(size * 0.42)} />
         </div>

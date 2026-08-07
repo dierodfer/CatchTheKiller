@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { makeBordersFor } from '@/components/boardCell.js'
 import { roomIndexByName } from '@/components/floorMaterials.js'
 import { controlLineCells } from '@/game/killerRule.js'
-import { isOccupiable } from '@/game/mapGenerator.js'
+import { isOccupiable, rugBoundsOf } from '@/game/mapGenerator.js'
 
 // Ancho de la columna/fila de numeración (1, 2, 3...) en los bordes del tablero.
 export const GUTTER = 18
@@ -78,11 +78,6 @@ export function useBoardGeometry({
       labelCell[`${sorted[0][0]},${sorted[0][1]}`] = zone.rooms[room.name].label
     }
 
-    // Bordes de la alfombra: marca los lados que no continúan en otra celda
-    // de alfombra, para dibujar el contorno redondeado solo en el perímetro.
-    const isRug = (r, c) =>
-      r >= 0 && c >= 0 && r < size && c < size && map.grid[r][c] === 'alfombra'
-
     // Muros con los colores y grosores de la zona (misma fábrica que usa la
     // miniatura, para que tablero y preview no se desincronicen).
     const bordersFor = makeBordersFor(map, roomLookup, size, zone)
@@ -113,15 +108,6 @@ export function useBoardGeometry({
           furniture,
           isWindow: key in windowByCell,
           wall: windowByCell[key],
-          rugEdges:
-            furniture === 'alfombra'
-              ? {
-                  top: !isRug(r - 1, c),
-                  bottom: !isRug(r + 1, c),
-                  left: !isRug(r, c - 1),
-                  right: !isRug(r, c + 1),
-                }
-              : null,
           occupiable: isOccupiable(map, r, c),
         })
       }
@@ -164,5 +150,11 @@ export function useBoardGeometry({
     return m
   }, [placements])
 
-  return { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt }
+  // Rectángulo (en celdas) de la alfombra, o `null` si el mapa no tiene. Se
+  // dibuja como UNA sola capa a nivel de tablero (ver Board.jsx), no por
+  // celda: es lo que permite que el marco se conserve sin deformarse sea cual
+  // sea la forma (de 1×2 a 6×1, pasando por bloques de 3×2).
+  const rugBounds = useMemo(() => rugBoundsOf(map), [map])
+
+  return { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt, rugBounds }
 }

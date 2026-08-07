@@ -8,6 +8,7 @@
 // define una vez en zones.js y aparece a la vez en el tablero y en la miniatura.
 
 import { MATERIALS, ROOM_MATERIAL } from './floorMaterials.js'
+import { RUG_SPRITE } from './rugSprite.js'
 
 // Tinte dorado y contornos del tablero (resaltado de revelado, soltar ficha).
 // NO se tematizan: son señales de interacción, no decorado. Que el destino de
@@ -64,31 +65,28 @@ export function floorPatternStyle(zone, roomName, size) {
   }
 }
 
-// Estilos de las capas de la alfombra. La CAJA (qué lados son frontera, el
-// margen y el radio de esquina) es común a todas las zonas; la PIEL —imagen,
-// mezcla y opacidad de cada capa— la aporta la zona. Cada capa lleva un `id`
-// estable para usarlo como key de React al renderizar.
-export function rugLayerStyles(zone, edges, margin, radius = 8) {
-  const box = {
-    top: edges.top ? margin : 0,
-    right: edges.right ? margin : 0,
-    bottom: edges.bottom ? margin : 0,
-    left: edges.left ? margin : 0,
-    borderTopLeftRadius: edges.top && edges.left ? radius : 0,
-    borderTopRightRadius: edges.top && edges.right ? radius : 0,
-    borderBottomLeftRadius: edges.bottom && edges.left ? radius : 0,
-    borderBottomRightRadius: edges.bottom && edges.right ? radius : 0,
+// Estilo del marco de la alfombra: UN solo `border-image` que cubre el
+// rectángulo entero (no una capa por celda — ver `rugBounds` en
+// useBoardGeometry.js y su render en Board.jsx). `border-image-slice`
+// reparte el sprite en 9 regiones —4 esquinas de tamaño fijo, 4 bordes que
+// se estiran en un eje, un centro que se estira en los dos— así el marco no
+// se deforma sea cual sea la forma final de la alfombra, incluida una tira
+// de una sola celda de ancho (donde no existe una fila/columna "central").
+// El grosor del marco es proporcional a la celda para que no quede
+// desproporcionado en un tablero grande ni desaparezca en uno pequeño.
+export function rugFrameStyle(zone, cellSize) {
+  const border = Math.max(4, Math.round(cellSize * zone.rug.borderFrac))
+  return {
+    borderStyle: 'solid',
+    borderWidth: border,
+    borderImageSource: `url("${RUG_SPRITE}")`,
+    borderImageSlice: '16 fill',
+    borderImageWidth: `${border}px`,
+    borderImageRepeat: 'stretch',
+    imageRendering: 'pixelated',
+    filter: zone.rug.filter,
+    opacity: zone.rug.opacity,
   }
-  return zone.rug.layers.map((layer) => ({
-    id: layer.id,
-    style: {
-      ...box,
-      backgroundImage: layer.image,
-      ...(layer.size ? { backgroundSize: layer.size } : null),
-      ...(layer.blend ? { mixBlendMode: layer.blend } : null),
-      opacity: layer.opacity,
-    },
-  }))
 }
 
 // Fábrica de bordes de celda: muro exterior del tablero, muro entre
