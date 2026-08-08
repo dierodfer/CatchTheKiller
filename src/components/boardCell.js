@@ -72,6 +72,11 @@ export function floorPatternStyle(zone, roomName, size) {
 //   `frame` — el ribete, un borde sólido del color que fija la zona.
 //   `fill`  — el tejido de `RUG_TEXTURES`, dentro del ribete.
 //
+// El ribete NO llega a los muros: `inset` lo separa del canto de las celdas
+// que ocupa, y por esa franja se ve el suelo de la habitación. Una alfombra
+// encajada al milímetro entre cuatro paredes se lee como moqueta —parte de
+// la obra—, y lo que se quiere aquí es una pieza suelta apoyada encima.
+//
 // Van separados por el `filter`. El filtro es del TEJIDO, no de la alfombra
 // entera: si se aplicara al elemento del ribete, el sepia de la casa de
 // montaña o el grayscale del apartamento arrastrarían también el color del
@@ -91,11 +96,17 @@ export function floorPatternStyle(zone, roomName, size) {
 // convierte en ruido cuando el tablero se comprime a 36 px en móvil (mismo
 // criterio que los materiales de suelo).
 export function rugLayerStyles(zone, cellSize) {
-  const border = Math.max(3, Math.round(cellSize * zone.rug.borderFrac))
+  const border = Math.max(2, Math.round(cellSize * zone.rug.borderFrac))
   const radius = Math.round(cellSize * zone.rug.radiusFrac)
   const tex = RUG_TEXTURES[zone.rug.texture]
   const t = Math.max(24, Math.round(cellSize / tex.tileDiv))
   return {
+    // En píxeles y sobre la celda, no en porcentaje sobre el rectángulo: la
+    // alfombra puede ser una tira de 1×6, y un porcentaje dejaría allí una
+    // franja de suelo seis veces más ancha por los extremos que por los
+    // lados. Con una medida fija el marco de suelo es igual en todo el
+    // contorno, salga la alfombra con la forma que salga.
+    inset: Math.max(2, Math.round(cellSize * zone.rug.insetFrac)),
     frame: {
       borderStyle: 'solid',
       borderWidth: border,

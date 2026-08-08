@@ -112,20 +112,32 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   control siguen pintándose por delante porque van dentro de la celda, más
   tarde en el documento.
 
-  Son tres capas apiladas, y el orden importa: el **suelo de la habitación**,
-  el **ribete** y el **tejido** dentro del ribete. La primera existe por las
-  esquinas redondeadas — las celdas de debajo van transparentes, así que sin
-  ella los huecos que deja la curva darían al vacío del tablero en vez de al
-  suelo de la sala. Las otras dos van separadas porque el `filter` de la zona
-  es del TEJIDO, no de la alfombra entera: aplicado al conjunto arrastraría
-  también el color del ribete y la zona dejaría de poder elegirlo.
+  Son tres capas apiladas, y el orden importa: el **suelo de la habitación**
+  (en todo el rectángulo), el **ribete** y el **tejido** dentro del ribete. La
+  primera cubre el rectángulo entero aunque las otras dos no lleguen a sus
+  bordes, y ahí está su razón de ser: por la franja de `inset` y por los huecos
+  de las esquinas redondeadas se ve suelo, y las celdas de debajo van
+  transparentes, así que sin ella ese contorno daría al vacío del tablero en
+  vez de al suelo de la sala. Las otras dos van separadas porque el `filter` de
+  la zona es del TEJIDO, no de la alfombra entera: aplicado al conjunto
+  arrastraría también el color del ribete y la zona dejaría de poder elegirlo.
+
+  **La alfombra no llega a los muros.** `insetFrac` la separa del canto de las
+  celdas que ocupa —un 7,5 % de la celda por lado, así que una tira de una sola
+  celda de ancho conserva el 85 %— y por esa franja se ve el suelo. Encajada al
+  milímetro entre cuatro paredes se leía como moqueta, parte de la obra; lo que
+  se busca es una pieza suelta apoyada encima. La medida va en píxeles sobre la
+  celda y no en porcentaje del rectángulo: la alfombra puede ser una tira de
+  1×6, y un porcentaje dejaría allí una franja seis veces más ancha por los
+  extremos que por los lados.
 
   El ribete lo fija cada zona (`zone.rug.border`, `borderFrac`, `radiusFrac`):
   cuero en la casa de montaña, taupe en el apartamento, nogal en la mansión.
   Grosor y radio son proporcionales a la celda, no fijos. La mansión 8-bit es
   la única con `radiusFrac: 0` — en una rejilla de píxeles no hay curvas, y
   redondear delataría que el marco no está dibujado a la misma resolución que
-  el resto de su arte.
+  el resto de su arte —, y también la del ribete más ancho: a esa resolución
+  uno de dos píxeles no se lee.
 - **Texturas de alfombra** (`rugTextures.js`): cuatro tiles de 64×64 px que
   embaldosan sin costura, generados a **resolución de hilo**: cada píxel es una
   pasada de trama, una hebra o un nudo, con su sección redondeada, la

@@ -8,17 +8,19 @@
 //
 // Son TRES capas apiladas, y el orden importa:
 //
-//   1. el suelo de la habitación,
-//   2. el ribete,
+//   1. el suelo de la habitación, en todo el rectángulo,
+//   2. el ribete, separado del canto por `inset`,
 //   3. el tejido, dentro del ribete.
 //
-// La primera existe por las esquinas redondeadas. Las celdas de debajo van
-// transparentes —pintan después que esta capa, cualquier fondo suyo taparía
-// la alfombra—, así que sin ella los cuatro huecos que deja la curva darían
-// al vacío del tablero en vez de al suelo de la sala, y la alfombra se leería
-// recortada contra un agujero en lugar de apoyada encima. Es el suelo de la
-// habitación, no uno genérico: la alfombra siempre cae dentro de una sola
-// sala, así que basta con el material y el tinte de esa.
+// La primera cubre el rectángulo ENTERO aunque las otras dos no lleguen a
+// sus bordes, y ahí está su razón de ser: por la franja que deja `inset` y
+// por los huecos de las esquinas redondeadas se ve suelo, y ese suelo tiene
+// que pintarlo esta capa. Las celdas de debajo van transparentes —pintan
+// después, cualquier fondo suyo taparía la alfombra—, así que sin ella el
+// contorno daría al vacío del tablero y la alfombra se leería recortada
+// contra un agujero en lugar de apoyada encima. Es el suelo de la habitación,
+// no uno genérico: la alfombra siempre cae dentro de una sola sala, así que
+// basta con el material y el tinte de esa.
 //
 // Las capas 2 y 3 van separadas porque el `filter` de la zona es solo del
 // tejido; el porqué está en `rugLayerStyles` (boardCell.js).
@@ -30,7 +32,7 @@
 import { floorPatternStyle, rugLayerStyles } from './boardCell.js'
 
 export function Rug({ zone, cellSize, bounds, roomName, tint, offsetX = 0 }) {
-  const { frame, fill } = rugLayerStyles(zone, cellSize)
+  const { inset, frame, fill } = rugLayerStyles(zone, cellSize)
   return (
     <div
       className="absolute"
@@ -46,7 +48,7 @@ export function Rug({ zone, cellSize, bounds, roomName, tint, offsetX = 0 }) {
           suelo cae en la misma fase que el de las celdas vecinas y la junta
           sigue de largo por debajo de la alfombra sin dar un salto. */}
       <div className="absolute inset-0" style={floorPatternStyle(zone, roomName, cellSize)} />
-      <div className="absolute inset-0 box-border" style={frame}>
+      <div className="absolute box-border" style={{ inset, ...frame }}>
         <div className="absolute inset-0" style={fill} />
       </div>
     </div>
