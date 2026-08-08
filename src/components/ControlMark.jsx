@@ -8,8 +8,8 @@
 //     que cambiar de aspa según la ambientación debilitaría la lectura sin
 //     aportar nada a cambio.
 //   · Pesa poco a propósito. Marca dónde NO puede ir una ficha; si compitiera
-//     con las fichas o con las anotaciones, el tablero se leería como si todo
-//     en él fuera igual de urgente.
+//     con las fichas o con las anotaciones, el tablero se leería como si cada
+//     cosa en él fuera igual de urgente.
 //
 // La geometría de cada variante está en controlMarks.js; aquí solo se traduce
 // a SVG. El color entra por `currentColor`, así el llamante lo fija en un solo

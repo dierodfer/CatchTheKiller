@@ -163,7 +163,7 @@ export const LUPA_SPENT_GRID = [
   [0, 0, 0, 0, 0, 0, 0, 0, 5, 5],
 ]
 
-// Disponible: latón dorado y cristal limpio. Gastada: todo desaturado a gris
+// Disponible: latón dorado y cristal limpio. Gastada: desaturada por entero a gris
 // y el aspa en rosa polvoriento (el color de error del sistema).
 export const LUPA_PALETTE = {
   1: '#a07d3c',

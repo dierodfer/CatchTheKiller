@@ -1,7 +1,7 @@
 // Icono de un elemento del mapa, en el estilo de la zona.
 //
 // El emisor lo decide la ZONA (`zone.art`), no el elemento: dentro de una
-// ambientación todo el mobiliario comparte lenguaje visual. Despachar por
+// ambientación el mobiliario entero comparte lenguaje visual. Despachar por
 // elemento invitaría a una zona que mezclase pixel art y sprites reales.
 
 import { PixelGrid } from './pixelArt.jsx'

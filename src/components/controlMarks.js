@@ -62,7 +62,7 @@ export const CONTROL_MARK_VARIANTS = {
   ],
 }
 
-// Variante en uso. Cambiar este nombre cambia el aspa en todo el tablero.
+// Variante en uso. Cambiar este nombre cambia el aspa del tablero entero.
 export const CONTROL_MARK = 'lapiz'
 
 // Tinta del aspa. Más opaca que la marca de píxeles que sustituye (0.10):

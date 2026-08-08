@@ -119,8 +119,8 @@ export function rugLayerStyles(zone, cellSize) {
     // En píxeles y sobre la celda, no en porcentaje sobre el rectángulo: la
     // alfombra puede ser una tira de 1×6, y un porcentaje dejaría allí una
     // franja de suelo seis veces más ancha por los extremos que por los
-    // lados. Con una medida fija el marco de suelo es igual en todo el
-    // contorno, salga la alfombra con la forma que salga.
+    // lados. Con una medida fija el marco de suelo es igual a lo largo del
+    // contorno entero, salga la alfombra con la forma que salga.
     inset: Math.max(2, Math.round(cellSize * zone.rug.insetFrac)),
     frame: {
       borderStyle: 'solid',

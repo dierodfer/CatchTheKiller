@@ -8,7 +8,7 @@
 //
 // Son TRES capas apiladas, y el orden importa:
 //
-//   1. el suelo de la habitación, en todo el rectángulo,
+//   1. el suelo de la habitación, en el rectángulo entero,
 //   2. el ribete, separado del canto por `inset`,
 //   3. el tejido, dentro del ribete.
 //

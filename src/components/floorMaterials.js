@@ -12,7 +12,7 @@
 // `zone.floor.filter` es deliberadamente el único punto donde una zona toca el
 // suelo: desaturar + oscurecer dirige el protagonismo del color hacia el lavado
 // de la habitación (igual que hacían antes las tres tintas `{l,m,d}`), mientras
-// que la zona 8-bit no aplica filtro y deja el pixel art a todo color, coherente
+// que la zona 8-bit no aplica filtro y deja el pixel art a pleno color, coherente
 // con el resto de su arte.
 //
 // AVISO: lo que se devuelve va a `background-image`, que SOLO admite imágenes.

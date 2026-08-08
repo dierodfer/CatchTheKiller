@@ -43,7 +43,7 @@ export const ROOM_TINTS = [
 // monocromo — por muy coherente que fuese con la ambientación — degradaría el
 // juego, no solo la estética.
 
-// Montaña: maderas, terracota, musgo y piedra. Todo cálido, pero alternando
+// Montaña: maderas, terracota, musgo y piedra. Gama cálida, pero alternando
 // lavados densos y claros para que dos salas contiguas nunca se confundan.
 export const ROOM_TINTS_MONTANA = [
   'rgba(166, 106, 58, 0.20)', // roble tostado

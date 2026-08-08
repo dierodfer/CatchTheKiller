@@ -112,7 +112,7 @@ export const ZONES = {
     frame: { background: 'rgba(238, 240, 243, 0.82)' },
     tints: ROOM_TINTS_APARTAMENTO,
 
-    // Desatura casi del todo: el hormigón/acero del apartamento no tiene tono
+    // Desatura casi por completo: el hormigón/acero del apartamento no tiene tono
     // propio, así que el color lo pone íntegro el lavado de la habitación.
     floor: {
       filter: 'grayscale(0.75) brightness(1.12) contrast(1.05)',
@@ -122,7 +122,7 @@ export const ZONES = {
     },
 
     // Sisal: fibra natural, la nota cálida del piso. Se desatura MENOS que el
-    // suelo (0.55 frente a 0.75) a propósito — si se le quita todo el tono, el
+    // suelo (0.55 frente a 0.75) a propósito — si se le quita el tono entero, el
     // yute queda gris y la alfombra deja de contrastar con el hormigón. Y no se
     // aclara: un `brightness` por encima de 1 quema la hebra, que es justo lo
     // que la hace parecer tejida.
@@ -192,7 +192,7 @@ export const ZONES = {
       opacity: 0.55,
     },
 
-    // Sin filtro, como el suelo: el pixel art va a todo color, y el kilim es
+    // Sin filtro, como el suelo: el pixel art va a pleno color, y el kilim es
     // la textura que más lo aprovecha — sus bandas y galones son ya de por sí
     // un dibujo a base de tramas, el mismo lenguaje que el resto de la zona.
     //
