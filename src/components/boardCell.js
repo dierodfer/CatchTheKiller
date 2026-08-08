@@ -9,6 +9,7 @@
 
 import { MATERIALS, ROOM_MATERIAL } from './floorMaterials.js'
 import { RUG_SPRITE } from './rugSprite.js'
+import { RUG_TEXTURES } from './rugTextures.js'
 
 // Tinte dorado y contornos del tablero (resaltado de revelado, soltar ficha).
 // NO se tematizan: son señales de interacción, no decorado. Que el destino de
@@ -77,13 +78,19 @@ export function floorPatternStyle(zone, roomName, size) {
 //
 // El RELLENO no sale del sprite: `border-image-slice` va SIN la palabra
 // clave `fill`, así que el centro queda transparente y dejamos ver, debajo,
-// el propio `background` del elemento — el tejido de `zone.rug.pattern`. El
+// el propio `background` del elemento — el TEJIDO de `RUG_TEXTURES`. El
 // sprite de Kenney es un color plano dentro del marco (una alfombra de un
 // solo tono no se lee como tejida), así que el marco real se lo debemos a
-// Kenney y la trama a un degradado propio, en lugar de forzar un único
-// origen para las dos cosas.
+// Kenney y el tejido a un tile propio generado a resolución de hilo, en
+// lugar de forzar un único origen para las dos cosas.
+//
+// El tile se escala con la celda, no a tamaño fijo: un periodo constante se
+// convierte en ruido cuando el tablero se comprime a 36 px en móvil (mismo
+// criterio que los materiales de suelo).
 export function rugFrameStyle(zone, cellSize) {
   const border = Math.max(4, Math.round(cellSize * zone.rug.borderFrac))
+  const tex = RUG_TEXTURES[zone.rug.texture]
+  const t = Math.max(24, Math.round(cellSize / tex.tileDiv))
   return {
     borderStyle: 'solid',
     borderWidth: border,
@@ -91,8 +98,11 @@ export function rugFrameStyle(zone, cellSize) {
     borderImageSlice: '16',
     borderImageWidth: `${border}px`,
     borderImageRepeat: 'stretch',
+    // Afecta a las DOS imágenes: mantiene el marco de 16 px nítido al estirarlo
+    // y conserva el hilo del tejido definido (el tile va casi a escala 1:1).
     imageRendering: 'pixelated',
-    backgroundImage: zone.rug.pattern,
+    backgroundImage: `url("${tex.tile}")`,
+    backgroundSize: `${t}px ${t}px`,
     filter: zone.rug.filter,
     opacity: zone.rug.opacity,
   }

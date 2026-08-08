@@ -48,9 +48,10 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   - **Casa de montaña** — roble, hierro y lana; suelo de tarima, muros de
     nogal y alfombra de kilim.
   - **Apartamento en la ciudad** — un piso alto de rascacielos: cristal,
-    acero y hormigón, baldosa de gran formato y ventanales de marco fino.
-  - **Mansión 8-bit** — el pixel art original, con su damero, su dorado y sus
-    sprites de 8×8.
+    acero y hormigón, baldosa de gran formato, ventanales de marco fino y
+    alfombra de lana bereber.
+  - **Mansión 8-bit** — el pixel art original, con su damero, su dorado, sus
+    sprites de 8×8 y una alfombra persa de medallones.
 
   Las dos primeras dibujan el mobiliario con sprites reales de Kenney
   (`furnitureSprites.js` — mesa, cómoda/TV, chimenea/planta, estantería, silla
@@ -117,10 +118,27 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   El RELLENO no sale del sprite —un color plano dentro del marco no se lee
   como una alfombra tejida—: `border-image-slice` va sin la palabra clave
   `fill`, así que el centro queda transparente y deja ver el `background`
-  propio del elemento: un kilim de bandas diagonales en montaña, una trama
-  geométrica fría en el apartamento, el dorado/ciruela original en la mansión
-  8-bit. El marco es de Kenney; el tejido, un degradado propio — cada uno
-  resuelve lo que mejor sabe hacer.
+  propio del elemento, que es un **tile de tejido** de `rugTextures.js`. El
+  marco es de Kenney; el tejido, propio — cada uno resuelve lo que mejor sabe
+  hacer.
+- **Texturas de alfombra** (`rugTextures.js`): cuatro tiles de 64×64 px que
+  embaldosan sin costura, generados a **resolución de hilo**: cada píxel es una
+  pasada de trama, una hebra o un nudo, con su sección redondeada, la
+  irregularidad de la hilatura y el grano de la fibra. Por eso se leen como
+  tejido y no como un tinte a rayas, que es lo que fallaba cuando el relleno
+  eran degradados CSS.
+
+  | Textura | Qué es |
+  |---|---|
+  | `kilim` | Bandas lisas alternadas con rombos y galones, a resolución de pasada |
+  | `berber` | Campo de fibra corta y tupida con enrejado de rombos en tinta |
+  | `sisal` | Esterilla de cuadros: hebras naturales que alternan dirección |
+  | `persa` | Medallones de rombo sobre campo granate, tejido de nudo fino |
+
+  La zona elige cuál usa (`zone.rug.texture`) y la tiñe con su `filter`, igual
+  que hace con los suelos. El tile se escala con la celda —no a tamaño fijo—
+  para que el motivo siga completo en una tira de una sola celda de alto y no
+  se convierta en ruido a 36 px en móvil.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.
