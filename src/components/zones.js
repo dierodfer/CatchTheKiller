@@ -66,8 +66,11 @@ export const ZONES = {
     // Mismo sprite con marco que las otras zonas (ver rugSprite.js), teñido
     // en cálido: el mismo `filter` que el suelo, para que la alfombra no
     // desentone del resto de la habitación.
+    // Lana bereber: el mismo sepia del suelo empuja el crudo del tile hacia el
+    // ámbar de la casa, así que la alfombra se lee como lana teñida en la misma
+    // gama que la tarima en vez de como una pieza traída de otra habitación.
     rug: {
-      texture: 'kilim',
+      texture: 'berber',
       filter: 'sepia(0.5) saturate(1.35) brightness(0.94) contrast(1.05)',
       opacity: 0.95,
       borderFrac: 0.15,
@@ -114,12 +117,14 @@ export const ZONES = {
       opacity: 0.8,
     },
 
-    // A diferencia del suelo, la alfombra NO se aclara: el tile de lana ya es
-    // pálido de por sí y un `brightness` por encima de 1 lo quemaba a blanco,
-    // borrando la fibra que es justo lo que la hace parecer lana.
+    // Sisal: fibra natural, la nota cálida del piso. Se desatura MENOS que el
+    // suelo (0.55 frente a 0.75) a propósito — si se le quita todo el tono, el
+    // yute queda gris y la alfombra deja de contrastar con el hormigón. Y no se
+    // aclara: un `brightness` por encima de 1 quema la hebra, que es justo lo
+    // que la hace parecer tejida.
     rug: {
-      texture: 'berber',
-      filter: 'grayscale(0.8) brightness(0.97) contrast(1.10)',
+      texture: 'sisal',
+      filter: 'grayscale(0.55) brightness(0.97) contrast(1.08)',
       opacity: 0.92,
       borderFrac: 0.12,
     },
@@ -170,9 +175,11 @@ export const ZONES = {
       opacity: 0.9,
     },
 
-    // Sin filtro, como el suelo: el pixel art va a todo color.
+    // Sin filtro, como el suelo: el pixel art va a todo color, y el kilim es
+    // la textura que más lo aprovecha — sus bandas y galones son ya de por sí
+    // un dibujo a base de tramas, el mismo lenguaje que el resto de la zona.
     rug: {
-      texture: 'persa',
+      texture: 'kilim',
       filter: 'none',
       opacity: 1,
       borderFrac: 0.16,

@@ -46,12 +46,12 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
 
 - **Tres ambientaciones**, repartidas por la semilla del puzzle:
   - **Casa de montaña** — roble, hierro y lana; suelo de tarima, muros de
-    nogal y alfombra de kilim.
+    nogal y alfombra de lana bereber.
   - **Apartamento en la ciudad** — un piso alto de rascacielos: cristal,
     acero y hormigón, baldosa de gran formato, ventanales de marco fino y
-    alfombra de lana bereber.
+    alfombra de sisal.
   - **Mansión 8-bit** — el pixel art original, con su damero, su dorado, sus
-    sprites de 8×8 y una alfombra persa de medallones.
+    sprites de 8×8 y un kilim de bandas a todo color.
 
   Las dos primeras dibujan el mobiliario con sprites reales de Kenney
   (`furnitureSprites.js` — mesa, cómoda/TV, chimenea/planta, estantería, silla
@@ -136,9 +136,18 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   | `persa` | Medallones de rombo sobre campo granate, tejido de nudo fino |
 
   La zona elige cuál usa (`zone.rug.texture`) y la tiñe con su `filter`, igual
-  que hace con los suelos. El tile se escala con la celda —no a tamaño fijo—
-  para que el motivo siga completo en una tira de una sola celda de alto y no
-  se convierta en ruido a 36 px en móvil.
+  que hace con los suelos: montaña lleva `berber`, el apartamento `sisal` y la
+  mansión 8-bit `kilim`. Las cuatro quedan disponibles, así que cambiar la
+  ambientación de una zona es cambiar una sola línea. El tile se escala con la
+  celda —no a tamaño fijo— para que el motivo siga completo en una tira de una
+  sola celda de alto y no se convierta en ruido a 36 px en móvil.
+
+  El `filter` de la alfombra es **suyo, no el del suelo**: los tiles de tejido
+  son más claros que los de baldosa, así que un `brightness` por encima de 1
+  quema la fibra y borra justo lo que hace que se lean como tejidos. Por lo
+  mismo el apartamento desatura la alfombra menos que el suelo (0.55 frente a
+  0.75): sin nada de tono, el sisal queda gris y deja de contrastar con el
+  hormigón.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.
