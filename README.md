@@ -123,20 +123,22 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   arrastraría también el color del ribete y la zona dejaría de poder elegirlo.
 
   **La alfombra no llega a los muros.** `insetFrac` la separa del canto de las
-  celdas que ocupa —un 7,5 % de la celda por lado, así que una tira de una sola
-  celda de ancho conserva el 85 %— y por esa franja se ve el suelo. Encajada al
+  celdas que ocupa —un 10 % de la celda por lado, así que una tira de una sola
+  celda de ancho conserva el 80 %— y por esa franja se ve el suelo. Encajada al
   milímetro entre cuatro paredes se leía como moqueta, parte de la obra; lo que
   se busca es una pieza suelta apoyada encima. La medida va en píxeles sobre la
   celda y no en porcentaje del rectángulo: la alfombra puede ser una tira de
   1×6, y un porcentaje dejaría allí una franja seis veces más ancha por los
   extremos que por los lados.
 
-  El ribete lo fija cada zona (`zone.rug.border`, `borderFrac`, `radiusFrac`):
-  cuero en la casa de montaña, taupe en el apartamento, nogal en la mansión.
+  El ribete lo fija cada zona (`zone.rug.border`, `borderFrac`, `radiusFrac`) y
+  se mantiene deliberadamente discreto —un trazo apenas más oscuro que el
+  propio tejido, no un marco que compita con él—: cuero en la casa de montaña,
+  taupe casi confundido con el sisal en el apartamento, nogal en la mansión.
   Grosor y radio son proporcionales a la celda, no fijos. La mansión 8-bit es
   la única con `radiusFrac: 0` — en una rejilla de píxeles no hay curvas, y
   redondear delataría que el marco no está dibujado a la misma resolución que
-  el resto de su arte —, y también la del ribete más ancho: a esa resolución
+  el resto de su arte —, y también la del ribete más ancho de las tres: a esa
   uno de dos píxeles no se lee.
 - **Texturas de alfombra** (`rugTextures.js`): cuatro tiles de 64×64 px que
   embaldosan sin costura, generados a **resolución de hilo**: cada píxel es una
