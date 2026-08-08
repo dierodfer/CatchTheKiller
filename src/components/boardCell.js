@@ -56,10 +56,25 @@ export function windowGlassStyle(zone, wall, inset) {
 // Estilo del suelo de una celda: el MATERIAL lo decide la habitación y el COLOR
 // la zona. Una sala sin material declarado (no debería pasar: ROOM_MATERIAL
 // cubre los 10 nombres) cae en el material por defecto de la zona.
+//
+// Salvo que la zona declare `floor.pattern`, y entonces ese dibujo va en TODAS
+// sus salas. Es la vía por la que la mansión 8-bit conserva su damero de
+// siempre: allí el suelo no distingue una habitación de otra —de eso ya se
+// encarga el tinte—, sino que sostiene la textura pixelada del conjunto, y un
+// sprite por tipo de sala le quitaba precisamente eso.
 export function floorPatternStyle(zone, roomName, size) {
-  const material = MATERIALS[ROOM_MATERIAL[roomName]] || MATERIALS[zone.floor.fallback]
+  const { pattern } = zone.floor
+  let skin
+  if (pattern) {
+    // Igual que los sprites: el periodo se escala con la celda, no es fijo.
+    const t = Math.max(4, Math.round(size / pattern.div))
+    skin = { backgroundImage: pattern.image, backgroundSize: `${t}px ${t}px` }
+  } else {
+    const material = MATERIALS[ROOM_MATERIAL[roomName]] || MATERIALS[zone.floor.fallback]
+    skin = material(zone, size)
+  }
   return {
-    ...material(zone, size),
+    ...skin,
     mixBlendMode: zone.floor.blend,
     opacity: zone.floor.opacity,
   }

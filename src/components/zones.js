@@ -21,7 +21,7 @@
 
 import { Building2, Gamepad2, Mountain } from 'lucide-react'
 import { ZONE_IDS, zoneForSeed, resolveRooms } from '@/game/zones.js'
-import { FURNITURE_SPRITES } from './pixelSprites.js'
+import { FURNITURE_SPRITES, PIXEL_FLOOR_PATTERN } from './pixelSprites.js'
 import { KENNEY_FURNITURE_SPRITES } from './furnitureSprites.js'
 import { ROOM_TINTS, ROOM_TINTS_MONTANA, ROOM_TINTS_APARTAMENTO } from './palette.js'
 
@@ -178,15 +178,18 @@ export const ZONES = {
     frame: { background: 'rgba(244, 235, 220, 0.75)' },
     tints: ROOM_TINTS,
 
-    // Sin filtro: la identidad de esta zona es precisamente el pixel art a todo
-    // color, coherente con el resto de su arte. `multiply`, no `soft-light`:
-    // con luz suave las diez salas salían casi idénticas y el suelo dejaba de
-    // distinguir una habitación de otra, que es justo su cometido.
+    // El damero de siempre, el mismo en las diez salas: `pattern` puentea los
+    // sprites por tipo de habitación que usan las otras dos zonas (ver
+    // `floorPatternStyle`). Aquí el suelo no tiene que distinguir una sala de
+    // otra —de eso ya se encarga el tinte, y estas tintas son las originales
+    // del proyecto—, sino sostener la textura pixelada del conjunto; un sprite
+    // distinto por sala rompía justo esa unidad. `soft-light` a 0.55 es lo que
+    // deja el damero como un velo sobre el tinte en vez de como un dibujo con
+    // voz propia.
     floor: {
-      filter: 'none',
-      fallback: 'damero',
-      blend: 'multiply',
-      opacity: 0.9,
+      pattern: { image: PIXEL_FLOOR_PATTERN, div: 4 },
+      blend: 'soft-light',
+      opacity: 0.55,
     },
 
     // Sin filtro, como el suelo: el pixel art va a todo color, y el kilim es

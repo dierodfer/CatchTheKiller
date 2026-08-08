@@ -87,22 +87,29 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   habitación y en los seis elementos.
 
 - **Un suelo por tipo de habitación** (`src/components/floorMaterials.js` +
-  `floorSprites.js`): la sala manda el material y la zona manda el tinte. La
-  Cocina lleva damero, la Biblioteca listones, la Bodega ladrillo, la Terraza
-  losa de piedra, la Galería terrazo… diez sprites reales de 16×16 px (Kenney,
-  ver créditos), no patrones CSS dibujados a mano. El material se elige por
-  **nombre** de sala, no por el orden en que el generador la creó, así que una
-  cocina se reconoce por su suelo tanto como por su rótulo; el tinte se indexa
-  igual, por coherencia.
+  `floorSprites.js`), en las dos zonas de sprites: la sala manda el material y
+  la zona manda el tinte. La Cocina lleva damero, la Biblioteca listones, la
+  Bodega ladrillo, la Terraza losa de piedra, la Galería terrazo… diez sprites
+  reales de 16×16 px (Kenney, ver créditos), no patrones CSS dibujados a mano.
+  El material se elige por **nombre** de sala, no por el orden en que el
+  generador la creó, así que una cocina se reconoce por su suelo tanto como por
+  su rótulo; el tinte se indexa igual, por coherencia.
 
   Cada zona toca el suelo en un único punto: un `filter` CSS (sepia cálido en
-  montaña, gris casi total en el apartamento, ninguno en la mansión 8-bit, fiel
-  a su pixel art a todo color) que se combina en `multiply` con el lavado de la
-  habitación — así el COLOR de una sala lo sigue poniendo la zona, y el sprite
-  solo aporta la textura. Se renderiza con `image-rendering: pixelated` para
-  que el recorte no se difumine al escalar de 16 px a una celda de hasta
-  112 px, y el tamaño del tile se ajusta a la celda para que el grano no se
-  convierta en ruido cuando el tablero se comprime a 36 px en móvil.
+  montaña, gris casi total en el apartamento) que se combina en `multiply` con
+  el lavado de la habitación — así el COLOR de una sala lo sigue poniendo la
+  zona, y el sprite solo aporta la textura. Se renderiza con
+  `image-rendering: pixelated` para que el recorte no se difumine al escalar de
+  16 px a una celda de hasta 112 px, y el tamaño del tile se ajusta a la celda
+  para que el grano no se convierta en ruido cuando el tablero se comprime a
+  36 px en móvil.
+
+  **La mansión 8-bit se queda fuera de ese reparto**: declara `floor.pattern` y
+  con eso puentea los sprites por sala, conservando su damero CSS de siempre —
+  el mismo dibujo en las diez habitaciones, en `soft-light` al 55 % sobre el
+  tinte. Allí el suelo no tiene que distinguir una sala de otra, que de eso ya
+  se encarga el tinte: tiene que sostener la textura pixelada del conjunto, y
+  un sprite distinto por sala rompía justo esa unidad.
 - **Alfombra en tres capas** (`Rug.jsx` + `rugLayerStyles`): la alfombra no se
   dibuja por celda — es UNA capa a nivel de tablero, posicionada sobre el
   rectángulo exacto que ocupa (de una tira de 1×6 a un bloque de 3×2, ver
