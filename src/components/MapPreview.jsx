@@ -12,9 +12,9 @@ import {
   windowBorder,
   windowGlassStyle,
   floorPatternStyle,
-  rugFrameStyle,
   makeBordersFor,
 } from './boardCell.js'
+import { Rug } from './Rug.jsx'
 
 const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
 
@@ -49,9 +49,15 @@ export default function MapPreview({ difficulty, irregular = false }) {
     return m
   }, [map])
 
-  // Misma alfombra que el tablero: una sola capa con `border-image`, no una
-  // por celda (ver rugBounds en useBoardGeometry.js / rugFrameStyle).
+  // Misma alfombra que el tablero: una sola capa, no una por celda (ver
+  // rugBounds en useBoardGeometry.js y Rug.jsx).
   const rugBounds = useMemo(() => rugBoundsOf(map), [map])
+
+  // Tinte de la sala en la que cae la alfombra (ver Rug.jsx): el mismo que
+  // usa su celda, calculado aquí porque la capa se pinta fuera del bucle.
+  const rugTint = rugBounds
+    ? zone.tints[roomIndexByName(roomLookup[cellKey(rugBounds.r0, rugBounds.c0)]) % zone.tints.length]
+    : null
 
   const rows = []
   for (let r = 0; r < size; r++) {
@@ -125,20 +131,18 @@ export default function MapPreview({ difficulty, irregular = false }) {
           style={{ ...zone.ambient, opacity: zone.ambientOpacity, mixBlendMode: 'multiply' }}
           aria-hidden
         />
-        {/* Alfombra: misma capa única con marco que en el tablero real (ver
-            Board.jsx), posicionada antes que `rows` para pintar por detrás. */}
+        {/* Alfombra: la misma capa única que en el tablero real (ver Rug.jsx),
+            posicionada antes que `rows` para pintar por detrás. */}
         {rugBounds && (
-          <div
-            className="pointer-events-none absolute box-border"
-            style={{
-              top: rugBounds.r0 * cellSize,
-              left: rugBounds.c0 * cellSize,
-              width: (rugBounds.c1 - rugBounds.c0 + 1) * cellSize,
-              height: (rugBounds.r1 - rugBounds.r0 + 1) * cellSize,
-              ...rugFrameStyle(zone, cellSize),
-            }}
-            aria-hidden
-          />
+          <div className="pointer-events-none absolute inset-0" aria-hidden>
+            <Rug
+              zone={zone}
+              cellSize={cellSize}
+              bounds={rugBounds}
+              roomName={roomLookup[cellKey(rugBounds.r0, rugBounds.c0)]}
+              tint={rugTint}
+            />
+          </div>
         )}
         <div className="relative">{rows}</div>
         <span

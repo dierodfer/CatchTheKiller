@@ -182,20 +182,6 @@ export const LUPA_SPENT_PALETTE = {
   6: '#b97a80',
 }
 
-// Marca de línea de control: aspa de píxeles muy tenue.
-export const PIXEL_X_GRID = [
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 1, 0, 0, 0, 0, 1, 0],
-  [0, 0, 1, 0, 0, 1, 0, 0],
-  [0, 0, 0, 1, 1, 0, 0, 0],
-  [0, 0, 0, 1, 1, 0, 0, 0],
-  [0, 0, 1, 0, 0, 1, 0, 0],
-  [0, 1, 0, 0, 0, 0, 1, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-]
-
-export const PIXEL_X_PALETTE = { 1: 'rgba(30,19,34,0.10)' }
-
 // Velo de baldosas en damero, superpuesto sobre el tinte de cada habitación
 // para dar textura de "suelo pixelado". `backgroundSize` se fija por celda
 // (un cuarto del tamaño de celda = 2×2 baldosas visibles).

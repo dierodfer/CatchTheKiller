@@ -10,8 +10,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
 import { FurnitureIcon } from './Furniture.jsx'
 import { DraggableToken, TokenChip } from './CharacterToken.jsx'
-import { PixelGrid } from './pixelArt.jsx'
-import { PIXEL_X_GRID, PIXEL_X_PALETTE } from './pixelSprites.js'
+import { ControlMark } from './ControlMark.jsx'
 import { colorForCharacter } from './palette.js'
 import CellMarkPopup from './CellMarkPopup.jsx'
 import {
@@ -101,9 +100,10 @@ function Cell({
       style={{
         width: size,
         height: size,
-        // Sin tinte propio bajo la alfombra: la cubre por completo la capa de
-        // Board.jsx (ver `rugBounds`), y un tinte por debajo solo se notaría
-        // como un halo asomando por los bordes del marco.
+        // Sin tinte ni suelo propios bajo la alfombra: la celda pinta DESPUÉS
+        // que la capa de alfombra (ver Board.jsx), así que cualquier fondo
+        // aquí la taparía. El suelo que asoma por las esquinas redondeadas lo
+        // pinta la propia alfombra, por debajo de su tejido (ver Rug.jsx).
         background: revealCell ? REVEAL_TINT : isRug ? 'transparent' : tint,
         borderTop: borders.top,
         borderRight: borders.right,
@@ -129,9 +129,7 @@ function Cell({
         />
       )}
 
-      {/* Suelo: el material lo pone la habitación, el color la zona. Se omite
-          bajo la alfombra — la cubre por completo, no tendría sentido que
-          asomara un suelo que en realidad no se ve. */}
+      {/* Suelo: el material lo pone la habitación, el color la zona. */}
       {!isRug && (
         <div
           className="pointer-events-none absolute inset-0"
@@ -165,14 +163,9 @@ function Cell({
         />
       )}
 
-      {/* Marca × de línea de control. */}
+      {/* Aspa de línea de control (ver ControlMark.jsx). */}
       {controlled && !occupantName && (
-        <PixelGrid
-          grid={PIXEL_X_GRID}
-          palette={PIXEL_X_PALETTE}
-          size={Math.round(size * 0.5)}
-          className="pointer-events-none absolute"
-        />
+        <ControlMark size={Math.round(size * 0.5)} className="pointer-events-none absolute" />
       )}
 
       {/* Marcas de candidatos (anotaciones del jugador). Permanecen visibles

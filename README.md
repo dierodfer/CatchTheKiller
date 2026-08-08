@@ -103,24 +103,29 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   que el recorte no se difumine al escalar de 16 px a una celda de hasta
   112 px, y el tamaño del tile se ajusta a la celda para que el grano no se
   convierta en ruido cuando el tablero se comprime a 36 px en móvil.
-- **Alfombra con marco real** (`rugSprite.js` + `rugFrameStyle`): un sprite de
-  Kenney de 48×48 px (3×3 tiles) reensamblado sin costuras, aplicado con
-  `border-image`. La alfombra no se dibuja por celda — es UNA capa a nivel de
-  tablero, posicionada sobre el rectángulo exacto que ocupa (de una tira de
-  1×6 a un bloque de 3×2, ver `placeRug` en `mapGenerator.js`), porque
-  `border-image-slice` reparte el sprite en 9 regiones (4 esquinas fijas, 4
-  bordes que se estiran en un eje, un centro que se estira en los dos) y así
-  el marco no se deforma sea cual sea la forma, incluida una tira de una sola
-  celda de ancho. Las celdas de alfombra quedan con fondo transparente para
-  que se vea a través; fichas, marcas y línea de control siguen pintándose por
-  delante porque van dentro de la celda, más tarde en el documento.
+- **Alfombra en tres capas** (`Rug.jsx` + `rugLayerStyles`): la alfombra no se
+  dibuja por celda — es UNA capa a nivel de tablero, posicionada sobre el
+  rectángulo exacto que ocupa (de una tira de 1×6 a un bloque de 3×2, ver
+  `placeRug` en `mapGenerator.js`). Dibujarla por celda obligaría a resolver a
+  mano qué canto es borde y cuál interior. Las celdas de alfombra quedan con
+  fondo transparente para que se vea a través; fichas, marcas y línea de
+  control siguen pintándose por delante porque van dentro de la celda, más
+  tarde en el documento.
 
-  El RELLENO no sale del sprite —un color plano dentro del marco no se lee
-  como una alfombra tejida—: `border-image-slice` va sin la palabra clave
-  `fill`, así que el centro queda transparente y deja ver el `background`
-  propio del elemento, que es un **tile de tejido** de `rugTextures.js`. El
-  marco es de Kenney; el tejido, propio — cada uno resuelve lo que mejor sabe
-  hacer.
+  Son tres capas apiladas, y el orden importa: el **suelo de la habitación**,
+  el **ribete** y el **tejido** dentro del ribete. La primera existe por las
+  esquinas redondeadas — las celdas de debajo van transparentes, así que sin
+  ella los huecos que deja la curva darían al vacío del tablero en vez de al
+  suelo de la sala. Las otras dos van separadas porque el `filter` de la zona
+  es del TEJIDO, no de la alfombra entera: aplicado al conjunto arrastraría
+  también el color del ribete y la zona dejaría de poder elegirlo.
+
+  El ribete lo fija cada zona (`zone.rug.border`, `borderFrac`, `radiusFrac`):
+  cuero en la casa de montaña, taupe en el apartamento, nogal en la mansión.
+  Grosor y radio son proporcionales a la celda, no fijos. La mansión 8-bit es
+  la única con `radiusFrac: 0` — en una rejilla de píxeles no hay curvas, y
+  redondear delataría que el marco no está dibujado a la misma resolución que
+  el resto de su arte.
 - **Texturas de alfombra** (`rugTextures.js`): cuatro tiles de 64×64 px que
   embaldosan sin costura, generados a **resolución de hilo**: cada píxel es una
   pasada de trama, una hebra o un nudo, con su sección redondeada, la
@@ -247,9 +252,16 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
 ### UI (`src/components/`)
 
 - `Board` / `Cell` — cuadrícula con **filas y columnas numeradas**, habitaciones,
-  mobiliario, ventanas y la **línea de control** (cruces `×` en fila y columna de
-  cada ficha colocada, en tiempo real; útil para comprobar que ningún personaje
-  comparte fila ni columna con otro). Las ventanas se dibujan sobre la pared de
+  mobiliario, ventanas y la **línea de control** (un aspa en cada celda de la
+  fila y la columna de cada ficha colocada, en tiempo real; útil para comprobar
+  que ningún personaje comparte fila ni columna con otro). El aspa es SVG
+  vectorial (`ControlMark.jsx` + `controlMarks.js`), con cuatro variantes
+  disponibles —`lapiz`, `fina`, `canto`, `recortada`— y la activa en la
+  constante `CONTROL_MARK`. Se escala con la celda, así que el trazo sale igual
+  de limpio a 95 px que a los 36 px del móvil; la rejilla de 8×8 píxeles que
+  sustituye se deshacía en cuatro puntos sueltos a tamaño pequeño. No se
+  tematiza a propósito: es una señal de juego, y significa lo mismo en las tres
+  zonas. Las ventanas se dibujan sobre la pared de
   la celda (no en el suelo) y son ocupables. Las alfombras pueden ocupar entre 2
   y 6 celdas formando una región rectangular.
 - `CharacterTray` — fichas sin colocar (orden alfabético), situada justo encima
@@ -288,13 +300,13 @@ sistema de puntuación y multijugador.
 ## Créditos y licencias de terceros
 
 - **Roguelike/RPG pack** (Kenney) — los 10 sprites de suelo
-  (`src/components/floorSprites.js`), el sprite de la alfombra
-  (`rugSprite.js`) y los 12 sprites de mobiliario de «Casa de montaña» y
-  «Apartamento en la ciudad» (`furnitureSprites.js`, 6 elementos × 2 zonas).
+  (`src/components/floorSprites.js`) y los 12 sprites de mobiliario de «Casa de
+  montaña» y «Apartamento en la ciudad» (`furnitureSprites.js`, 6 elementos ×
+  2 zonas).
   Licencia CC0 1.0 (dominio público, no exige atribución); texto de cortesía
   en [`LICENSES/kenney-roguelike-rpg-pack-CC0.txt`](LICENSES/kenney-roguelike-rpg-pack-CC0.txt).
-  Cada sprite es un recorte de 16×16 px (la alfombra, un bloque de 3×3 tiles)
-  del spritesheet oficial, embebido como PNG en base64: cero peticiones en
+  Cada sprite es un recorte de 16×16 px del spritesheet oficial, embebido como
+  PNG en base64: cero peticiones en
   tiempo de ejecución, porque la app es una PWA offline.
 - El pixel art de la zona «Mansión 8-bit», los retratos de los personajes y la
   lupa son originales del proyecto.

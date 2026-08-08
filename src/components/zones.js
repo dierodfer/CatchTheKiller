@@ -63,17 +63,20 @@ export const ZONES = {
       opacity: 0.85,
     },
 
-    // Mismo sprite con marco que las otras zonas (ver rugSprite.js), teñido
-    // en cálido: el mismo `filter` que el suelo, para que la alfombra no
-    // desentone del resto de la habitación.
     // Lana bereber: el mismo sepia del suelo empuja el crudo del tile hacia el
     // ámbar de la casa, así que la alfombra se lee como lana teñida en la misma
     // gama que la tarima en vez de como una pieza traída de otra habitación.
+    //
+    // Ribete de cuero curtido y esquina generosamente redondeada: una alfombra
+    // de lana ante una chimenea es la pieza más blanda de la casa, y el pico
+    // recto es justo lo que le quitaría esa blandura.
     rug: {
       texture: 'berber',
       filter: 'sepia(0.5) saturate(1.35) brightness(0.94) contrast(1.05)',
       opacity: 0.95,
+      border: '#8a6844',
       borderFrac: 0.15,
+      radiusFrac: 0.24,
     },
 
     wall: { color: '#5c3a1e', outerPx: 5, roomPx: 3, thinColor: 'rgba(60,38,20,0.20)', thinPx: 1 },
@@ -122,11 +125,18 @@ export const ZONES = {
     // yute queda gris y la alfombra deja de contrastar con el hormigón. Y no se
     // aclara: un `brightness` por encima de 1 quema la hebra, que es justo lo
     // que la hace parecer tejida.
+    //
+    // Ribete greige y esquina apenas matada: una alfombra de fibra natural se
+    // remata con una cinta al tono, no con un color que cante. La curva es
+    // pequeña a propósito — este piso va de cantos rectos (ver el cristal, de
+    // radio 0), y una esquina muy redondeada rompería esa disciplina.
     rug: {
       texture: 'sisal',
       filter: 'grayscale(0.55) brightness(0.97) contrast(1.08)',
       opacity: 0.92,
+      border: '#6f6a61',
       borderFrac: 0.12,
+      radiusFrac: 0.08,
     },
 
     // `thinPx: 0` a propósito: la junta del suelo YA dibuja la rejilla interior.
@@ -178,11 +188,18 @@ export const ZONES = {
     // Sin filtro, como el suelo: el pixel art va a todo color, y el kilim es
     // la textura que más lo aprovecha — sus bandas y galones son ya de por sí
     // un dibujo a base de tramas, el mismo lenguaje que el resto de la zona.
+    //
+    // `radiusFrac: 0`, la única zona con la esquina en pico: en una rejilla de
+    // píxeles no hay curvas, y redondear aquí delataría que el marco no está
+    // dibujado a la misma resolución que el resto del arte. El ribete es el
+    // dorado apagado de los muros, no un color nuevo.
     rug: {
       texture: 'kilim',
       filter: 'none',
       opacity: 1,
+      border: '#7a5330',
       borderFrac: 0.16,
+      radiusFrac: 0,
     },
 
     wall: { color: '#a07d3c', outerPx: 5, roomPx: 3, thinColor: 'rgba(39,24,41,0.16)', thinPx: 1 },

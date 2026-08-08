@@ -8,7 +8,6 @@
 // define una vez en zones.js y aparece a la vez en el tablero y en la miniatura.
 
 import { MATERIALS, ROOM_MATERIAL } from './floorMaterials.js'
-import { RUG_SPRITE } from './rugSprite.js'
 import { RUG_TEXTURES } from './rugTextures.js'
 
 // Tinte dorado y contornos del tablero (resaltado de revelado, soltar ficha).
@@ -66,45 +65,56 @@ export function floorPatternStyle(zone, roomName, size) {
   }
 }
 
-// Estilo del marco de la alfombra: UN solo `border-image` que cubre el
-// rectángulo entero (no una capa por celda — ver `rugBounds` en
-// useBoardGeometry.js y su render en Board.jsx). `border-image-slice`
-// reparte el sprite en 9 regiones —4 esquinas de tamaño fijo, 4 bordes que
-// se estiran en un eje, un centro que se estira en los dos— así el marco no
-// se deforma sea cual sea la forma final de la alfombra, incluida una tira
-// de una sola celda de ancho (donde no existe una fila/columna "central").
-// El grosor del marco es proporcional a la celda para que no quede
-// desproporcionado en un tablero grande ni desaparezca en uno pequeño.
+// Estilos de la alfombra: UNA capa que cubre el rectángulo entero (no una
+// por celda — ver `rugBounds` en useBoardGeometry.js y su render en
+// Board.jsx), en DOS elementos anidados. Devuelve el estilo de cada uno:
 //
-// El RELLENO no sale del sprite: `border-image-slice` va SIN la palabra
-// clave `fill`, así que el centro queda transparente y dejamos ver, debajo,
-// el propio `background` del elemento — el TEJIDO de `RUG_TEXTURES`. El
-// sprite de Kenney es un color plano dentro del marco (una alfombra de un
-// solo tono no se lee como tejida), así que el marco real se lo debemos a
-// Kenney y el tejido a un tile propio generado a resolución de hilo, en
-// lugar de forzar un único origen para las dos cosas.
+//   `frame` — el ribete, un borde sólido del color que fija la zona.
+//   `fill`  — el tejido de `RUG_TEXTURES`, dentro del ribete.
+//
+// Van separados por el `filter`. El filtro es del TEJIDO, no de la alfombra
+// entera: si se aplicara al elemento del ribete, el sepia de la casa de
+// montaña o el grayscale del apartamento arrastrarían también el color del
+// ribete y la zona dejaría de poder elegirlo — que es justo lo que hace que
+// se lea como una cinta cosida al borde y no como un recorte más de la
+// misma tela. Anidados, cada capa recibe solo lo suyo.
+//
+// El grosor y el radio son proporcionales a la celda, no fijos: así el
+// ribete no queda desproporcionado en un tablero grande ni desaparece en
+// uno pequeño. `radiusFrac: 0` deja la esquina en pico — es lo que quiere la
+// mansión 8-bit, donde una curva delataría que no es pixel art. El radio
+// interior descuenta el grosor del ribete para que las dos curvas sean
+// concéntricas; si el ribete es más ancho que el radio, sale 0 y el tejido
+// queda en pico dentro de una cinta redondeada, que es lo correcto.
 //
 // El tile se escala con la celda, no a tamaño fijo: un periodo constante se
 // convierte en ruido cuando el tablero se comprime a 36 px en móvil (mismo
 // criterio que los materiales de suelo).
-export function rugFrameStyle(zone, cellSize) {
-  const border = Math.max(4, Math.round(cellSize * zone.rug.borderFrac))
+export function rugLayerStyles(zone, cellSize) {
+  const border = Math.max(3, Math.round(cellSize * zone.rug.borderFrac))
+  const radius = Math.round(cellSize * zone.rug.radiusFrac)
   const tex = RUG_TEXTURES[zone.rug.texture]
   const t = Math.max(24, Math.round(cellSize / tex.tileDiv))
   return {
-    borderStyle: 'solid',
-    borderWidth: border,
-    borderImageSource: `url("${RUG_SPRITE}")`,
-    borderImageSlice: '16',
-    borderImageWidth: `${border}px`,
-    borderImageRepeat: 'stretch',
-    // Afecta a las DOS imágenes: mantiene el marco de 16 px nítido al estirarlo
-    // y conserva el hilo del tejido definido (el tile va casi a escala 1:1).
-    imageRendering: 'pixelated',
-    backgroundImage: `url("${tex.tile}")`,
-    backgroundSize: `${t}px ${t}px`,
-    filter: zone.rug.filter,
-    opacity: zone.rug.opacity,
+    frame: {
+      borderStyle: 'solid',
+      borderWidth: border,
+      borderColor: zone.rug.border,
+      borderRadius: radius,
+    },
+    fill: {
+      borderRadius: Math.max(0, radius - border),
+      backgroundImage: `url("${tex.tile}")`,
+      backgroundSize: `${t}px ${t}px`,
+      // Mantiene el hilo del tejido definido (el tile va casi a escala 1:1).
+      imageRendering: 'pixelated',
+      // Sombra hacia dentro: oscurece el tejido justo donde se encuentra con
+      // el ribete, que es lo que da el pliegue del pelo contra la cinta. Sin
+      // ella, las dos capas se tocan en un canto plano de recorte.
+      boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.22)',
+      filter: zone.rug.filter,
+      opacity: zone.rug.opacity,
+    },
   }
 }
 

@@ -4,7 +4,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { cellKey } from '@/game/constants.js'
 import Cell from './Cell.jsx'
-import { rugFrameStyle } from './boardCell.js'
+import { Rug } from './Rug.jsx'
 import { GUTTER, useBoardGeometry } from '@/hooks/useBoardGeometry.js'
 
 export default function Board({
@@ -89,24 +89,23 @@ export default function Board({
     )
   }
 
-  // Alfombra: UNA capa a nivel de tablero, no por celda — así su marco
-  // (`rugFrameStyle`, un `border-image`) se estira sin deformarse sea cual
-  // sea la forma, de una tira de 1×6 a un bloque de 3×2. Va ANTES que `rows`
-  // a propósito: pinta por detrás, y las celdas de alfombra dejan su fondo
-  // transparente (ver Cell.jsx) para que se vea a través; el resto de celdas
-  // no se entera, pintan encima como siempre. Así la ficha o la marca que
-  // caiga sobre la alfombra sigue quedando por delante sin ningún z-index.
+  // Alfombra: UNA capa a nivel de tablero, no por celda (ver Rug.jsx). Va
+  // ANTES que `rows` a propósito: pinta por detrás, y las celdas de alfombra
+  // dejan su fondo transparente (ver Cell.jsx) para que se vea a través; el
+  // resto de celdas no se entera, pintan encima como siempre. Así la ficha o
+  // la marca que caiga sobre la alfombra sigue quedando por delante sin
+  // ningún z-index.
   const rugLayer = rugBounds ? (
     <div className="pointer-events-none absolute inset-0" style={{ top: GUTTER }} aria-hidden>
-      <div
-        className="absolute box-border"
-        style={{
-          top: rugBounds.r0 * cellSize,
-          left: GUTTER + rugBounds.c0 * cellSize,
-          width: (rugBounds.c1 - rugBounds.c0 + 1) * cellSize,
-          height: (rugBounds.r1 - rugBounds.r0 + 1) * cellSize,
-          ...rugFrameStyle(zone, cellSize),
-        }}
+      <Rug
+        zone={zone}
+        cellSize={cellSize}
+        bounds={rugBounds}
+        offsetX={GUTTER}
+        // La alfombra cae siempre dentro de una sola habitación, así que su
+        // esquina superior izquierda basta para saber qué suelo pintar debajo.
+        roomName={cellGeometry[rugBounds.r0][rugBounds.c0].roomName}
+        tint={cellGeometry[rugBounds.r0][rugBounds.c0].tint}
       />
     </div>
   ) : null
