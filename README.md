@@ -54,126 +54,44 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
     sprites de 8×8 y un kilim de bandas a todo color.
 
   Las dos primeras dibujan el mobiliario con sprites reales de Kenney
-  (`furnitureSprites.js` — mesa, cómoda/TV, chimenea/planta, estantería, silla
-  y cama, un set propio por zona, sin compartir dibujo entre sí); la tercera,
-  con el emisor de pixel art original (`pixelArt.jsx`). La zona se parte en
-  dos capas:
+  (`furnitureSprites.js`, un set propio por zona); la tercera, con el emisor de
+  pixel art original (`pixelArt.jsx`). La zona se parte en dos capas:
   `src/game/zones.js` guarda lo que la lógica necesita —qué zona toca a cada
-  semilla y **cómo se llama cada elemento** en ella— y
-  `src/components/zones.js`, cómo se ve (mobiliario, tintas, muros, ventanas y
-  alfombra).
+  semilla y cómo se llama cada elemento en ella— y `src/components/zones.js`,
+  cómo se ve (mobiliario, tintas, muros, ventanas, suelo y alfombra).
 
-  Una zona puede **renombrar** elementos: en la casa de montaña la `planta` es
-  una *chimenea* y la `TV` una *cómoda*, y las pistas lo dicen así. Lo que
-  **no** puede cambiar es la lógica: el conjunto de ids y sus marcas
-  `blocking`/`mueble` son del puzzle, no de la ambientación. La chimenea encaja
-  precisamente porque comparte clase con la planta —estorba el paso y no es
-  mobiliario—, así que la pista "no estaba junto a ningún mueble" sigue siendo
-  cierta a su lado. Una aserción al cargar el módulo rechaza cualquier
-  sustitución que se salga de su clase o que deje sin frase a un elemento
-  pisable.
+  Una zona puede **renombrar** elementos y habitaciones sin tocar la lógica:
+  en la casa de montaña la `planta` es una *chimenea* y la `Terraza` es el
+  *Porche*, pero el id canónico sigue siendo la clave real que indexa material,
+  tinte y las marcas `blocking`/`mueble` del puzzle — solo cambia la palabra
+  que ve el jugador. Una aserción al cargar el módulo impide sustituciones que
+  rompan esa correspondencia. La mansión 8-bit no redefine nada: conserva el
+  vocabulario canónico.
 
-  **Las habitaciones también se renombran por zona** (`ZONE_ROOMS` en
-  `game/zones.js`, mismo mecanismo): la `Terraza` es el *Porche* en la casa de
-  montaña y el *Balcón* en el apartamento; el `Estudio` pasa a ser la
-  *Armería* o el *Despacho*. El nombre CANÓNICO (el de `ROOM_NAMES`) sigue
-  siendo la identidad real de la sala —la clave de `roomLookup`, la que
-  indexa su tinte y su material de suelo—, así que renombrar una habitación
-  nunca cambia de qué material está hecho su suelo ni qué tinte lleva; solo
-  cambia la palabra que ve el jugador, tanto en el rótulo del tablero como en
-  el texto de las pistas ("Estaba en la Alcoba"). Una aserción impide que dos
-  salas de una misma zona terminen compartiendo nombre. La mansión 8-bit no
-  redefine ninguna: conserva el vocabulario canónico en los diez tipos de
-  habitación y en los seis elementos.
-
-- **Un suelo por tipo de habitación** (`src/components/floorMaterials.js` +
-  `floorSprites.js`), en las dos zonas de sprites: la sala manda el material y
-  la zona manda el tinte. La Cocina lleva damero, la Biblioteca listones, la
-  Bodega ladrillo, la Terraza losa de piedra, la Galería terrazo… diez sprites
-  reales de 16×16 px (Kenney, ver créditos), no patrones CSS dibujados a mano.
-  El material se elige por **nombre** de sala, no por el orden en que el
-  generador la creó, así que una cocina se reconoce por su suelo tanto como por
-  su rótulo; el tinte se indexa igual, por coherencia.
-
-  Cada zona toca el suelo en un único punto: un `filter` CSS (sepia cálido en
-  montaña, gris casi total en el apartamento) que se combina en `multiply` con
-  el lavado de la habitación — así el COLOR de una sala lo sigue poniendo la
-  zona, y el sprite solo aporta la textura. Se renderiza con
-  `image-rendering: pixelated` para que el recorte no se difumine al escalar de
-  16 px a una celda de hasta 112 px, y el tamaño del tile se ajusta a la celda
-  para que el grano no se convierta en ruido cuando el tablero se comprime a
-  36 px en móvil.
-
-  **La mansión 8-bit se queda fuera de ese reparto**: declara `floor.pattern` y
-  con eso puentea los sprites por sala, conservando su damero CSS de siempre —
-  el mismo dibujo en las diez habitaciones, en `soft-light` al 55 % sobre el
-  tinte. Allí el suelo no tiene que distinguir una sala de otra, que de eso ya
-  se encarga el tinte: tiene que sostener la textura pixelada del conjunto, y
-  un sprite distinto por sala rompía justo esa unidad.
-- **Alfombra en tres capas** (`Rug.jsx` + `rugLayerStyles`): la alfombra no se
-  dibuja por celda — es UNA capa a nivel de tablero, posicionada sobre el
-  rectángulo exacto que ocupa (de una tira de 1×6 a un bloque de 3×2, ver
-  `placeRug` en `mapGenerator.js`). Dibujarla por celda obligaría a resolver a
-  mano qué canto es borde y cuál interior. Las celdas de alfombra quedan con
-  fondo transparente para que se vea a través; fichas, marcas y línea de
-  control siguen pintándose por delante porque van dentro de la celda, más
-  tarde en el documento.
-
-  Son tres capas apiladas, y el orden importa: el **suelo de la habitación**
-  (en todo el rectángulo), el **ribete** y el **tejido** dentro del ribete. La
-  primera cubre el rectángulo entero aunque las otras dos no lleguen a sus
-  bordes, y ahí está su razón de ser: por la franja de `inset` y por los huecos
-  de las esquinas redondeadas se ve suelo, y las celdas de debajo van
-  transparentes, así que sin ella ese contorno daría al vacío del tablero en
-  vez de al suelo de la sala. Las otras dos van separadas porque el `filter` de
-  la zona es del TEJIDO, no de la alfombra entera: aplicado al conjunto
-  arrastraría también el color del ribete y la zona dejaría de poder elegirlo.
-
-  **La alfombra no llega a los muros.** `insetFrac` la separa del canto de las
-  celdas que ocupa —un 10 % de la celda por lado, así que una tira de una sola
-  celda de ancho conserva el 80 %— y por esa franja se ve el suelo. Encajada al
-  milímetro entre cuatro paredes se leía como moqueta, parte de la obra; lo que
-  se busca es una pieza suelta apoyada encima. La medida va en píxeles sobre la
-  celda y no en porcentaje del rectángulo: la alfombra puede ser una tira de
-  1×6, y un porcentaje dejaría allí una franja seis veces más ancha por los
-  extremos que por los lados.
-
-  El ribete lo fija cada zona (`zone.rug.border`, `borderFrac`, `radiusFrac`) y
-  se mantiene deliberadamente discreto —un trazo apenas más oscuro que el
-  propio tejido, no un marco que compita con él—: cuero en la casa de montaña,
-  taupe casi confundido con el sisal en el apartamento, nogal en la mansión.
-  Grosor y radio son proporcionales a la celda, no fijos. La mansión 8-bit es
-  la única con `radiusFrac: 0` — en una rejilla de píxeles no hay curvas, y
-  redondear delataría que el marco no está dibujado a la misma resolución que
-  el resto de su arte —, y también la del ribete más ancho de las tres: a esa
-  uno de dos píxeles no se lee.
-- **Texturas de alfombra** (`rugTextures.js`): cuatro tiles de 64×64 px que
-  embaldosan sin costura, generados a **resolución de hilo**: cada píxel es una
-  pasada de trama, una hebra o un nudo, con su sección redondeada, la
-  irregularidad de la hilatura y el grano de la fibra. Por eso se leen como
-  tejido y no como un tinte a rayas, que es lo que fallaba cuando el relleno
-  eran degradados CSS.
-
-  | Textura | Qué es |
-  |---|---|
-  | `kilim` | Bandas lisas alternadas con rombos y galones, a resolución de pasada |
-  | `berber` | Campo de fibra corta y tupida con enrejado de rombos en tinta |
-  | `sisal` | Esterilla de cuadros: hebras naturales que alternan dirección |
-  | `persa` | Medallones de rombo sobre campo granate, tejido de nudo fino |
-
-  La zona elige cuál usa (`zone.rug.texture`) y la tiñe con su `filter`, igual
-  que hace con los suelos: montaña lleva `berber`, el apartamento `sisal` y la
-  mansión 8-bit `kilim`. Las cuatro quedan disponibles, así que cambiar la
-  ambientación de una zona es cambiar una sola línea. El tile se escala con la
-  celda —no a tamaño fijo— para que el motivo siga completo en una tira de una
-  sola celda de alto y no se convierta en ruido a 36 px en móvil.
-
-  El `filter` de la alfombra es **suyo, no el del suelo**: los tiles de tejido
-  son más claros que los de baldosa, así que un `brightness` por encima de 1
-  quema la fibra y borra justo lo que hace que se lean como tejidos. Por lo
-  mismo el apartamento desatura la alfombra menos que el suelo (0.55 frente a
-  0.75): sin nada de tono, el sisal queda gris y deja de contrastar con el
-  hormigón.
+- **Suelo**: en montaña y apartamento, un sprite de 16×16 px por tipo de
+  habitación (`floorMaterials.js` + `floorSprites.js`, Kenney) elegido por
+  **nombre** de sala —la Cocina siempre lleva damero, la Bodega ladrillo—,
+  teñido con el `filter` de la zona. La mansión 8-bit usa en cambio
+  `floor.pattern`: el mismo damero CSS en las diez salas (el original del
+  proyecto), porque ahí el suelo no tiene que distinguir una habitación de
+  otra —de eso ya se encarga el tinte— sino sostener la textura pixelada del
+  conjunto.
+- **Alfombra en tres capas** (`Rug.jsx` + `rugLayerStyles`): una sola capa a
+  nivel de tablero —no por celda— sobre el rectángulo que ocupa (de una tira
+  de 1×6 a un bloque de 3×2, ver `placeRug` en `mapGenerator.js`). Debajo, el
+  **suelo de la habitación**; encima, el **ribete** (fino y discreto, propio de
+  cada zona) separado del muro por un margen (`insetFrac`) para que no se lea
+  como moqueta empotrada; dentro, el **tejido**. Ribete y tejido llevan cada
+  uno su propio `filter` — si compartieran el de la zona, esta no podría
+  colorear uno sin arrastrar el otro. La mansión 8-bit es la única con esquina
+  en pico (`radiusFrac: 0`): en una rejilla de píxeles no hay curvas.
+- **Texturas de alfombra** (`rugTextures.js`): cuatro tiles de 64×64 px a
+  **resolución de hilo** —trama, hebra o nudo, no un degradado CSS a rayas—
+  que embaldosan sin costura: `kilim` (bandas y galones), `berber` (fibra
+  corta con enrejado de rombos), `sisal` (esterilla de hebras cruzadas) y
+  `persa` (medallones sobre campo granate). La zona elige cuál usa
+  (`zone.rug.texture`) y la tiñe con su propio `filter`: montaña lleva
+  `berber`, el apartamento `sisal`, la mansión 8-bit `kilim`.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.
@@ -276,15 +194,11 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
   mobiliario, ventanas y la **línea de control** (un aspa en cada celda de la
   fila y la columna de cada ficha colocada, en tiempo real; útil para comprobar
   que ningún personaje comparte fila ni columna con otro). El aspa es SVG
-  vectorial (`ControlMark.jsx` + `controlMarks.js`), con cuatro variantes
-  disponibles —`lapiz`, `fina`, `canto`, `recortada`— y la activa en la
-  constante `CONTROL_MARK`. Se escala con la celda, así que el trazo sale igual
-  de limpio a 95 px que a los 36 px del móvil; la rejilla de 8×8 píxeles que
-  sustituye se deshacía en cuatro puntos sueltos a tamaño pequeño. No se
-  tematiza a propósito: es una señal de juego, y significa lo mismo en las tres
-  zonas. Las ventanas se dibujan sobre la pared de
-  la celda (no en el suelo) y son ocupables. Las alfombras pueden ocupar entre 2
-  y 6 celdas formando una región rectangular.
+  vectorial, escalable sin perder nitidez (`ControlMark.jsx` +
+  `controlMarks.js`, cuatro variantes disponibles, activa en `CONTROL_MARK`) y
+  no se tematiza: es una señal de juego igual en las tres zonas. Las ventanas
+  se dibujan sobre la pared de la celda (no en el suelo) y son ocupables. Las
+  alfombras pueden ocupar entre 2 y 6 celdas formando una región rectangular.
 - `CharacterTray` — fichas sin colocar (orden alfabético), situada justo encima
   del tablero; zona para descolocar.
 - `CluePanel` — pistas agrupadas por personaje (orden alfabético), marcables como
@@ -323,11 +237,11 @@ sistema de puntuación y multijugador.
 - **Roguelike/RPG pack** (Kenney) — los 10 sprites de suelo
   (`src/components/floorSprites.js`) y los 12 sprites de mobiliario de «Casa de
   montaña» y «Apartamento en la ciudad» (`furnitureSprites.js`, 6 elementos ×
-  2 zonas).
-  Licencia CC0 1.0 (dominio público, no exige atribución); texto de cortesía
-  en [`LICENSES/kenney-roguelike-rpg-pack-CC0.txt`](LICENSES/kenney-roguelike-rpg-pack-CC0.txt).
+  2 zonas). Licencia CC0 1.0 (dominio público, no exige atribución); texto de
+  cortesía en
+  [`LICENSES/kenney-roguelike-rpg-pack-CC0.txt`](LICENSES/kenney-roguelike-rpg-pack-CC0.txt).
   Cada sprite es un recorte de 16×16 px del spritesheet oficial, embebido como
-  PNG en base64: cero peticiones en
-  tiempo de ejecución, porque la app es una PWA offline.
+  PNG en base64: cero peticiones en tiempo de ejecución, porque la app es una
+  PWA offline.
 - El pixel art de la zona «Mansión 8-bit», los retratos de los personajes y la
   lupa son originales del proyecto.
