@@ -34,7 +34,7 @@ export function zoneForSeed(seed = 0) {
 
 // Campos que una zona puede redefinir. Que la lista viva aquí y se valide más
 // abajo es lo que impide que una superposición toque la lógica por descuido.
-const PRESENTATION_FIELDS = ['label', 'plural', 'article', 'onText']
+const PRESENTATION_FIELDS = new Set(['label', 'plural', 'article', 'onText'])
 
 // Sustituciones de nombre por zona: `id de elemento -> campos de presentación`.
 // Una zona ausente —o un id ausente dentro de una zona— usa el nombre base.
@@ -57,6 +57,30 @@ export const ZONE_ELEMENTS = {
   // describen igual de bien un piso moderno y una mansión de 8 bits.
 }
 
+// Coherencia de UNA superposición de elemento: el id existe, solo toca campos
+// de presentación y, si el elemento es ocupable y cambia de nombre, reescribe
+// también su frase (si no, la pista nombraría el elemento equivocado).
+function assertElementOverlay(zoneId, id, over) {
+  const base = ELEMENTS[id]
+  if (!base) throw new Error(`Zona ${zoneId}: elemento desconocido "${id}"`)
+
+  for (const field of Object.keys(over)) {
+    if (!PRESENTATION_FIELDS.has(field)) {
+      throw new Error(
+        `Zona ${zoneId}: "${id}.${field}" no es un campo de presentación; ` +
+          `blocking y mueble son lógica de puzzle y no se pueden redefinir`,
+      )
+    }
+  }
+
+  if (base.onText && over.label && !over.onText) {
+    throw new Error(
+      `Zona ${zoneId}: "${id}" es ocupable y cambia de nombre a "${over.label}", ` +
+        `pero no redefine onText`,
+    )
+  }
+}
+
 // Coherencia de las superposiciones. Son datos estáticos, así que basta con
 // comprobarlos una vez al cargar el módulo: un tema mal definido falla al
 // arrancar (y en `npm run test:logic`), no a mitad de una partida.
@@ -66,24 +90,7 @@ function assertZoneElements() {
       throw new Error(`ZONE_ELEMENTS: zona desconocida "${zoneId}"`)
     }
     for (const [id, over] of Object.entries(overlay)) {
-      const base = ELEMENTS[id]
-      if (!base) throw new Error(`Zona ${zoneId}: elemento desconocido "${id}"`)
-      for (const field of Object.keys(over)) {
-        if (!PRESENTATION_FIELDS.includes(field)) {
-          throw new Error(
-            `Zona ${zoneId}: "${id}.${field}" no es un campo de presentación; ` +
-              `blocking y mueble son lógica de puzzle y no se pueden redefinir`,
-          )
-        }
-      }
-      // Un elemento ocupable se anuncia con su propia frase; si cambia de
-      // nombre y no la reescribe, la pista nombraría el elemento equivocado.
-      if (base.onText && over.label && !over.onText) {
-        throw new Error(
-          `Zona ${zoneId}: "${id}" es ocupable y cambia de nombre a "${over.label}", ` +
-            `pero no redefine onText`,
-        )
-      }
+      assertElementOverlay(zoneId, id, over)
     }
   }
 }
@@ -160,26 +167,38 @@ const BASE_ROOMS = Object.fromEntries(
 //   - la sala existe en `ROOM_NAMES` y el artículo es 'el' o 'la';
 //   - dentro de una misma zona, dos salas nunca terminan con el MISMO nombre
 //     en pantalla (eso confundiría al jugador sobre cuál es cuál).
+function assertRoomOverlay(zoneId, room, over) {
+  if (!ROOM_NAMES.includes(room)) throw new Error(`Zona ${zoneId}: habitación desconocida "${room}"`)
+  if (!over.label) throw new Error(`Zona ${zoneId}: "${room}" no define label`)
+  if (over.article !== 'el' && over.article !== 'la') {
+    throw new Error(`Zona ${zoneId}: "${room}" tiene un artículo inválido ("${over.article}")`)
+  }
+}
+
+// Dos salas de una misma zona nunca pueden acabar con el mismo nombre en
+// pantalla: el jugador no sabría cuál es cuál. Se comprueba sobre las diez
+// salas resueltas, no solo sobre las redefinidas, porque una colisión puede
+// darse entre una sala renombrada y otra que conserva su nombre canónico.
+function assertUniqueRoomLabels(zoneId, overlay) {
+  const labelOwner = new Map() // nombre en pantalla -> sala canónica que lo usa
+  for (const room of ROOM_NAMES) {
+    const label = overlay[room]?.label ?? room
+    if (labelOwner.has(label)) {
+      throw new Error(
+        `Zona ${zoneId}: "${room}" y "${labelOwner.get(label)}" comparten el nombre "${label}"`,
+      )
+    }
+    labelOwner.set(label, room)
+  }
+}
+
 function assertZoneRooms() {
   for (const [zoneId, overlay] of Object.entries(ZONE_ROOMS)) {
     if (!ZONE_IDS.includes(zoneId)) throw new Error(`ZONE_ROOMS: zona desconocida "${zoneId}"`)
     for (const [room, over] of Object.entries(overlay)) {
-      if (!ROOM_NAMES.includes(room)) throw new Error(`Zona ${zoneId}: habitación desconocida "${room}"`)
-      if (!over.label) throw new Error(`Zona ${zoneId}: "${room}" no define label`)
-      if (over.article !== 'el' && over.article !== 'la') {
-        throw new Error(`Zona ${zoneId}: "${room}" tiene un artículo inválido ("${over.article}")`)
-      }
+      assertRoomOverlay(zoneId, room, over)
     }
-    const labelOwner = new Map() // nombre en pantalla -> sala canónica que lo usa
-    for (const room of ROOM_NAMES) {
-      const label = overlay[room]?.label ?? room
-      if (labelOwner.has(label)) {
-        throw new Error(
-          `Zona ${zoneId}: "${room}" y "${labelOwner.get(label)}" comparten el nombre "${label}"`,
-        )
-      }
-      labelOwner.set(label, room)
-    }
+    assertUniqueRoomLabels(zoneId, overlay)
   }
 }
 

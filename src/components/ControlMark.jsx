@@ -28,9 +28,9 @@ export function ControlMark({ variant = CONTROL_MARK, size, className, style }) 
       style={{ color: CONTROL_MARK_INK, ...style }}
       aria-hidden="true"
     >
-      {CONTROL_MARK_VARIANTS[variant].map((layer, i) => (
+      {CONTROL_MARK_VARIANTS[variant].map((layer) => (
         <g
-          key={i}
+          key={layer.id}
           opacity={layer.opacity}
           // Sin `width` la capa va rellena: es como se define el aspa de canto
           // vivo, que es un contorno cerrado y no una sucesión de trazos.

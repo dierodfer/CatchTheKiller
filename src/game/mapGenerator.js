@@ -260,18 +260,21 @@ export function buildRoomLookup(map) {
 // basta con el min/max de las celdas 'alfombra', no hace falta comprobar
 // contigüidad.
 export function rugBoundsOf(map) {
-  let r0 = Infinity,
-    c0 = Infinity,
-    r1 = -Infinity,
-    c1 = -Infinity
+  const rows = []
+  const cols = []
   for (let r = 0; r < map.gridSize; r++) {
     for (let c = 0; c < map.gridSize; c++) {
-      if (map.grid[r][c] !== 'alfombra') continue
-      if (r < r0) r0 = r
-      if (c < c0) c0 = c
-      if (r > r1) r1 = r
-      if (c > c1) c1 = c
+      if (map.grid[r][c] === 'alfombra') {
+        rows.push(r)
+        cols.push(c)
+      }
     }
   }
-  return r1 < 0 ? null : { r0, c0, r1, c1 }
+  if (rows.length === 0) return null
+  return {
+    r0: Math.min(...rows),
+    c0: Math.min(...cols),
+    r1: Math.max(...rows),
+    c1: Math.max(...cols),
+  }
 }

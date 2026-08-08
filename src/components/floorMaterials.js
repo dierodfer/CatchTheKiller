@@ -71,7 +71,6 @@ export const ROOM_MATERIAL = {
 // Índice estable de una sala dentro del catálogo de nombres. Se usa para elegir
 // su tinte, de modo que el color de una sala tampoco dependa del orden en que
 // el generador la haya creado: la Cocina siempre sale del mismo tono.
-export const roomIndexByName = (name) => {
-  const i = ROOM_NAMES.indexOf(name)
-  return i < 0 ? 0 : i
-}
+// Una sala desconocida cae en el índice 0 en vez de en el -1 de `indexOf`, que
+// como índice de tinte daría `undefined`.
+export const roomIndexByName = (name) => Math.max(0, ROOM_NAMES.indexOf(name))
