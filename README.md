@@ -112,6 +112,10 @@ ni en el lint. Si se quisiera migrar a TypeScript más adelante, el código de
 
 ## Cómo ejecutar
 
+Requiere **Node 22.22.2+, 24.15.0+ o 26+** (declarado en `engines`): con Node 20
+los tests fallan de verdad en tiempo de ejecución, no es solo un aviso — `jsdom`
+(vía `undici`) usa una API de `node:util` que no existe en Node 20.
+
 ```bash
 npm install
 npm run dev           # desarrollo (http://localhost:5173)
