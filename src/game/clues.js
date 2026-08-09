@@ -9,12 +9,10 @@
 // El evaluador es la base tanto del generador de pistas como del Solver:
 // "la IA propone, el Solver decide" — aquí no hay IA, la lógica es la autoridad.
 
-import { ADJACENT, ROOM_ARTICLE, cellKey } from './constants.js'
-import { ELEMENTS, MUEBLE_ELEMENTS, elementPhrase, elementCountPhrase } from './elements.js'
+import { ADJACENT, cellKey, roomPhrase } from './constants.js'
+import { MUEBLE_ELEMENTS, elementPhrase, elementCountPhrase } from './elements.js'
+import { resolveElements, resolveRooms } from './zones.js'
 import { computeExteriorVoid } from './mapShapes.js'
-
-// Frase "el/la <habitación>" con el artículo correcto (concordancia de género).
-const roomPhrase = (room) => `${ROOM_ARTICLE[room] ?? 'el'} ${room}`
 
 // Frase "las N esquinas del mapa" para las pistas de esquina. Las esquinas son
 // los cuatro vértices del tablero (ver `isCornerCell`), así que N vale 4 salvo
@@ -40,13 +38,13 @@ export const CLUE_TYPES = {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) => ctx.roomAt(pos.row, pos.col) === p.room,
-    text: (p) => `Estaba en ${roomPhrase(p.room)}`,
+    text: (p, ctx) => `Estaba en ${roomPhrase(ctx.rm, p.room)}`,
   },
   notInRoom: {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) => ctx.roomAt(pos.row, pos.col) !== p.room,
-    text: (p) => `No estaba en ${roomPhrase(p.room)}`,
+    text: (p, ctx) => `No estaba en ${roomPhrase(ctx.rm, p.room)}`,
   },
   // "No compartía habitación con ningún otro sospechoso". A diferencia de
   // "estaba solo", NO excluye a la víctima: el asesino (a solas con la víctima)
@@ -208,7 +206,7 @@ export const CLUE_TYPES = {
           ctx.furnitureAt(r, c) === p.element &&
           ctx.roomAt(r, c) === ctx.roomAt(pos.row, pos.col),
       ),
-    text: (p) => `Estaba junto a ${elementPhrase(p.element)}`,
+    text: (p, ctx) => `Estaba junto a ${elementPhrase(ctx.el, p.element)}`,
   },
   // La ventana forma parte de la pared de su celda: estar "junto a la ventana"
   // significa ocupar esa misma celda (no una contigua).
@@ -239,7 +237,7 @@ export const CLUE_TYPES = {
     tier: 'room',
     unary: true,
     evaluate: (pos, p, _all, ctx) => ctx.furnitureAt(pos.row, pos.col) === p.element,
-    text: (p) => ELEMENTS[p.element].onText,
+    text: (p, ctx) => ctx.el[p.element].onText,
   },
 
   // ───────── Propiedades de la habitación ─────────
@@ -262,9 +260,9 @@ export const CLUE_TYPES = {
       const n = ctx.roomElementCount(ctx.roomAt(pos.row, pos.col), p.element)
       return p.op === 'masDe' ? n > p.value : n < p.value
     },
-    text: (p) =>
+    text: (p, ctx) =>
       `En mi habitación había ${p.op === 'masDe' ? 'más' : 'menos'} de ` +
-      `${elementCountPhrase(p.element, p.value)}`,
+      `${elementCountPhrase(ctx.el, p.element, p.value)}`,
   },
   roomWindowCount: {
     tier: 'room',
@@ -293,7 +291,12 @@ export function evalClue(clue, placements, ctx) {
 }
 
 // Construye el contexto compartido por evaluador, generador y Solver.
-export function buildClueContext(map, roomLookup, characters) {
+//
+// `zoneId` solo afecta a la REDACCIÓN (`ctx.el`, los nombres de los elementos en
+// esa ambientación); ningún `evaluate` lo mira. Por eso quien solo evalúa
+// predicados —el Solver, el generador de soluciones, los tests— puede omitirlo
+// y quedarse con los nombres base.
+export function buildClueContext(map, roomLookup, characters, zoneId) {
   const windowSet = new Set(map.windows.map((w) => cellKey(w.row, w.col)))
   const everyone = [...characters.suspects, characters.victim]
   const suspects = [...characters.suspects]
@@ -353,6 +356,10 @@ export function buildClueContext(map, roomLookup, characters) {
 
   return {
     gridSize: map.gridSize,
+    // Nombres de los elementos y de las habitaciones en esta zona (ver
+    // game/zones.js). Ninguno de los dos lo mira `evaluate` — solo `text`.
+    el: resolveElements(zoneId),
+    rm: resolveRooms(zoneId),
     everyone,
     suspects,
     cellExists,

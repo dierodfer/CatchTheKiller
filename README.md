@@ -44,13 +44,54 @@ y **rosa polvoriento** para el error. Tipografía con carácter: serif editorial
 **Cormorant Garamond** para los títulos + **Inter** para la interfaz. Los
 tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4).
 
-- **Dos ambientaciones** (`src/components/zones.js`): cada caso se sitúa en un
-  **Apartamento en la ciudad** (frío-neutro, veteado de lino/mármol mediante
-  ruido SVG) o una **Casa de montaña** (cálido-terroso, veta de madera también
-  con ruido SVG direccional). La zona se deriva de la semilla del puzzle, así
-  que es **puramente visual**: no altera el mapa, las pistas ni la regla del
-  asesino, solo la atmósfera (acento, textura y distintivo). Son distinguibles
-  a golpe de vista pero cohesivas en el sistema.
+- **Tres ambientaciones**, repartidas por la semilla del puzzle:
+  - **Casa de montaña** — roble, hierro y lana; suelo de tarima, muros de
+    nogal y alfombra de lana bereber.
+  - **Apartamento en la ciudad** — un piso alto de rascacielos: cristal,
+    acero y hormigón, baldosa de gran formato, ventanales de marco fino y
+    alfombra de sisal.
+  - **Mansión 8-bit** — el pixel art original, con su damero, su dorado, sus
+    sprites de 8×8 y un kilim de bandas a todo color.
+
+  Las dos primeras dibujan el mobiliario con sprites reales de Kenney
+  (`furnitureSprites.js`, un set propio por zona); la tercera, con el emisor de
+  pixel art original (`pixelArt.jsx`). La zona se parte en dos capas:
+  `src/game/zones.js` guarda lo que la lógica necesita —qué zona toca a cada
+  semilla y cómo se llama cada elemento en ella— y `src/components/zones.js`,
+  cómo se ve (mobiliario, tintas, muros, ventanas, suelo y alfombra).
+
+  Una zona puede **renombrar** elementos y habitaciones sin tocar la lógica:
+  en la casa de montaña la `planta` es una *chimenea* y la `Terraza` es el
+  *Porche*, pero el id canónico sigue siendo la clave real que indexa material,
+  tinte y las marcas `blocking`/`mueble` del puzzle — solo cambia la palabra
+  que ve el jugador. Una aserción al cargar el módulo impide sustituciones que
+  rompan esa correspondencia. La mansión 8-bit no redefine nada: conserva el
+  vocabulario canónico.
+
+- **Suelo**: en montaña y apartamento, un sprite de 16×16 px por tipo de
+  habitación (`floorMaterials.js` + `floorSprites.js`, Kenney) elegido por
+  **nombre** de sala —la Cocina siempre lleva damero, la Bodega ladrillo—,
+  teñido con el `filter` de la zona. La mansión 8-bit usa en cambio
+  `floor.pattern`: el mismo damero CSS en las diez salas (el original del
+  proyecto), porque ahí el suelo no tiene que distinguir una habitación de
+  otra —de eso ya se encarga el tinte— sino sostener la textura pixelada del
+  conjunto.
+- **Alfombra en tres capas** (`Rug.jsx` + `rugLayerStyles`): una sola capa a
+  nivel de tablero —no por celda— sobre el rectángulo que ocupa (de una tira
+  de 1×6 a un bloque de 3×2, ver `placeRug` en `mapGenerator.js`). Debajo, el
+  **suelo de la habitación**; encima, el **ribete** (fino y discreto, propio de
+  cada zona) separado del muro por un margen (`insetFrac`) para que no se lea
+  como moqueta empotrada; dentro, el **tejido**. Ribete y tejido llevan cada
+  uno su propio `filter` — si compartieran el de la zona, esta no podría
+  colorear uno sin arrastrar el otro. La mansión 8-bit es la única con esquina
+  en pico (`radiusFrac: 0`): en una rejilla de píxeles no hay curvas.
+- **Texturas de alfombra** (`rugTextures.js`): cuatro tiles de 64×64 px a
+  **resolución de hilo** —trama, hebra o nudo, no un degradado CSS a rayas—
+  que embaldosan sin costura: `kilim` (bandas y galones), `berber` (fibra
+  corta con enrejado de rombos), `sisal` (esterilla de hebras cruzadas) y
+  `persa` (medallones sobre campo granate). La zona elige cuál usa
+  (`zone.rug.texture`) y la tiñe con su propio `filter`: montaña lleva
+  `berber`, el apartamento `sisal`, la mansión 8-bit `kilim`.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.
@@ -150,11 +191,14 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
 ### UI (`src/components/`)
 
 - `Board` / `Cell` — cuadrícula con **filas y columnas numeradas**, habitaciones,
-  mobiliario, ventanas y la **línea de control** (cruces `×` en fila y columna de
-  cada ficha colocada, en tiempo real; útil para comprobar que ningún personaje
-  comparte fila ni columna con otro). Las ventanas se dibujan sobre la pared de
-  la celda (no en el suelo) y son ocupables. Las alfombras pueden ocupar entre 2
-  y 6 celdas formando una región rectangular.
+  mobiliario, ventanas y la **línea de control** (un aspa en cada celda de la
+  fila y la columna de cada ficha colocada, en tiempo real; útil para comprobar
+  que ningún personaje comparte fila ni columna con otro). El aspa es SVG
+  vectorial, escalable sin perder nitidez (`ControlMark.jsx` +
+  `controlMarks.js`, cuatro variantes disponibles, activa en `CONTROL_MARK`) y
+  no se tematiza: es una señal de juego igual en las tres zonas. Las ventanas
+  se dibujan sobre la pared de la celda (no en el suelo) y son ocupables. Las
+  alfombras pueden ocupar entre 2 y 6 celdas formando una región rectangular.
 - `CharacterTray` — fichas sin colocar (orden alfabético), situada justo encima
   del tablero; zona para descolocar.
 - `CluePanel` — pistas agrupadas por personaje (orden alfabético), marcables como
@@ -187,3 +231,17 @@ continuarla si se recarga la página a mitad de un caso.
 
 Cuestiones aún abiertas del diseño (sección 15): revelado progresivo de pistas,
 sistema de puntuación y multijugador.
+
+## Créditos y licencias de terceros
+
+- **Roguelike/RPG pack** (Kenney) — los 10 sprites de suelo
+  (`src/components/floorSprites.js`) y los 12 sprites de mobiliario de «Casa de
+  montaña» y «Apartamento en la ciudad» (`furnitureSprites.js`, 6 elementos ×
+  2 zonas). Licencia CC0 1.0 (dominio público, no exige atribución); texto de
+  cortesía en
+  [`LICENSES/kenney-roguelike-rpg-pack-CC0.txt`](LICENSES/kenney-roguelike-rpg-pack-CC0.txt).
+  Cada sprite es un recorte de 16×16 px del spritesheet oficial, embebido como
+  PNG en base64: cero peticiones en tiempo de ejecución, porque la app es una
+  PWA offline.
+- El pixel art de la zona «Mansión 8-bit», los retratos de los personajes y la
+  lupa son originales del proyecto.

@@ -44,8 +44,8 @@ export function pickNextHint({
   }
   if (candidates.length === 0) return null
 
-  // El grupo de reserva (prioridad 3) existe a propósito: si el jugador lo
-  // tiene todo bien colocado y pide pista, debe recibir una igualmente —
+  // El grupo de reserva (prioridad 3) existe a propósito: si el jugador ya lo
+  // tiene bien colocado entero y pide pista, debe recibir una igualmente —
   // negársela delataría que su reconstrucción ya es correcta antes de que
   // pulse "Resolver".
   let best = null

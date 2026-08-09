@@ -163,7 +163,7 @@ export const LUPA_SPENT_GRID = [
   [0, 0, 0, 0, 0, 0, 0, 0, 5, 5],
 ]
 
-// Disponible: latón dorado y cristal limpio. Gastada: todo desaturado a gris
+// Disponible: latón dorado y cristal limpio. Gastada: desaturada por entero a gris
 // y el aspa en rosa polvoriento (el color de error del sistema).
 export const LUPA_PALETTE = {
   1: '#a07d3c',
@@ -181,20 +181,6 @@ export const LUPA_SPENT_PALETTE = {
   5: '#79737d',
   6: '#b97a80',
 }
-
-// Marca de línea de control: aspa de píxeles muy tenue.
-export const PIXEL_X_GRID = [
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 1, 0, 0, 0, 0, 1, 0],
-  [0, 0, 1, 0, 0, 1, 0, 0],
-  [0, 0, 0, 1, 1, 0, 0, 0],
-  [0, 0, 0, 1, 1, 0, 0, 0],
-  [0, 0, 1, 0, 0, 1, 0, 0],
-  [0, 1, 0, 0, 0, 0, 1, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-]
-
-export const PIXEL_X_PALETTE = { 1: 'rgba(30,19,34,0.10)' }
 
 // Velo de baldosas en damero, superpuesto sobre el tinte de cada habitación
 // para dar textura de "suelo pixelado". `backgroundSize` se fija por celda

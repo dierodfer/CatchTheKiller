@@ -37,6 +37,42 @@ export const ROOM_TINTS = [
   'rgba(185, 122, 128, 0.16)', // rosa profundo
 ]
 
+// Variantes por zona de los tintes de habitación (misma longitud y mismo uso:
+// se ciclan por orden de sala). Cada set varía LUMINOSIDAD además de tono: los
+// jugadores leen los límites de habitación de un vistazo, así que un set
+// monocromo — por muy coherente que fuese con la ambientación — degradaría el
+// juego, no solo la estética.
+
+// Montaña: maderas, terracota, musgo y piedra. Gama cálida, pero alternando
+// lavados densos y claros para que dos salas contiguas nunca se confundan.
+export const ROOM_TINTS_MONTANA = [
+  'rgba(166, 106, 58, 0.20)', // roble tostado
+  'rgba(109, 122, 82, 0.19)', // musgo
+  'rgba(214, 176, 122, 0.16)', // arena clara
+  'rgba(140, 74, 48, 0.17)', // terracota profunda
+  'rgba(122, 134, 128, 0.16)', // piedra fría
+  'rgba(196, 150, 84, 0.22)', // miel
+  'rgba(92, 58, 30, 0.14)', // nogal
+  'rgba(168, 186, 142, 0.18)', // verde pálido
+  'rgba(150, 96, 84, 0.16)', // ladrillo apagado
+  'rgba(224, 198, 156, 0.20)', // haya
+]
+
+// Apartamento: hormigón, acero, cristal y un par de acentos fríos. Más apagado
+// que montaña a propósito — es lo que separa las dos zonas de un vistazo.
+export const ROOM_TINTS_APARTAMENTO = [
+  'rgba(96, 110, 130, 0.24)', // hormigón
+  'rgba(198, 208, 218, 0.30)', // niebla clara
+  'rgba(56, 66, 82, 0.20)', // grafito
+  'rgba(112, 148, 150, 0.24)', // verdigrís
+  'rgba(150, 168, 186, 0.16)', // acero claro
+  'rgba(72, 98, 140, 0.22)', // azul urbano
+  'rgba(150, 138, 164, 0.22)', // lila ceniza
+  'rgba(212, 220, 226, 0.34)', // cristal
+  'rgba(78, 98, 96, 0.22)', // pizarra verdosa
+  'rgba(164, 152, 136, 0.22)', // arena fría
+]
+
 export function colorForCharacter(name, characters) {
   if (name === characters.victim) return VICTIM_COLOR
   const idx = characters.suspects.indexOf(name)

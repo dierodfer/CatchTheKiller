@@ -222,8 +222,86 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   return out
 }
 
-export function generateClues(rng, map, characters, solution, roomLookup, difficulty) {
-  const ctx = buildClueContext(map, roomLookup, characters)
+// ¿Puede esta candidata entrar en el conjunto? Reúne los cinco descartes
+// baratos —ya elegida, cupo del sujeto agotado, cupo de fila/columna agotado,
+// redundante por eje o recíproca de una direccional ya presente— para no
+// pagar el Solver con una candidata que se iba a descartar igualmente.
+function isEligible(cand, { chosen, chosenIds, limit, rowColCapped, countForSubject }) {
+  if (chosenIds.has(clueId(cand))) return false
+  if (countForSubject(cand.subject) >= limit) return false
+  if (rowColCapped && ROWCOL_KINDS.has(cand.kind)) return false
+  return !axisRedundant(cand, chosen) && !directionalDuplicate(cand, chosen)
+}
+
+// La mejor pista de refuerzo de una muestra: la primera que logra unicidad o,
+// si ninguna la logra, la que deja menos soluciones vivas. Devuelve `null` si
+// ninguna candidata elegible aporta nada.
+function bestReinforcement(state) {
+  const { rng, all, chosen, count, kindUsage } = state
+  let bestCount = Infinity
+  let ties = [] // candidatas que empatan en bestCount (no dan unicidad ya)
+
+  for (const cand of shuffle(rng, all).slice(0, GENERATION.CANDIDATE_SAMPLE)) {
+    if (!isEligible(cand, state)) continue
+    // Probar la candidata: contar soluciones con ella dentro y sacarla.
+    chosen.push(cand)
+    const c = count(chosen, GENERATION.SOLUTION_PROBE_CAP)
+    chosen.pop()
+    if (c < 1) continue
+    if (c === 1) return cand
+    if (c < bestCount) {
+      bestCount = c
+      ties = [cand]
+    } else if (c === bestCount) {
+      ties.push(cand)
+    }
+  }
+
+  if (ties.length === 0) return null
+  // Entre las igual de constriñentes, prefiere el tipo de pista menos usado
+  // hasta ahora: así el refuerzo aporta variedad, no más `inRoom`.
+  return ties.reduce((a, b) => (kindUsage(b) < kindUsage(a) ? b : a), ties[0])
+}
+
+// Añade pistas hasta que el Solver confirme unicidad, probando cada tope de
+// `limits` en orden. `guard` acota los intentos: si no se logra dentro de
+// `maxAdds`, se sale y el orquestador reintenta con otro mapa/solución.
+function addUntilUnique(limits, state) {
+  const { chosen, chosenIds, count, rowColCount, maxAdds } = state
+  let guard = 0
+  while (count(chosen, 2) !== 1 && guard++ < maxAdds) {
+    const rowColCapped = rowColCount() >= GENERATION.MAX_ROWCOL_CLUES
+    let best = null
+    for (const limit of limits) {
+      best = bestReinforcement({ ...state, limit, rowColCapped })
+      if (best) break
+    }
+    if (!best) break
+    chosen.push(best)
+    chosenIds.add(clueId(best))
+  }
+}
+
+// Pistas de reserva de UN sujeto: verdaderas, fuera del set principal y que
+// aporten información nueva respecto a lo ya elegido (incluidas las extras que
+// se acaban de tomar para este mismo sujeto). Marca en `takenIds` las que toma.
+function extrasForSubject(rng, pool, takenIds, context) {
+  const out = []
+  for (const cand of shuffle(rng, pool)) {
+    if (out.length >= GENERATION.EXTRAS_PER_SUBJECT) break
+    if (takenIds.has(clueId(cand))) continue
+    const seen = context.concat(out)
+    if (axisRedundant(cand, seen) || directionalDuplicate(cand, seen)) continue
+    out.push(cand)
+    takenIds.add(clueId(cand))
+  }
+  return out
+}
+
+// `zoneId` fija la ambientación con la que se redactan las pistas: aquí es donde
+// "silla" pasa a ser "banco" en la casa de montaña. Solo afecta al texto.
+export function generateClues(rng, map, characters, solution, roomLookup, difficulty, zoneId) {
+  const ctx = buildClueContext(map, roomLookup, characters, zoneId)
   ctx.rooms = map.rooms.map((r) => r.name)
   ctx.occupiable = freeCells(map)
   const tiers = difficulty.clueTiers
@@ -256,60 +334,24 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   // 3. Añadir pistas hasta lograr unicidad. El máximo es de 2 pistas por
   // sujeto: si no se logra unicidad dentro de ese límite, se descarta este
   // mapa/solución y el orquestador reintenta con otro.
-  const { SOLUTION_PROBE_CAP: CAP, MAX_CLUES_PER_SUBJECT, CANDIDATE_SAMPLE } = GENERATION
   const countForSubject = (subject) => chosen.filter((c) => c.subject === subject).length
-  const maxAdds = characters.suspects.length * 2 + 4
 
   // Cuántas pistas de cada tipo se han elegido ya (para diversificar el refuerzo).
   const kindUsage = (cand) => chosen.reduce((n, c) => n + (c.kind === cand.kind ? 1 : 0), 0)
 
-  const addUntilUnique = (limits) => {
-    let guard = 0
-    while (count(chosen, 2) !== 1 && guard++ < maxAdds) {
-      let best = null
-      let bestCount = Infinity
-      let ties = [] // candidatas que empatan en bestCount (no unicidad inmediata)
-      const rowColCapped = rowColCount() >= GENERATION.MAX_ROWCOL_CLUES
-      for (const limit of limits) {
-        for (const cand of shuffle(rng, all).slice(0, CANDIDATE_SAMPLE)) {
-          if (chosenIds.has(clueId(cand))) continue
-          if (countForSubject(cand.subject) >= limit) continue
-          if (rowColCapped && ROWCOL_KINDS.has(cand.kind)) continue
-          if (axisRedundant(cand, chosen)) continue
-          if (directionalDuplicate(cand, chosen)) continue
-          chosen.push(cand)
-          const c = count(chosen, CAP)
-          chosen.pop()
-          if (c < 1) continue
-          if (c === 1) {
-            // Esta candidata cierra la unicidad: úsala de inmediato.
-            best = cand
-            ties = []
-            break
-          }
-          if (c < bestCount) {
-            bestCount = c
-            ties = [cand]
-          } else if (c === bestCount) {
-            ties.push(cand)
-          }
-        }
-        if (best) break
-        // Entre las candidatas igual de constriñentes, prefiere el tipo de pista
-        // menos usado hasta ahora: así el refuerzo aporta variedad, no más
-        // `inRoom`/`nextToElement`.
-        if (ties.length) {
-          best = ties.reduce((a, b) => (kindUsage(b) < kindUsage(a) ? b : a), ties[0])
-          break
-        }
-      }
-      if (!best) break
-      chosen.push(best)
-      chosenIds.add(clueId(best))
-    }
+  const state = {
+    rng,
+    all,
+    chosen,
+    chosenIds,
+    count,
+    countForSubject,
+    kindUsage,
+    rowColCount,
+    maxAdds: characters.suspects.length * 2 + 4,
   }
 
-  addUntilUnique([MAX_CLUES_PER_SUBJECT])
+  addUntilUnique([GENERATION.MAX_CLUES_PER_SUBJECT], state)
 
   if (count(chosen, 2) !== 1) return null
 
@@ -344,17 +386,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
   const chosenFinalIds = new Set(clues.map(clueId))
   const extras = []
   for (const s of subjects) {
-    let taken = 0
-    for (const cand of shuffle(rng, pools[s])) {
-      if (taken >= GENERATION.EXTRAS_PER_SUBJECT) break
-      if (chosenFinalIds.has(clueId(cand))) continue
-      const context = clues.concat(extras)
-      if (axisRedundant(cand, context)) continue
-      if (directionalDuplicate(cand, context)) continue
-      extras.push(cand)
-      chosenFinalIds.add(clueId(cand))
-      taken++
-    }
+    extras.push(...extrasForSubject(rng, pools[s], chosenFinalIds, clues.concat(extras)))
   }
   const extraClues = sortAlpha(extras)
 

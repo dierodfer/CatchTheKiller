@@ -4,6 +4,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { cellKey } from '@/game/constants.js'
 import Cell from './Cell.jsx'
+import { Rug } from './Rug.jsx'
 import { GUTTER, useBoardGeometry } from '@/hooks/useBoardGeometry.js'
 
 export default function Board({
@@ -23,9 +24,10 @@ export default function Board({
   onMarkClose,
 }) {
   const { map, roomLookup, characters, solution, killer } = puzzle
-  const { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt } = useBoardGeometry({
+  const { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt, rugBounds } = useBoardGeometry({
     map,
     roomLookup,
+    zone,
     placements,
     revealMode,
     killer,
@@ -59,6 +61,7 @@ export default function Board({
         <Cell
           key={key}
           geometry={cellGeometry[r][c]}
+          zone={zone}
           characters={characters}
           occupantName={occupantAt[key]}
           controlled={controlled.has(key)}
@@ -86,9 +89,29 @@ export default function Board({
     )
   }
 
+  // Alfombra: UNA capa a nivel de tablero, no por celda (ver Rug.jsx). Va
+  // ANTES que `rows` a propósito: pinta por detrás, y las celdas de alfombra
+  // dejan su fondo transparente (ver Cell.jsx) para que se vea a través; el
+  // resto de celdas no se entera, pintan encima como siempre. Así la ficha o
+  // la marca que caiga sobre la alfombra sigue quedando por delante sin
+  // ningún z-index.
+  const rugLayer = rugBounds ? (
+    <div className="pointer-events-none absolute inset-0" style={{ top: GUTTER }} aria-hidden>
+      <Rug
+        zone={zone}
+        cellSize={cellSize}
+        bounds={rugBounds}
+        offsetX={GUTTER}
+        // La alfombra cae siempre dentro de una sola habitación, así que su
+        // esquina superior izquierda basta para saber qué suelo pintar debajo.
+        roomName={cellGeometry[rugBounds.r0][rugBounds.c0].roomName}
+        tint={cellGeometry[rugBounds.r0][rugBounds.c0].tint}
+      />
+    </div>
+  ) : null
+
   // Celebración: la escena se ilumina habitación por habitación, trazando la
   // forma real de cada sala con un resplandor dorado escalonado.
-  const glowGold = zone?.glow || 'rgba(160, 125, 60, 0.35)'
   const celebrationLayer =
     celebrating && !reduce ? (
       <div className="pointer-events-none absolute inset-0" style={{ top: GUTTER }} aria-hidden>
@@ -102,7 +125,7 @@ export default function Board({
                 left: GUTTER + c * cellSize,
                 width: cellSize,
                 height: cellSize,
-                background: `radial-gradient(circle at 50% 50%, ${glowGold}, transparent 75%)`,
+                background: `radial-gradient(circle at 50% 50%, ${zone.glow}, transparent 75%)`,
                 mixBlendMode: 'multiply',
               }}
               initial={{ opacity: 0, scale: 0.6 }}
@@ -119,20 +142,20 @@ export default function Board({
     // anula su ancho mínimo por defecto (min-content), que descuadraría la
     // rejilla.
     <fieldset
-      className="pixel-frame relative inline-block overflow-hidden rounded-lg bg-cream-100/75 p-2.5 shadow-2xl"
-      style={{ minInlineSize: 'auto' }}
+      className="pixel-frame relative inline-block overflow-hidden rounded-lg p-2.5 shadow-2xl"
+      style={{ minInlineSize: 'auto', background: zone.frame.background }}
       aria-label="Tablero del caso"
     >
-      {/* Textura ambiental propia de la zona. */}
-      {zone && (
-        <div
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{ backgroundImage: zone.texture, mixBlendMode: 'multiply' }}
-          aria-hidden
-        />
-      )}
+      {/* Textura ambiental propia de la zona. La opacidad va en el estilo, no en
+          una clase: cada zona calibra la suya. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ ...zone.ambient, opacity: zone.ambientOpacity, mixBlendMode: 'multiply' }}
+        aria-hidden
+      />
       <div className="relative">
         {header}
+        {rugLayer}
         {rows}
         {celebrationLayer}
       </div>

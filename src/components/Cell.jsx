@@ -10,28 +10,60 @@ import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
 import { FurnitureIcon } from './Furniture.jsx'
 import { DraggableToken, TokenChip } from './CharacterToken.jsx'
-import { PixelGrid } from './pixelArt.jsx'
-import { PIXEL_X_GRID, PIXEL_X_PALETTE } from './pixelSprites.js'
+import { ControlMark } from './ControlMark.jsx'
 import { colorForCharacter } from './palette.js'
 import CellMarkPopup from './CellMarkPopup.jsx'
 import {
   WINDOW_BORDER_SIDE,
-  WINDOW_GLASS_COLOR,
   REVEAL_TINT,
   REVEAL_HIGHLIGHT,
   DROP_OUTLINE,
+  SELECTED_OUTLINE,
   windowBorder,
   windowGlassStyle,
   floorPatternStyle,
-  rugLayerStyles,
 } from './boardCell.js'
 
 // Grosor del marco de ventana (px) e inset del cristal en el tablero de juego.
 const WINDOW_FRAME_PX = 5
 const GLASS_INSET = 8
 
+// Anotaciones del jugador: las iniciales de los sospechosos que ha marcado como
+// candidatos de esta casilla. Se quedan visibles aunque haya una ficha encima
+// —son su razonamiento, no el estado del tablero—, así que van apiladas abajo
+// para no taparle la cara a la ficha. Tamaño y tipografía se escalan con la
+// celda, con un mínimo legible para que sigan leyéndose a 36 px en móvil.
+function CandidateMarks({ names, characters, size }) {
+  if (names.length === 0) return null
+  const dot = Math.max(12, Math.round(size * 0.2))
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 flex flex-wrap items-end justify-center gap-px p-0.5"
+      style={{ alignContent: 'end' }}
+    >
+      {names.map((name) => (
+        <span
+          key={name}
+          className="inline-flex items-center justify-center rounded-full text-white font-bold leading-none"
+          style={{
+            width: dot,
+            height: dot,
+            fontSize: Math.max(7, Math.round(size * 0.12)),
+            background: colorForCharacter(name, characters).bg,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+          }}
+          title={name}
+        >
+          {name[0]}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function Cell({
   geometry,
+  zone,
   characters,
   occupantName,
   controlled,
@@ -46,8 +78,9 @@ function Cell({
   onMarkOpen,
   onMarkClose,
 }) {
-  const { r, c, size, tint, borders, label, furniture, isWindow, wall, rugEdges, occupiable } =
-    geometry
+  const { r, c, size, tint, borders, label, furniture, isWindow, wall, occupiable } = geometry
+  const { roomName } = geometry
+  const isRug = furniture === 'alfombra'
 
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${r}-${c}`,
@@ -73,7 +106,6 @@ function Cell({
 
   const tokenSize = Math.round(size * 0.62)
   const canDrop = occupiable && (isOver || (selectedToken && !occupantName))
-  const margin = Math.max(2, Math.round(size * 0.05))
   const clickable = occupiable && !revealMode
 
   const cellMarks = marks?.[`${r},${c}`] || []
@@ -81,6 +113,22 @@ function Cell({
 
   const occupantSuffix = occupantName ? `, ${occupantName}` : ''
   const cellLabel = `Casilla fila ${r + 1}, columna ${c + 1}${occupantSuffix}`
+
+  // Fondo de la celda. La de alfombra no pinta NINGUNO: la celda se dibuja
+  // después que la capa de alfombra (ver Board.jsx), así que cualquier fondo
+  // aquí la taparía. El suelo que asoma por el margen y las esquinas
+  // redondeadas lo pinta la propia alfombra, bajo su tejido (ver Rug.jsx).
+  let background = tint
+  if (revealCell) background = REVEAL_TINT
+  else if (isRug) background = 'transparent'
+
+  // Contorno de interacción: `canDrop` gana si coincide con `isMarkingThis`
+  // (no debería pasar en la práctica, son dos modos de interacción distintos,
+  // pero un gesto en curso —arrastrar una ficha— es más urgente que "esta es
+  // la casilla que estoy anotando").
+  let outline = 'none'
+  if (canDrop) outline = DROP_OUTLINE
+  else if (isMarkingThis) outline = SELECTED_OUTLINE
 
   // Solo se invoca desde la diana de interacción, que únicamente se renderiza
   // cuando `clickable`; no hace falta volver a comprobarlo aquí.
@@ -102,14 +150,16 @@ function Cell({
       style={{
         width: size,
         height: size,
-        background: revealCell ? REVEAL_TINT : tint,
+        background,
         borderTop: borders.top,
         borderRight: borders.right,
         borderBottom: borders.bottom,
         borderLeft: borders.left,
-        ...(isWindow && wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(WINDOW_FRAME_PX) } : null),
+        ...(isWindow && wall
+          ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(zone, WINDOW_FRAME_PX) }
+          : null),
         cursor: clickable ? 'pointer' : 'default',
-        outline: canDrop ? DROP_OUTLINE : 'none',
+        outline,
         outlineOffset: -2,
       }}
     >
@@ -125,8 +175,13 @@ function Cell({
         />
       )}
 
-      {/* Suelo a baldosas: damero superpuesto al tinte de la habitación. */}
-      <div className="pointer-events-none absolute inset-0" style={floorPatternStyle(size)} />
+      {/* Suelo: el material lo pone la habitación, el color la zona. */}
+      {!isRug && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={floorPatternStyle(zone, roomName, size)}
+        />
+      )}
 
       {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
@@ -135,66 +190,31 @@ function Cell({
         </span>
       )}
 
-      {/* Alfombra: relleno de fondo, puede abarcar varias celdas contiguas. */}
-      {furniture === 'alfombra' &&
-        rugEdges &&
-        rugLayerStyles(rugEdges, margin).map(({ id, style }) => (
-          <div key={id} className="pointer-events-none absolute" style={style} />
-        ))}
+      {/* La alfombra no se dibuja aquí: es una única capa a nivel de tablero
+          (ver Board.jsx) para que su marco no se deforme sea cual sea la
+          forma — esta celda solo le deja hueco (fondo transparente arriba). */}
 
       {/* Mobiliario (excepto alfombra), oculto si hay una ficha encima. */}
-      {!occupantName && furniture && furniture !== 'alfombra' && (
+      {!occupantName && furniture && !isRug && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-75">
-          <FurnitureIcon type={furniture} size={Math.round(size * 0.42)} className="text-plum-700/70" />
+          <FurnitureIcon type={furniture} zone={zone} size={Math.round(size * 0.42)} />
         </div>
       )}
 
       {/* Ventana: cristal claro junto al tramo de pared marcado en azul. */}
       {isWindow && wall && (
         <div
-          className="pointer-events-none absolute rounded-full"
-          style={{ background: WINDOW_GLASS_COLOR, ...windowGlassStyle(wall, GLASS_INSET) }}
-        />
-      )}
-
-      {/* Marca × de línea de control. */}
-      {controlled && !occupantName && (
-        <PixelGrid
-          grid={PIXEL_X_GRID}
-          palette={PIXEL_X_PALETTE}
-          size={Math.round(size * 0.5)}
           className="pointer-events-none absolute"
+          style={windowGlassStyle(zone, wall, GLASS_INSET)}
         />
       )}
 
-      {/* Marcas de candidatos (anotaciones del jugador). Permanecen visibles
-          aunque haya una ficha colocada encima. */}
-      {cellMarks.length > 0 && (
-        <div
-          className="pointer-events-none absolute inset-0 flex flex-wrap items-end justify-center gap-px p-0.5"
-          style={{ alignContent: 'end' }}
-        >
-          {cellMarks.map((name) => {
-            const color = colorForCharacter(name, characters)
-            return (
-              <span
-                key={name}
-                className="inline-flex items-center justify-center rounded-full text-white font-bold leading-none"
-                style={{
-                  width: Math.max(12, Math.round(size * 0.2)),
-                  height: Math.max(12, Math.round(size * 0.2)),
-                  fontSize: Math.max(7, Math.round(size * 0.12)),
-                  background: color.bg,
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
-                }}
-                title={name}
-              >
-                {name[0]}
-              </span>
-            )
-          })}
-        </div>
+      {/* Aspa de línea de control (ver ControlMark.jsx). */}
+      {controlled && !occupantName && (
+        <ControlMark size={Math.round(size * 0.5)} className="pointer-events-none absolute" />
       )}
+
+      <CandidateMarks names={cellMarks} characters={characters} size={size} />
 
       {/* Ficha colocada. */}
       {occupantName && (

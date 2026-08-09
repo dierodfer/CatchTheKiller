@@ -79,13 +79,15 @@ export const PROXIMITY_ELEMENTS = ELEMENT_IDS
 export const ON_ELEMENTS = idsWhere((e) => !!e.onText)
 
 // Frase indeterminada "una <elemento>" con el nombre actual del elemento.
-// Punto único de indirección para el nombre mostrado (futuro: por ambiente).
-export const elementPhrase = (id) => `${ELEMENTS[id].article} ${ELEMENTS[id].label}`
+// `el` es la tabla de elementos ya resuelta para la zona (ver game/zones.js);
+// pasarla en lugar de leer ELEMENTS directamente es lo que permite que un mismo
+// id se llame distinto en cada ambiente sin tocar la lógica.
+export const elementPhrase = (el, id) => `${el[id].article} ${el[id].label}`
 
 // Frase de conteo "N <elemento>" con concordancia singular/plural
 // ("1 cama", "2 plantas"). Para las pistas de cantidad por habitación.
-export const elementCountPhrase = (id, n) =>
-  `${n} ${n === 1 ? ELEMENTS[id].label : ELEMENTS[id].plural}`
+export const elementCountPhrase = (el, id, n) =>
+  `${n} ${n === 1 ? el[id].label : el[id].plural}`
 
 // ¿Este id se considera un "mueble"? (alfombra/planta → false).
 export const isMueble = (id) => !!ELEMENTS[id]?.mueble

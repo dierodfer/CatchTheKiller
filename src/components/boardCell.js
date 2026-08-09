@@ -1,19 +1,28 @@
 // Primitivas de dibujo compartidas por Cell (tablero de juego) y MapPreview
-// (miniatura de la pantalla inicial): marco de ventana, cristal, suelo a
-// baldosas y las dos capas de la alfombra. Centralizar esto evita que ambos
+// (miniatura de la pantalla inicial): bordes de celda, marco de ventana,
+// cristal, suelo y las capas de la alfombra. Centralizar esto evita que ambos
 // componentes dupliquen constantes y cálculos (y se desincronicen).
+//
+// Todas las funciones reciben la ZONA como primer parámetro: es el punto único
+// por el que la ambientación entra en el tablero, así que un material nuevo se
+// define una vez en zones.js y aparece a la vez en el tablero y en la miniatura.
 
-import { RUG_PATTERN, RUG_NOISE, RUG_NOISE_SIZE } from './rugPattern.js'
-import { PIXEL_FLOOR_PATTERN } from './pixelSprites.js'
+import { MATERIALS, ROOM_MATERIAL } from './floorMaterials.js'
+import { RUG_TEXTURES } from './rugTextures.js'
 
-// Color del marco de ventana (estilo plano técnico) y del cristal.
-export const WINDOW_FRAME_COLOR = '#6f9bc9'
-export const WINDOW_GLASS_COLOR = '#eaf3fb'
-
-// Tinte dorado y contornos del tablero (resaltado de revelado, soltar ficha).
+// Tinte dorado y contornos del tablero (resaltado de revelado, soltar ficha,
+// casilla seleccionada). NO se tematizan: son señales de interacción, no
+// decorado. Que el destino de soltado o la habitación revelada cambien de
+// color según la zona debilitaría el feedback sin aportar ambientación.
 export const REVEAL_TINT = 'rgba(203,163,92,0.30)'
 export const REVEAL_HIGHLIGHT = '#a07d3c'
 export const DROP_OUTLINE = '2px solid rgba(255,255,255,0.7)'
+// Casilla con el popup de marcado abierto: mismo dorado de foco que usa el
+// resto de la app (ver README, "foco visible en dorado"). Un trazo más
+// grueso que DROP_OUTLINE porque aquí es la única señal de qué casilla se
+// está editando —el popup flota aparte y puede no tocar la celda—, así que
+// tiene que sostenerse por sí solo, no solo reforzar un gesto en curso.
+export const SELECTED_OUTLINE = '3px solid #cba35c'
 
 // Lado del borde de la celda que ocupa la ventana, según su pared.
 export const WINDOW_BORDER_SIDE = {
@@ -23,63 +32,152 @@ export const WINDOW_BORDER_SIDE = {
   este: 'borderRight',
 }
 
-// Marco de ventana, parametrizado por grosor en px (tablero 5, preview 3).
-export const windowBorder = (px) => `${px}px solid ${WINDOW_FRAME_COLOR}`
+// Marco de ventana. `px` es el grosor base del llamante (tablero 5, miniatura
+// 3) y la zona lo escala: el acero del apartamento es deliberadamente más fino
+// que la madera de la casa de montaña.
+export const windowBorder = (zone, px) =>
+  `${Math.max(1, Math.round(px * zone.window.frameScale))}px solid ${zone.window.frame}`
 
-// Estilo del cristal pegado a la pared. `inset` separa el cristal de las
-// esquinas (px); su grosor es fijo (~2px).
-export function windowGlassStyle(wall, inset) {
+// Estilo del cristal pegado a la pared: geometría, color y radio. `inset`
+// separa el cristal de las esquinas (px); su grosor es fijo (~2px). El radio
+// viene de la zona porque un ventanal de acero quiere cantos rectos y uno de
+// madera, redondeados.
+export function windowGlassStyle(zone, wall, inset) {
   const T = 2
+  const skin = { background: zone.window.glass, borderRadius: zone.window.glassRadius }
   switch (wall) {
     case 'norte':
-      return { left: inset, right: inset, top: T, height: T }
+      return { ...skin, left: inset, right: inset, top: T, height: T }
     case 'sur':
-      return { left: inset, right: inset, bottom: T, height: T }
+      return { ...skin, left: inset, right: inset, bottom: T, height: T }
     case 'oeste':
-      return { top: inset, bottom: inset, left: T, width: T }
+      return { ...skin, top: inset, bottom: inset, left: T, width: T }
     case 'este':
-      return { top: inset, bottom: inset, right: T, width: T }
+      return { ...skin, top: inset, bottom: inset, right: T, width: T }
     default:
       return {}
   }
 }
 
-// Estilo del suelo a baldosas (damero superpuesto al tinte de la habitación).
-export function floorPatternStyle(size) {
-  const tile = Math.max(4, Math.round(size / 4))
+// Estilo del suelo de una celda: el MATERIAL lo decide la habitación y el COLOR
+// la zona. Una sala sin material declarado (no debería pasar: ROOM_MATERIAL
+// cubre los 10 nombres) cae en el material por defecto de la zona.
+//
+// Salvo que la zona declare `floor.pattern`, y entonces ese dibujo va en TODAS
+// sus salas. Es la vía por la que la mansión 8-bit conserva su damero de
+// siempre: allí el suelo no distingue una habitación de otra —de eso ya se
+// encarga el tinte—, sino que sostiene la textura pixelada del conjunto, y un
+// sprite por tipo de sala le quitaba precisamente eso.
+export function floorPatternStyle(zone, roomName, size) {
+  const { pattern } = zone.floor
+  let skin
+  if (pattern) {
+    // Igual que los sprites: el periodo se escala con la celda, no es fijo.
+    const t = Math.max(4, Math.round(size / pattern.div))
+    skin = { backgroundImage: pattern.image, backgroundSize: `${t}px ${t}px` }
+  } else {
+    const material = MATERIALS[ROOM_MATERIAL[roomName]] || MATERIALS[zone.floor.fallback]
+    skin = material(zone, size)
+  }
   return {
-    backgroundImage: PIXEL_FLOOR_PATTERN,
-    backgroundSize: `${tile}px ${tile}px`,
-    mixBlendMode: 'soft-light',
-    opacity: 0.55,
+    ...skin,
+    mixBlendMode: zone.floor.blend,
+    opacity: zone.floor.opacity,
   }
 }
 
-// Estilos de las dos capas de la alfombra (trama + dither) dados los bordes
-// (qué lados son frontera de la alfombra), el margen y el radio de esquina.
-// Cada capa lleva un `id` estable para usarlo como key de React al renderizar.
-export function rugLayerStyles(edges, margin, radius = 8) {
-  const box = {
-    top: edges.top ? margin : 0,
-    right: edges.right ? margin : 0,
-    bottom: edges.bottom ? margin : 0,
-    left: edges.left ? margin : 0,
-    borderTopLeftRadius: edges.top && edges.left ? radius : 0,
-    borderTopRightRadius: edges.top && edges.right ? radius : 0,
-    borderBottomLeftRadius: edges.bottom && edges.left ? radius : 0,
-    borderBottomRightRadius: edges.bottom && edges.right ? radius : 0,
-  }
-  return [
-    { id: 'trama', style: { ...box, background: RUG_PATTERN, opacity: 0.85 } },
-    {
-      id: 'dither',
-      style: {
-        ...box,
-        backgroundImage: RUG_NOISE,
-        backgroundSize: RUG_NOISE_SIZE,
-        mixBlendMode: 'soft-light',
-        opacity: 0.25,
-      },
+// Estilos de la alfombra: UNA capa que cubre el rectángulo entero (no una
+// por celda — ver `rugBounds` en useBoardGeometry.js y su render en
+// Board.jsx), en DOS elementos anidados. Devuelve el estilo de cada uno:
+//
+//   `frame` — el ribete, un borde sólido del color que fija la zona.
+//   `fill`  — el tejido de `RUG_TEXTURES`, dentro del ribete.
+//
+// El ribete NO llega a los muros: `inset` lo separa del canto de las celdas
+// que ocupa, y por esa franja se ve el suelo de la habitación. Una alfombra
+// encajada al milímetro entre cuatro paredes se lee como moqueta —parte de
+// la obra—, y lo que se quiere aquí es una pieza suelta apoyada encima.
+//
+// Van separados por el `filter`. El filtro es del TEJIDO, no de la alfombra
+// entera: si se aplicara al elemento del ribete, el sepia de la casa de
+// montaña o el grayscale del apartamento arrastrarían también el color del
+// ribete y la zona dejaría de poder elegirlo — que es justo lo que hace que
+// se lea como una cinta cosida al borde y no como un recorte más de la
+// misma tela. Anidados, cada capa recibe solo lo suyo.
+//
+// El grosor y el radio son proporcionales a la celda, no fijos: así el
+// ribete no queda desproporcionado en un tablero grande ni desaparece en
+// uno pequeño. `radiusFrac: 0` deja la esquina en pico — es lo que quiere la
+// mansión 8-bit, donde una curva delataría que no es pixel art. El radio
+// interior descuenta el grosor del ribete para que las dos curvas sean
+// concéntricas; si el ribete es más ancho que el radio, sale 0 y el tejido
+// queda en pico dentro de una cinta redondeada, que es lo correcto.
+//
+// El tile se escala con la celda, no a tamaño fijo: un periodo constante se
+// convierte en ruido cuando el tablero se comprime a 36 px en móvil (mismo
+// criterio que los materiales de suelo).
+export function rugLayerStyles(zone, cellSize) {
+  const border = Math.max(2, Math.round(cellSize * zone.rug.borderFrac))
+  const radius = Math.round(cellSize * zone.rug.radiusFrac)
+  const tex = RUG_TEXTURES[zone.rug.texture]
+  const t = Math.max(24, Math.round(cellSize / tex.tileDiv))
+  return {
+    // En píxeles y sobre la celda, no en porcentaje sobre el rectángulo: la
+    // alfombra puede ser una tira de 1×6, y un porcentaje dejaría allí una
+    // franja de suelo seis veces más ancha por los extremos que por los
+    // lados. Con una medida fija el marco de suelo es igual a lo largo del
+    // contorno entero, salga la alfombra con la forma que salga.
+    inset: Math.max(2, Math.round(cellSize * zone.rug.insetFrac)),
+    frame: {
+      borderStyle: 'solid',
+      borderWidth: border,
+      borderColor: zone.rug.border,
+      borderRadius: radius,
     },
-  ]
+    fill: {
+      borderRadius: Math.max(0, radius - border),
+      backgroundImage: `url("${tex.tile}")`,
+      backgroundSize: `${t}px ${t}px`,
+      // Mantiene el hilo del tejido definido (el tile va casi a escala 1:1).
+      imageRendering: 'pixelated',
+      // Sombra hacia dentro: oscurece el tejido justo donde se encuentra con
+      // el ribete, que es lo que da el pliegue del pelo contra la cinta. Sin
+      // ella, las dos capas se tocan en un canto plano de recorte.
+      boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.22)',
+      filter: zone.rug.filter,
+      opacity: zone.rug.opacity,
+    },
+  }
+}
+
+// Fábrica de bordes de celda: muro exterior del tablero, muro entre
+// habitaciones y —opcional— línea interior de rejilla, con los colores y
+// grosores de la zona. `scale` adelgaza los trazos en la miniatura (el
+// tablero usa 1). Un grosor de 0 px produce 'none': las tres zonas
+// prescinden de la rejilla interior, porque el propio suelo (veta, damero,
+// junta de baldosa) ya separa una celda de la siguiente sin necesidad de una
+// línea CSS encima que partiera el sprite en dos. Solo quedan las fronteras
+// que SÍ son información — muro exterior y muro entre habitaciones.
+export function makeBordersFor(map, roomLookup, size, zone, scale = 1) {
+  const px = (n) => Math.max(1, Math.round(n * scale))
+  const OUTER = `${px(zone.wall.outerPx)}px solid ${zone.wall.color}`
+  const ROOM = `${px(zone.wall.roomPx)}px solid ${zone.wall.color}`
+  const THIN = zone.wall.thinPx <= 0 ? 'none' : `${px(zone.wall.thinPx)}px solid ${zone.wall.thinColor}`
+
+  return (r, c) => {
+    const room = roomLookup[`${r},${c}`]
+    const sideBorder = (nr, nc) => {
+      // Fuera del tablero o celda void (mapa irregular): muro exterior.
+      if (nr < 0 || nc < 0 || nr >= size || nc >= size) return OUTER
+      if (map.voidCells?.has(`${nr},${nc}`)) return OUTER
+      if (roomLookup[`${nr},${nc}`] !== room) return ROOM
+      return THIN
+    }
+    return {
+      top: sideBorder(r - 1, c),
+      bottom: sideBorder(r + 1, c),
+      left: sideBorder(r, c - 1),
+      right: sideBorder(r, c + 1),
+    }
+  }
 }
