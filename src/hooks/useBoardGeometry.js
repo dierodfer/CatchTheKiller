@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { makeBordersFor } from '@/components/boardCell.js'
 import { roomIndexByName } from '@/components/floorMaterials.js'
+import { cellKey } from '@/game/constants.js'
 import { controlLineCells } from '@/game/killerRule.js'
 import { isOccupiable, rugBoundsOf } from '@/game/mapGenerator.js'
 
@@ -65,7 +66,7 @@ export function useBoardGeometry({
 
   const cellGeometry = useMemo(() => {
     const windowByCell = {}
-    for (const w of map.windows) windowByCell[`${w.row},${w.col}`] = w.wall
+    for (const w of map.windows) windowByCell[cellKey(w.row, w.col)] = w.wall
     // Celda que muestra la etiqueta de cada habitación (primera en lectura).
     // El rótulo es el nombre de la ZONA para esa sala (`zone.rooms`), no el
     // canónico: es la única pieza de la geometría que varía con la
@@ -86,7 +87,7 @@ export function useBoardGeometry({
     for (let r = 0; r < size; r++) {
       const row = []
       for (let c = 0; c < size; c++) {
-        const key = `${r},${c}`
+        const key = cellKey(r, c)
         // Celda void (mapa irregular): hueco no jugable, se pinta como exterior.
         if (map.voidCells?.has(key)) {
           row.push({ r, c, size: cellSize, isVoid: true, occupiable: false })
@@ -123,7 +124,7 @@ export function useBoardGeometry({
     const set = new Set()
     for (const name of Object.keys(placements)) {
       if (name === draggingName) continue
-      for (const [r, c] of controlLineCells(placements[name], map)) set.add(`${r},${c}`)
+      for (const [r, c] of controlLineCells(placements[name], map)) set.add(cellKey(r, c))
     }
     return set
   }, [placements, map, draggingName])
@@ -133,7 +134,7 @@ export function useBoardGeometry({
   const revealRoom = useMemo(() => {
     if (!revealMode || !killer) return new Set()
     const v = solution[victim]
-    const room = roomLookup[`${v.row},${v.col}`]
+    const room = roomLookup[cellKey(v.row, v.col)]
     const set = new Set()
     for (const key of Object.keys(roomLookup)) {
       if (roomLookup[key] === room) set.add(key)
@@ -145,7 +146,7 @@ export function useBoardGeometry({
     const m = {}
     for (const name of Object.keys(placements)) {
       const p = placements[name]
-      m[`${p.row},${p.col}`] = name
+      m[cellKey(p.row, p.col)] = name
     }
     return m
   }, [placements])

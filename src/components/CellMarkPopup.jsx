@@ -7,6 +7,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { cellKey } from '@/game/constants.js'
 import { colorForCharacter } from './palette.js'
 
 const VIEWPORT_MARGIN = 8 // separación mínima respecto a los bordes de la ventana
@@ -62,7 +63,7 @@ export default function CellMarkPopup({
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  const currentMarks = marks[`${r},${c}`] || []
+  const currentMarks = marks[cellKey(r, c)] || []
   const cols = allNames.length <= 4 ? 2 : 3
 
   return createPortal(

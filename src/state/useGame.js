@@ -9,6 +9,7 @@ import {
   filterValidRevealedExtras,
   filterValidStruckClues,
 } from '@/game/placements.js'
+import { cellKey } from '@/game/constants.js'
 import { clueId } from '@/game/clues.js'
 import { pickNextHint } from '@/game/hints.js'
 import { validatePlayerSolution } from '@/game/solver.js'
@@ -96,7 +97,7 @@ function reducer(state, action) {
     // Anotación de candidato en una casilla: alterna el personaje y descarta
     // la entrada cuando se queda sin nombres.
     case 'TOGGLE_MARK': {
-      const key = `${action.row},${action.col}`
+      const key = cellKey(action.row, action.col)
       const current = state.marks[key] || []
       const next = current.includes(action.name)
         ? current.filter((n) => n !== action.name)
@@ -135,7 +136,7 @@ function reducer(state, action) {
           solved: true,
           complete: true,
           killer: puzzle.killer,
-          room: puzzle.roomLookup[`${v.row},${v.col}`],
+          room: puzzle.roomLookup[cellKey(v.row, v.col)],
           errorCount: 0,
           revealed: true,
         },

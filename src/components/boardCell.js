@@ -7,6 +7,7 @@
 // por el que la ambientación entra en el tablero, así que un material nuevo se
 // define una vez en zones.js y aparece a la vez en el tablero y en la miniatura.
 
+import { cellKey } from '@/game/constants.js'
 import { MATERIALS, ROOM_MATERIAL } from './floorMaterials.js'
 import { RUG_TEXTURES } from './rugTextures.js'
 
@@ -165,12 +166,12 @@ export function makeBordersFor(map, roomLookup, size, zone, scale = 1) {
   const THIN = zone.wall.thinPx <= 0 ? 'none' : `${px(zone.wall.thinPx)}px solid ${zone.wall.thinColor}`
 
   return (r, c) => {
-    const room = roomLookup[`${r},${c}`]
+    const room = roomLookup[cellKey(r, c)]
     const sideBorder = (nr, nc) => {
       // Fuera del tablero o celda void (mapa irregular): muro exterior.
       if (nr < 0 || nc < 0 || nr >= size || nc >= size) return OUTER
-      if (map.voidCells?.has(`${nr},${nc}`)) return OUTER
-      if (roomLookup[`${nr},${nc}`] !== room) return ROOM
+      if (map.voidCells?.has(cellKey(nr, nc))) return OUTER
+      if (roomLookup[cellKey(nr, nc)] !== room) return ROOM
       return THIN
     }
     return {
