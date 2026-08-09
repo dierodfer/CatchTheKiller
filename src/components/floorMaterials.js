@@ -1,23 +1,17 @@
 // Materiales de suelo, uno por TIPO de habitación.
 //
-// La sala manda el material (una cocina lleva baldosa, una bodega ladrillo) y
-// la zona manda el TINTE (no el dibujo): cada material es un sprite de 16×16 px
-// recortado de un set profesional (`floorSprites.js`, Kenney CC0 — ver ese
-// fichero), y la zona lo tiñe con un `filter` CSS y lo combina con su lavado de
-// habitación (`zone.tints`) mediante `mixBlendMode`. Así el tablero se lee como
-// una casa de verdad —el jugador reconoce la Biblioteca por su suelo igual que
-// por su rótulo— y la misma Biblioteca cambia de tono según la ambientación sin
-// que haga falta un sprite distinto por zona.
+// La sala manda el material (cocina = baldosa, bodega = ladrillo) y la zona
+// manda el TINTE: cada material es un sprite de 16×16 px (`floorSprites.js`,
+// Kenney CC0), teñido con el `filter` de la zona y combinado con su lavado de
+// habitación (`zone.tints`) vía `mixBlendMode`. Así la misma Biblioteca cambia
+// de tono según la ambientación sin necesitar un sprite distinto por zona.
 //
-// `zone.floor.filter` es deliberadamente el único punto donde una zona toca el
-// suelo: desaturar + oscurecer dirige el protagonismo del color hacia el lavado
-// de la habitación (igual que hacían antes las tres tintas `{l,m,d}`), mientras
-// que la zona 8-bit no aplica filtro y deja el pixel art a pleno color, coherente
-// con el resto de su arte.
+// `zone.floor.filter` es el único punto donde una zona toca el suelo: la
+// mansión 8-bit no aplica ninguno y deja el pixel art a pleno color.
 //
 // AVISO: lo que se devuelve va a `background-image`, que SOLO admite imágenes.
-// La posición y el tamaño van en sus propias longhands. Meterlas dentro del
-// string —sintaxis del atajo `background`— invalida la declaración entera.
+// La posición y el tamaño van en sus propias longhands — meterlas dentro del
+// string (atajo `background`) invalida la declaración entera.
 
 import { ROOM_NAMES } from '@/game/constants.js'
 import { FLOOR_TILES } from './floorSprites.js'

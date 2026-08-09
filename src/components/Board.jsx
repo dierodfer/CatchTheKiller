@@ -80,7 +80,6 @@ export default function Board({
     }
     rows.push(
       <div key={r} className="flex">
-        {/* Número de fila (decorativo). */}
         <div className={axisLabel} style={{ width: GUTTER, height: cellSize }} aria-hidden>
           {r + 1}
         </div>
@@ -91,10 +90,8 @@ export default function Board({
 
   // Alfombra: UNA capa a nivel de tablero, no por celda (ver Rug.jsx). Va
   // ANTES que `rows` a propósito: pinta por detrás, y las celdas de alfombra
-  // dejan su fondo transparente (ver Cell.jsx) para que se vea a través; el
-  // resto de celdas no se entera, pintan encima como siempre. Así la ficha o
-  // la marca que caiga sobre la alfombra sigue quedando por delante sin
-  // ningún z-index.
+  // dejan su fondo transparente para que se vea a través — así la ficha o la
+  // marca que caiga encima sigue quedando delante sin ningún z-index.
   const rugLayer = rugBounds ? (
     <div className="pointer-events-none absolute inset-0" style={{ top: GUTTER }} aria-hidden>
       <Rug

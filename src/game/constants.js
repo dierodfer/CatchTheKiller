@@ -89,13 +89,6 @@ export const IRREGULAR = {
   7: { kinds: ['corners', 'donut', 'nibble'], maxVoid: 6, donutHole: 2 },
 }
 
-// Tipos de celda según su ocupabilidad.
-export const CELL = {
-  FREE: 'free',
-  BLOCKED: 'blocked',
-  WINDOW: 'window',
-}
-
 // Direcciones cardinales para adyacencia (4 vecinos).
 export const ADJACENT = [
   [-1, 0],

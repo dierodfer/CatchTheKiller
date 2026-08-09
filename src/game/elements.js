@@ -6,10 +6,10 @@
 // elemento es un cambio en un solo sitio.
 //
 // Cada entrada está indexada por un `id` ESTABLE (el valor que se guarda en
-// `map.grid`). Los atributos de presentación (`label` y, en el futuro, el icono
-// o sprite) se resuelven por ese id: cuando más adelante el nombre/imagen deban
-// cambiar dinámicamente según el ambiente/zona, bastará con superponer un mapa
-// `id -> { label, icon }` por ambiente sin tocar la lógica del juego.
+// `map.grid`). Los atributos de presentación —`label` aquí, sprite/icono en
+// `src/components/`— se resuelven por ese mismo id, así que la zona puede
+// superponer nombre e imagen sin tocar la lógica del juego (ver
+// `ZONE_ELEMENTS` en `game/zones.js`).
 //
 // Campos:
 //   - id:       identificador estable (clave en map.grid).
@@ -61,10 +61,10 @@ export const ELEMENT_IDS = Object.keys(ELEMENTS)
 
 const idsWhere = (pred) => ELEMENT_IDS.filter((id) => pred(ELEMENTS[id]))
 
-// Elementos que bloquean la celda (no ocupable). Sustituye a BLOCKING_FURNITURE.
+// Elementos que bloquean la celda (no ocupable).
 export const BLOCKING_ELEMENTS = idsWhere((e) => e.blocking)
 
-// Elementos "libres": un personaje puede ocupar su celda. Sustituye a FREE_FURNITURE.
+// Elementos "libres": un personaje puede ocupar su celda.
 export const FREE_ELEMENTS = idsWhere((e) => !e.blocking)
 
 // Elementos considerados "muebles" (para la pista "no estaba junto a ningún
@@ -88,6 +88,3 @@ export const elementPhrase = (el, id) => `${el[id].article} ${el[id].label}`
 // ("1 cama", "2 plantas"). Para las pistas de cantidad por habitación.
 export const elementCountPhrase = (el, id, n) =>
   `${n} ${n === 1 ? el[id].label : el[id].plural}`
-
-// ¿Este id se considera un "mueble"? (alfombra/planta → false).
-export const isMueble = (id) => !!ELEMENTS[id]?.mueble

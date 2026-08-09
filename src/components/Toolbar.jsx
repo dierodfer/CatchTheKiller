@@ -41,7 +41,6 @@ export default function Toolbar({
         )}
       </div>
 
-      {/* Acción principal. */}
       <button
         type="button"
         onClick={onCheck}
@@ -51,7 +50,6 @@ export default function Toolbar({
         <Gavel size={16} /> Resolver el caso
       </button>
 
-      {/* Acciones secundarias. */}
       <div className="mt-2 flex flex-wrap gap-2">
         <button
           type="button"

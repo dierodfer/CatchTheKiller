@@ -30,7 +30,6 @@ export default function CharacterTray({ characters, placements, selectedToken, o
         </span>
       </div>
 
-      {/* Barra de progreso de colocación. */}
       <div className="mb-3 h-1 w-full overflow-hidden rounded-full bg-cream-300/70">
         <div
           className="h-full rounded-full bg-gold transition-all duration-500 ease-out"

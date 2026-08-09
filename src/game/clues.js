@@ -14,11 +14,9 @@ import { MUEBLE_ELEMENTS, elementPhrase, elementCountPhrase } from './elements.j
 import { resolveElements, resolveRooms } from './zones.js'
 import { computeExteriorVoid } from './mapShapes.js'
 
-// Frase "las N esquinas del mapa" para las pistas de esquina. Las esquinas son
-// los cuatro vértices del tablero (ver `isCornerCell`), así que N vale 4 salvo
-// que un mapa irregular haya recortado alguno. Decir el número es la
-// información que faltaba: sin ella, en un mapa recortado el jugador cuenta
-// cuatro esquinas y busca en un vértice que ya no existe.
+// "las N esquinas del mapa": N vale 4 salvo que un mapa irregular haya
+// recortado algún vértice. Sin decir el número, en un mapa recortado el
+// jugador cuenta cuatro esquinas y busca una que ya no existe.
 const cornersPhrase = (ctx) =>
   ctx.cornerCount === 1 ? 'la única esquina del mapa' : `las ${ctx.cornerCount} esquinas del mapa`
 
@@ -46,10 +44,8 @@ export const CLUE_TYPES = {
     evaluate: (pos, p, _all, ctx) => ctx.roomAt(pos.row, pos.col) !== p.room,
     text: (p, ctx) => `No estaba en ${roomPhrase(ctx.rm, p.room)}`,
   },
-  // "No compartía habitación con ningún otro sospechoso". A diferencia de
-  // "estaba solo", NO excluye a la víctima: el asesino (a solas con la víctima)
-  // también la cumple, así que la pista nunca delata quién NO es el asesino.
-  // Mantiene casi toda la fuerza de desambiguación de habitaciones.
+  // NO excluye a la víctima: el asesino (a solas con ella) también cumple esta
+  // pista, así que nunca delata quién NO es el asesino.
   noSuspectInRoom: {
     tier: 'room',
     unary: false,
@@ -189,14 +185,10 @@ export const CLUE_TYPES = {
   nextToElement: {
     tier: 'room',
     unary: true,
-    // Solo cuenta el elemento si está en la MISMA habitación que el personaje:
-    // una celda contigua puede pertenecer a otra habitación y su elemento no
-    // debe referenciarse.
-    //
-    // Además, "junto a" excluye "encima de": si el personaje ocupa una celda del
-    // mismo tipo de elemento (silla/alfombra/cama), la pista no aplica aunque
-    // haya otra contigua igual — la redacción correcta sería "estaba sobre la
-    // alfombra", no "junto a una alfombra". Sin este filtro sería engañosa.
+    // Solo cuenta el elemento si está en la MISMA habitación (una celda
+    // contigua puede ser de otra sala). Y "junto a" excluye "encima de": si el
+    // personaje ocupa una celda del mismo elemento, no aplica aunque haya otra
+    // contigua igual — sería "sobre la alfombra", no "junto a una alfombra".
     evaluate: (pos, p, _all, ctx) =>
       ctx.furnitureAt(pos.row, pos.col) !== p.element &&
       adjacentHas(
@@ -320,11 +312,10 @@ export function buildClueContext(map, roomLookup, characters, zoneId) {
     roomWindowCount[rn] = (roomWindowCount[rn] || 0) + 1
   }
 
-  // BORDE en términos de LADOS EXTERIORES, no de índices: en mapas irregulares
-  // el perímetro real incluye los recortes (una celda junto a una esquina
-  // eliminada sigue "en el borde"), y el hueco de un donut es patio interior —
-  // sus celdas vecinas NO están en el borde del mapa. En tableros clásicos
-  // ambas definiciones coinciden con la fórmula de índice antigua.
+  // BORDE por LADOS EXTERIORES, no por índices: en un mapa irregular una celda
+  // junto a una esquina recortada sigue "en el borde", y las celdas junto al
+  // patio de un donut NO lo están (es interior). En tableros clásicos coincide
+  // con la fórmula de índice de siempre.
   const size = map.gridSize
   const voidCells = map.voidCells ?? new Set()
   const exteriorVoid = computeExteriorVoid(size, voidCells)
@@ -335,18 +326,14 @@ export function buildClueContext(map, roomLookup, characters, zoneId) {
   const isBorderCell = (r, c) =>
     sideExterior(r - 1, c) || sideExterior(r + 1, c) || sideExterior(r, c - 1) || sideExterior(r, c + 1)
 
-  // ESQUINA, en cambio, sí es cuestión de índices: son los cuatro vértices del
-  // tablero y solo esos, nunca más de cuatro. Un recorte puede quitar un vértice
-  // (deja de contar, y quedan menos de cuatro), pero JAMÁS asciende a esquina a
-  // la celda vecina: para quien mira el tablero las esquinas son las del marco,
-  // no cualquier celda que quede en ángulo tras un mordisco del perímetro.
+  // ESQUINA sí es por índices: los cuatro vértices del tablero y solo esos. Un
+  // recorte puede quitar un vértice, pero nunca asciende a esquina a la celda
+  // vecina — para quien mira el tablero, las esquinas son las del marco.
   const isCornerCell = (r, c) =>
     (r === 0 || r === size - 1) && (c === 0 || c === size - 1) && cellExists(r, c)
 
-  // Cuántos de los cuatro vértices siguen en pie. La redacción de las pistas de
-  // esquina lo nombra (ver `cornersPhrase`) para que en un mapa irregular no se
-  // busque en un vértice recortado. Es geometría visible en el tablero: contarla
-  // no filtra nada de la solución.
+  // Cuántos de los cuatro vértices siguen en pie, para que `cornersPhrase` lo
+  // nombre. Es geometría visible en el tablero: contarla no filtra la solución.
   let cornerCount = 0
   for (const r of [0, size - 1]) {
     for (const c of [0, size - 1]) {

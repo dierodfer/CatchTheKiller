@@ -7,6 +7,7 @@
 // por el que la ambientación entra en el tablero, así que un material nuevo se
 // define una vez en zones.js y aparece a la vez en el tablero y en la miniatura.
 
+import { cellKey } from '@/game/constants.js'
 import { MATERIALS, ROOM_MATERIAL } from './floorMaterials.js'
 import { RUG_TEXTURES } from './rugTextures.js'
 
@@ -60,14 +61,10 @@ export function windowGlassStyle(zone, wall, inset) {
 }
 
 // Estilo del suelo de una celda: el MATERIAL lo decide la habitación y el COLOR
-// la zona. Una sala sin material declarado (no debería pasar: ROOM_MATERIAL
-// cubre los 10 nombres) cae en el material por defecto de la zona.
-//
-// Salvo que la zona declare `floor.pattern`, y entonces ese dibujo va en TODAS
-// sus salas. Es la vía por la que la mansión 8-bit conserva su damero de
-// siempre: allí el suelo no distingue una habitación de otra —de eso ya se
-// encarga el tinte—, sino que sostiene la textura pixelada del conjunto, y un
-// sprite por tipo de sala le quitaba precisamente eso.
+// la zona (una sala sin material declarado cae en el fallback de la zona).
+// Salvo que la zona declare `floor.pattern` — entonces ese dibujo va en TODAS
+// sus salas: es como la mansión 8-bit conserva su damero de siempre, en vez
+// de un sprite distinto por tipo de habitación.
 export function floorPatternStyle(zone, roomName, size) {
   const { pattern } = zone.floor
   let skin
@@ -86,36 +83,19 @@ export function floorPatternStyle(zone, roomName, size) {
   }
 }
 
-// Estilos de la alfombra: UNA capa que cubre el rectángulo entero (no una
-// por celda — ver `rugBounds` en useBoardGeometry.js y su render en
-// Board.jsx), en DOS elementos anidados. Devuelve el estilo de cada uno:
+// Estilos de la alfombra en DOS elementos anidados: `frame` (el ribete, borde
+// sólido del color de la zona) y `fill` (el tejido de `RUG_TEXTURES`, dentro).
+// Van separados porque el `filter` es del TEJIDO, no de la alfombra entera —
+// si tocara también al ribete, el sepia o el grayscale de la zona le
+// arrastrarían el color y dejaría de leerse como una cinta cosida al borde.
 //
-//   `frame` — el ribete, un borde sólido del color que fija la zona.
-//   `fill`  — el tejido de `RUG_TEXTURES`, dentro del ribete.
-//
-// El ribete NO llega a los muros: `inset` lo separa del canto de las celdas
-// que ocupa, y por esa franja se ve el suelo de la habitación. Una alfombra
-// encajada al milímetro entre cuatro paredes se lee como moqueta —parte de
-// la obra—, y lo que se quiere aquí es una pieza suelta apoyada encima.
-//
-// Van separados por el `filter`. El filtro es del TEJIDO, no de la alfombra
-// entera: si se aplicara al elemento del ribete, el sepia de la casa de
-// montaña o el grayscale del apartamento arrastrarían también el color del
-// ribete y la zona dejaría de poder elegirlo — que es justo lo que hace que
-// se lea como una cinta cosida al borde y no como un recorte más de la
-// misma tela. Anidados, cada capa recibe solo lo suyo.
-//
-// El grosor y el radio son proporcionales a la celda, no fijos: así el
-// ribete no queda desproporcionado en un tablero grande ni desaparece en
-// uno pequeño. `radiusFrac: 0` deja la esquina en pico — es lo que quiere la
-// mansión 8-bit, donde una curva delataría que no es pixel art. El radio
-// interior descuenta el grosor del ribete para que las dos curvas sean
-// concéntricas; si el ribete es más ancho que el radio, sale 0 y el tejido
-// queda en pico dentro de una cinta redondeada, que es lo correcto.
-//
-// El tile se escala con la celda, no a tamaño fijo: un periodo constante se
-// convierte en ruido cuando el tablero se comprime a 36 px en móvil (mismo
-// criterio que los materiales de suelo).
+// El ribete no llega a los muros: `inset` lo separa del canto de la celda,
+// dejando ver el suelo — sin eso se lee como moqueta empotrada, no como una
+// pieza suelta apoyada encima. Grosor y radio son proporcionales a la celda;
+// el radio interior resta el grosor del ribete para que ambas curvas queden
+// concéntricas (si el ribete es más ancho que el radio, sale 0 y el tejido
+// queda en pico dentro de una cinta redondeada). El tile del tejido también
+// se escala con la celda, no a tamaño fijo, o se vuelve ruido en móvil.
 export function rugLayerStyles(zone, cellSize) {
   const border = Math.max(2, Math.round(cellSize * zone.rug.borderFrac))
   const radius = Math.round(cellSize * zone.rug.radiusFrac)
@@ -150,14 +130,11 @@ export function rugLayerStyles(zone, cellSize) {
   }
 }
 
-// Fábrica de bordes de celda: muro exterior del tablero, muro entre
-// habitaciones y —opcional— línea interior de rejilla, con los colores y
-// grosores de la zona. `scale` adelgaza los trazos en la miniatura (el
-// tablero usa 1). Un grosor de 0 px produce 'none': las tres zonas
-// prescinden de la rejilla interior, porque el propio suelo (veta, damero,
-// junta de baldosa) ya separa una celda de la siguiente sin necesidad de una
-// línea CSS encima que partiera el sprite en dos. Solo quedan las fronteras
-// que SÍ son información — muro exterior y muro entre habitaciones.
+// Fábrica de bordes de celda: muro exterior, muro entre habitaciones y
+// —opcional— línea interior de rejilla, con los colores y grosores de la
+// zona. `scale` adelgaza los trazos en la miniatura (el tablero usa 1). Las
+// tres zonas usan `thinPx: 0`: el propio suelo ya separa una celda de la
+// siguiente, y una línea CSS encima solo partía el sprite en dos.
 export function makeBordersFor(map, roomLookup, size, zone, scale = 1) {
   const px = (n) => Math.max(1, Math.round(n * scale))
   const OUTER = `${px(zone.wall.outerPx)}px solid ${zone.wall.color}`
@@ -165,12 +142,12 @@ export function makeBordersFor(map, roomLookup, size, zone, scale = 1) {
   const THIN = zone.wall.thinPx <= 0 ? 'none' : `${px(zone.wall.thinPx)}px solid ${zone.wall.thinColor}`
 
   return (r, c) => {
-    const room = roomLookup[`${r},${c}`]
+    const room = roomLookup[cellKey(r, c)]
     const sideBorder = (nr, nc) => {
       // Fuera del tablero o celda void (mapa irregular): muro exterior.
       if (nr < 0 || nc < 0 || nr >= size || nc >= size) return OUTER
-      if (map.voidCells?.has(`${nr},${nc}`)) return OUTER
-      if (roomLookup[`${nr},${nc}`] !== room) return ROOM
+      if (map.voidCells?.has(cellKey(nr, nc))) return OUTER
+      if (roomLookup[cellKey(nr, nc)] !== room) return ROOM
       return THIN
     }
     return {

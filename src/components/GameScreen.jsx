@@ -117,7 +117,6 @@ export default function GameScreen({ game }) {
 
   return (
     <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6">
-      {/* Cabecera del caso, centrada. */}
       <header className="mb-6 flex flex-col items-center gap-2.5 text-center">
         <div className="flex items-center gap-3">
           <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" className="h-10 w-auto drop-shadow" />
@@ -146,7 +145,6 @@ export default function GameScreen({ game }) {
         onDragEnd={handleDragEnd}
       >
         <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:justify-center">
-          {/* Personajes + tablero. */}
           <div className="flex w-full justify-center lg:w-auto">
             <div className="flex max-w-full flex-col items-center gap-3 overflow-x-auto">
               <CharacterTray
@@ -174,7 +172,6 @@ export default function GameScreen({ game }) {
             </div>
           </div>
 
-          {/* Panel lateral. */}
           <div className="flex w-full flex-col gap-4 lg:max-w-sm">
             <CluePanel
               puzzle={puzzle}

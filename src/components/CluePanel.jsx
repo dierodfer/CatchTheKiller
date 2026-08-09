@@ -112,12 +112,10 @@ export default function CluePanel({
                   className="absolute inset-0 z-10 cursor-pointer rounded-[4px] bg-transparent"
                 />
 
-                {/* Chincheta que sujeta la ficha. */}
                 <span className="absolute -top-2 left-1/2 -translate-x-1/2">
                   <Pushpin victim={isVictim} />
                 </span>
 
-                {/* Retrato como foto polaroid fijada a la izquierda. */}
                 <div
                   className="shrink-0 rounded-[3px] border border-plum-950/10 bg-cream-50 p-1 pb-2 shadow-[0_2px_6px_-2px_rgba(30,19,34,0.5)]"
                   style={{ transform: `rotate(${photoTilt(i)}deg)` }}
@@ -127,7 +125,6 @@ export default function CluePanel({
                   </div>
                 </div>
 
-                {/* Identidad + testimonios. */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-1.5">
                     <span
@@ -153,7 +150,6 @@ export default function CluePanel({
                   </div>
                 </div>
 
-                {/* Sello de descartado. */}
                 {isStruck && (
                   <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 select-none whitespace-nowrap rounded-[3px] border-2 border-rose-deep/70 px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-[0.18em] text-rose-deep">
                     Descartado
@@ -165,7 +161,6 @@ export default function CluePanel({
         })}
       </ul>
 
-      {/* Pistas extra: slot independiente con botón "Pedir pista". */}
       {extraClueBudget > 0 && extraClues.length > 0 && (
         <ExtraCluesSlot
           extraClues={extraClues}

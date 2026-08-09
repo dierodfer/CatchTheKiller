@@ -31,10 +31,8 @@ export function isKiller(suspect, placements, suspects, victim, ctx) {
   const v = placements[victim]
   if (!a || !v) return false
 
-  // A y V en la misma habitación...
   if (roomOf(ctx, a) !== roomOf(ctx, v)) return false
 
-  // ...y a solas: ningún otro sospechoso en la habitación de la víctima.
   for (const name of suspects) {
     if (name === suspect) continue
     const p = placements[name]

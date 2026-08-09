@@ -13,11 +13,10 @@
 // baldosa en las tres zonas; lo que cambia es si esa baldosa es de barro, de
 // gres o de 8 bits.
 //
-// AVISO sobre los materiales CSS: `ambient` se asigna a `background-image`, que
-// admite SOLO imágenes. La posición y el tamaño van en sus propias longhands.
-// Meterlas dentro del string —sintaxis del atajo `background`— invalida la
-// declaración entera y el navegador la descarta en silencio: es exactamente el
-// fallo que mantuvo esta capa invisible desde que se escribió.
+// AVISO: `ambient` se asigna a `background-image`, que admite SOLO imágenes —
+// posición y tamaño van en sus propias longhands. Meterlas en el string (atajo
+// `background`) invalida la declaración entera y el navegador la descarta en
+// silencio; así se quedó esta capa invisible la primera vez.
 
 import { Building2, Gamepad2, Mountain } from 'lucide-react'
 import { ZONE_IDS, zoneForSeed, resolveRooms } from '@/game/zones.js'
@@ -63,13 +62,9 @@ export const ZONES = {
       opacity: 0.85,
     },
 
-    // Lana bereber: el mismo sepia del suelo empuja el crudo del tile hacia el
-    // ámbar de la casa, así que la alfombra se lee como lana teñida en la misma
-    // gama que la tarima en vez de como una pieza traída de otra habitación.
-    //
-    // Ribete de cuero curtido, apenas insinuado, y esquina muy redondeada:
-    // una alfombra de lana ante una chimenea es la pieza más blanda de la
-    // casa, y el pico recto es justo lo que le quitaría esa blandura.
+    // Berber teñida en la misma gama que la tarima (mismo sepia), en vez de
+    // leerse como una pieza traída de otra habitación. Ribete de cuero apenas
+    // insinuado y esquina muy redondeada: la pieza más blanda de la casa.
     rug: {
       texture: 'berber',
       filter: 'sepia(0.5) saturate(1.35) brightness(0.94) contrast(1.05)',
@@ -124,18 +119,11 @@ export const ZONES = {
       opacity: 0.8,
     },
 
-    // Sisal: fibra natural, la nota cálida del piso. Se desatura MENOS que el
-    // suelo (0.55 frente a 0.75) a propósito — si se le quita el tono entero, el
-    // yute queda gris y la alfombra deja de contrastar con el hormigón. Y no se
-    // aclara: un `brightness` por encima de 1 quema la hebra, que es justo lo
-    // que la hace parecer tejida.
-    //
-    // Ribete greige, casi confundido con el propio tejido, y esquina apenas
-    // matada: una alfombra de fibra natural se remata con una cinta al tono,
-    // no con un color que cante. La curva es pequeña a propósito — este piso
-    // va de cantos rectos (ver el cristal, de radio 0), y una esquina muy
-    // redondeada rompería esa disciplina. Es también el ribete más fino de
-    // las tres zonas, por lo mismo.
+    // Sisal, desaturado MENOS que el suelo (0.55 frente a 0.75): sin nada de
+    // tono el yute queda gris y deja de contrastar con el hormigón. Sin
+    // aclarar tampoco — un `brightness` >1 quema la hebra. Ribete greige casi
+    // confundido con el tejido y curva mínima, a juego con los cantos rectos
+    // del resto del piso (ver el cristal, radio 0).
     rug: {
       texture: 'sisal',
       filter: 'grayscale(0.55) brightness(0.97) contrast(1.08)',
@@ -181,29 +169,22 @@ export const ZONES = {
     frame: { background: 'rgba(244, 235, 220, 0.75)' },
     tints: ROOM_TINTS,
 
-    // El damero de siempre, el mismo en las diez salas: `pattern` puentea los
-    // sprites por tipo de habitación que usan las otras dos zonas (ver
-    // `floorPatternStyle`). Aquí el suelo no tiene que distinguir una sala de
-    // otra —de eso ya se encarga el tinte, y estas tintas son las originales
-    // del proyecto—, sino sostener la textura pixelada del conjunto; un sprite
-    // distinto por sala rompía justo esa unidad. `soft-light` a 0.55 es lo que
-    // deja el damero como un velo sobre el tinte en vez de como un dibujo con
-    // voz propia.
+    // El damero de siempre, el mismo en las diez salas: `pattern` puentea el
+    // sprite por tipo de habitación de las otras zonas (`floorPatternStyle`).
+    // Aquí el tinte ya distingue una sala de otra, así que el suelo solo tiene
+    // que sostener la textura pixelada del conjunto; un sprite distinto por
+    // sala rompería esa unidad. `soft-light` a 0.55 lo deja como un velo sobre
+    // el tinte, no como un dibujo con voz propia.
     floor: {
       pattern: { image: PIXEL_FLOOR_PATTERN, div: 4 },
       blend: 'soft-light',
       opacity: 0.55,
     },
 
-    // Sin filtro, como el suelo: el pixel art va a pleno color, y el kilim es
-    // la textura que más lo aprovecha — sus bandas y galones son ya de por sí
-    // un dibujo a base de tramas, el mismo lenguaje que el resto de la zona.
-    //
-    // `radiusFrac: 0`, la única zona con la esquina en pico: en una rejilla de
-    // píxeles no hay curvas, y redondear aquí delataría que el marco no está
-    // dibujado a la misma resolución que el resto del arte. El ribete es el
-    // nogal de los muros, no un color nuevo, y se queda el más ancho de las
-    // tres pese a aligerarse: a esta resolución uno más fino no se lee.
+    // Kilim sin filtro, a pleno color como el resto del pixel art: sus bandas
+    // y galones ya son un dibujo a base de tramas. Única zona con esquina en
+    // pico (`radiusFrac: 0`) —en una rejilla de píxeles no hay curvas— y con
+    // el ribete más ancho de las tres: a esta resolución, uno más fino no se lee.
     rug: {
       texture: 'kilim',
       filter: 'none',

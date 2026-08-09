@@ -7,10 +7,10 @@
 // renderizados innecesarios al colocar/quitar fichas.
 
 import { useEffect, useMemo, useState } from 'react'
-import { makeBordersFor } from '@/components/boardCell.js'
-import { roomIndexByName } from '@/components/floorMaterials.js'
+import { buildCellGeometry } from '@/components/cellGeometry.js'
+import { cellKey } from '@/game/constants.js'
 import { controlLineCells } from '@/game/killerRule.js'
-import { isOccupiable, rugBoundsOf } from '@/game/mapGenerator.js'
+import { rugBoundsOf } from '@/game/mapGenerator.js'
 
 // Ancho de la columna/fila de numeración (1, 2, 3...) en los bordes del tablero.
 export const GUTTER = 18
@@ -63,58 +63,13 @@ export function useBoardGeometry({
     Math.max(MIN_CELL_SIZE, Math.floor(available / size)),
   )
 
-  const cellGeometry = useMemo(() => {
-    const windowByCell = {}
-    for (const w of map.windows) windowByCell[`${w.row},${w.col}`] = w.wall
-    // Celda que muestra la etiqueta de cada habitación (primera en lectura).
-    // El rótulo es el nombre de la ZONA para esa sala (`zone.rooms`), no el
-    // canónico: es la única pieza de la geometría que varía con la
-    // ambientación sin que la sala cambie de identidad — sigue siendo la
-    // misma "Terraza" a efectos de tinte, material y pistas; en pantalla se
-    // lee "Porche" o "Balcón" según toque.
-    const labelCell = {}
-    for (const room of map.rooms) {
-      const sorted = [...room.cells].sort((a, b) => a[0] - b[0] || a[1] - b[1])
-      labelCell[`${sorted[0][0]},${sorted[0][1]}`] = zone.rooms[room.name].label
-    }
-
-    // Muros con los colores y grosores de la zona (misma fábrica que usa la
-    // miniatura, para que tablero y preview no se desincronicen).
-    const bordersFor = makeBordersFor(map, roomLookup, size, zone)
-
-    const grid = []
-    for (let r = 0; r < size; r++) {
-      const row = []
-      for (let c = 0; c < size; c++) {
-        const key = `${r},${c}`
-        // Celda void (mapa irregular): hueco no jugable, se pinta como exterior.
-        if (map.voidCells?.has(key)) {
-          row.push({ r, c, size: cellSize, isVoid: true, occupiable: false })
-          continue
-        }
-        const furniture = map.grid[r][c]
-        const roomName = roomLookup[key]
-        row.push({
-          r,
-          c,
-          size: cellSize,
-          roomName,
-          // Tinte indexado por el NOMBRE de la sala, no por el orden en que el
-          // generador la creó: así la Cocina sale siempre del mismo tono, a
-          // juego con su suelo de baldosa.
-          tint: zone.tints[roomIndexByName(roomName) % zone.tints.length],
-          borders: bordersFor(r, c),
-          label: labelCell[key],
-          furniture,
-          isWindow: key in windowByCell,
-          wall: windowByCell[key],
-          occupiable: isOccupiable(map, r, c),
-        })
-      }
-      grid.push(row)
-    }
-    return grid
-  }, [map, roomLookup, size, cellSize, zone])
+  // El cálculo lo comparte con la miniatura de la pantalla de inicio (ver
+  // cellGeometry.js); aquí solo se memoiza, porque el tablero lo rehace cada
+  // vez que el redimensionado de la ventana cambia el tamaño de celda.
+  const cellGeometry = useMemo(
+    () => buildCellGeometry({ map, roomLookup, zone, cellSize }),
+    [map, roomLookup, zone, cellSize],
+  )
 
   // Celdas bajo línea de control de cualquier ficha colocada. La ficha que se
   // está arrastrando no aporta su línea de control: al "levantarla" del
@@ -123,7 +78,7 @@ export function useBoardGeometry({
     const set = new Set()
     for (const name of Object.keys(placements)) {
       if (name === draggingName) continue
-      for (const [r, c] of controlLineCells(placements[name], map)) set.add(`${r},${c}`)
+      for (const [r, c] of controlLineCells(placements[name], map)) set.add(cellKey(r, c))
     }
     return set
   }, [placements, map, draggingName])
@@ -133,7 +88,7 @@ export function useBoardGeometry({
   const revealRoom = useMemo(() => {
     if (!revealMode || !killer) return new Set()
     const v = solution[victim]
-    const room = roomLookup[`${v.row},${v.col}`]
+    const room = roomLookup[cellKey(v.row, v.col)]
     const set = new Set()
     for (const key of Object.keys(roomLookup)) {
       if (roomLookup[key] === room) set.add(key)
@@ -145,15 +100,13 @@ export function useBoardGeometry({
     const m = {}
     for (const name of Object.keys(placements)) {
       const p = placements[name]
-      m[`${p.row},${p.col}`] = name
+      m[cellKey(p.row, p.col)] = name
     }
     return m
   }, [placements])
 
-  // Rectángulo (en celdas) de la alfombra, o `null` si el mapa no tiene. Se
-  // dibuja como UNA sola capa a nivel de tablero (ver Board.jsx), no por
-  // celda: es lo que permite que el marco se conserve sin deformarse sea cual
-  // sea la forma (de 1×2 a 6×1, pasando por bloques de 3×2).
+  // Rectángulo (en celdas) de la alfombra, o `null` si el mapa no tiene una.
+  // Se dibuja como una sola capa a nivel de tablero, no por celda (ver Rug.jsx).
   const rugBounds = useMemo(() => rugBoundsOf(map), [map])
 
   return { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt, rugBounds }

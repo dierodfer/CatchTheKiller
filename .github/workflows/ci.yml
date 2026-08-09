@@ -16,7 +16,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 24, igual que deploy.yml: jsdom@30 (Vitest + Testing Library)
+          # requiere Node ^22.22.2 || ^24.15.0 || >=26 en tiempo de ejecución,
+          # no solo en `engines` — con Node 20 el runtime falla de verdad
+          # (`undici` usa una API de `node:util` que no existe ahí), no es
+          # un aviso ignorable.
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -24,6 +29,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Unit tests
+        run: npm test
 
       - name: Logic tests
         run: npm run test:logic

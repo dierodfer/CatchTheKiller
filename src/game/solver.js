@@ -22,7 +22,6 @@ function participants(clue) {
 }
 
 function isUnarySatisfiable(clue, cell, ctx) {
-  // Solo aplicable a pistas unarias (un único participante).
   const pos = { row: cell[0], col: cell[1] }
   const placements = { [clue.subject]: pos }
   return evalClue(clue, placements, ctx)
@@ -55,10 +54,9 @@ export function solve(map, characters, clues, opts = {}) {
     domains[name] = cells.filter((cell) => unary.every((c) => isUnarySatisfiable(c, cell, ctx)))
   }
 
-  // Orden de asignación: por dominio creciente. En toda solución válida nadie
-  // comparte fila ni columna con otro personaje, así que cada asignación poda
-  // de inmediato a cualquier actor pendiente que caiga en esa línea (clave
-  // para el rendimiento).
+  // Orden de asignación: por dominio creciente. Nadie comparte fila ni columna
+  // con otro (regla del asesino), así que cada asignación poda de inmediato a
+  // cualquier actor pendiente que caiga en esa línea — clave para el rendimiento.
   const byDomain = (a, b) => domains[a].length - domains[b].length
   const order = [...names].sort(byDomain)
 
@@ -129,12 +127,6 @@ export function solve(map, characters, clues, opts = {}) {
 // ¿El conjunto de pistas produce exactamente una solución?
 export function hasUniqueSolution(map, characters, clues, roomLookup) {
   return solve(map, characters, clues, { limit: 2, roomLookup }).length === 1
-}
-
-// Detecta si una pista es redundante (la solución sigue siendo única sin ella).
-export function isRedundant(map, characters, clues, clue, roomLookup) {
-  const without = clues.filter((c) => c !== clue)
-  return hasUniqueSolution(map, characters, without, roomLookup)
 }
 
 // Valida la colocación del jugador (sección 9, condición de victoria).

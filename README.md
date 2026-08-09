@@ -85,13 +85,15 @@ tokens de color y tipografía viven en `src/index.css` (`@theme` de Tailwind v4)
   uno su propio `filter` — si compartieran el de la zona, esta no podría
   colorear uno sin arrastrar el otro. La mansión 8-bit es la única con esquina
   en pico (`radiusFrac: 0`): en una rejilla de píxeles no hay curvas.
-- **Texturas de alfombra** (`rugTextures.js`): cuatro tiles de 64×64 px a
-  **resolución de hilo** —trama, hebra o nudo, no un degradado CSS a rayas—
-  que embaldosan sin costura: `kilim` (bandas y galones), `berber` (fibra
-  corta con enrejado de rombos), `sisal` (esterilla de hebras cruzadas) y
-  `persa` (medallones sobre campo granate). La zona elige cuál usa
-  (`zone.rug.texture`) y la tiñe con su propio `filter`: montaña lleva
-  `berber`, el apartamento `sisal`, la mansión 8-bit `kilim`.
+- **Texturas de alfombra** (`rugTextures.js`): un tile de 64×64 px por zona, a
+  **resolución de hilo** —trama, hebra o nudo, no un degradado CSS a rayas— que
+  embaldosa sin costura: `berber` (fibra corta con enrejado de rombos) para la
+  casa de montaña, `sisal` (esterilla de hebras cruzadas) para el apartamento y
+  `kilim` (bandas y galones) para la mansión 8-bit. La zona elige cuál usa
+  (`zone.rug.texture`) y la tiñe con su propio `filter`. El catálogo tiene
+  exactamente las que se usan: cada tile pesa ~10 KB en el bundle y la app es
+  una PWA offline, así que una textura de repuesto la descargarían todos los
+  jugadores sin verla nunca.
 - **Celebración al resolver**: al cerrar el caso de verdad, la escena se
   ilumina **habitación por habitación** sobre el tablero (Framer Motion) y un
   overlay editorial con pétalos dorados presenta el desenlace.
@@ -110,13 +112,32 @@ ni en el lint. Si se quisiera migrar a TypeScript más adelante, el código de
 
 ## Cómo ejecutar
 
+Requiere **Node 22.22.2+, 24.15.0+ o 26+** (declarado en `engines`): con Node 20
+los tests fallan de verdad en tiempo de ejecución, no es solo un aviso — `jsdom`
+(vía `undici`) usa una API de `node:util` que no existe en Node 20.
+
 ```bash
 npm install
-npm run dev        # desarrollo (http://localhost:5173)
-npm run build      # build de producción en dist/
-npm run preview    # sirve el build
-npm run test:logic # smoke test de la lógica de generación (sin UI)
+npm run dev           # desarrollo (http://localhost:5173)
+npm run build         # build de producción en dist/
+npm run preview       # sirve el build
+npm test              # tests unitarios (Vitest)
+npm run test:watch    # los mismos, en modo watch
+npm run test:coverage # cobertura
+npm run test:logic    # smoke test de la generación sobre decenas de semillas
 ```
+
+Las pruebas van en dos capas, y las dos corren en CI:
+
+- **`npm test`** (Vitest) cubre la máquina de estados de la partida, la
+  validación de datos que llegan de fuera (código compartido, partida guardada)
+  y el render de la celda. Los tests de `src/game/` corren en `node`; los de
+  componentes declaran `// @vitest-environment jsdom` en su primera línea, así
+  que solo se paga el coste del DOM donde hace falta.
+- **`npm run test:logic`** es un banco de pruebas sobre decenas de semillas
+  reales: comprueba que cada puzzle generado tiene solución única, exactamente
+  un asesino y pistas coherentes. Es lento por naturaleza (genera puzzles de
+  verdad), de ahí que viva aparte del suite unitario.
 
 ## Despliegue a GitHub Pages
 
@@ -213,7 +234,10 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
   cerrar para inspeccionar el tablero); FAIL indica que hay errores **sin revelar
   la solución**.
 - `MapPreview` — previsualización de solo lectura del tipo de mapa que generará
-  la dificultad seleccionada, visible en la pantalla de inicio.
+  la dificultad seleccionada, visible en la pantalla de inicio. Comparte con el
+  tablero el cálculo por celda (`cellGeometry.js`: muros, tintes, ventanas,
+  suelo y rótulos); lo único que cambia entre ambos es el tamaño de celda y el
+  grosor del muro, así que un retoque visual sale a la vez en los dos sitios.
 
 Colocación por **arrastre** (dnd-kit) o **click-to-place** (seleccionar ficha y
 pulsar la celda).
