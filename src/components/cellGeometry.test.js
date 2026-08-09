@@ -96,12 +96,18 @@ describe('tablero y miniatura comparten geometría', () => {
     borderScale: 0.6,
   })
 
+  // Todo lo que NO puede diferir entre las dos vistas.
+  const sinTamañoNiBordes = (cell) => {
+    const resto = { ...cell }
+    delete resto.size
+    delete resto.borders
+    return resto
+  }
+
   it('coinciden en todo salvo el tamaño y los bordes', () => {
     for (let r = 0; r < 2; r++) {
       for (let c = 0; c < 2; c++) {
-        const { size: _s1, borders: _b1, ...restoTablero } = tablero[r][c]
-        const { size: _s2, borders: _b2, ...restoMiniatura } = miniatura[r][c]
-        expect(restoMiniatura).toEqual(restoTablero)
+        expect(sinTamañoNiBordes(miniatura[r][c])).toEqual(sinTamañoNiBordes(tablero[r][c]))
       }
     }
   })
