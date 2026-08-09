@@ -43,9 +43,21 @@ describe('caso no resuelto correctamente', () => {
     }
   })
 
-  it('deja seguir intentándolo', () => {
+  it('deja seguir intentándolo, y no ofrece empezar un caso nuevo', () => {
+    // Sin "Nuevo caso": esa es una vía de escape que evita corregir el error,
+    // y el punto de un FAIL es forzar a seguir deduciendo sobre este caso.
     renderBanner('fail', { solved: false, complete: true, errorCount: 2 })
     expect(screen.getByRole('button', { name: /Seguir intentando/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Nuevo caso/ })).not.toBeInTheDocument()
+  })
+
+  it('no explica qué hacer a continuación: el número basta', () => {
+    // La frase "cuáles son y dónde está el fallo tendrás que deducirlo tú" se
+    // quitó por larga; el título ya dice que es un error y el recuento ya
+    // dice cuánto de mal, no hace falta una tercera frase.
+    renderBanner('fail', { solved: false, complete: true, errorCount: 2 })
+    expect(screen.queryByText(/deducirlo tú/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/solución no se revela/)).not.toBeInTheDocument()
   })
 
   it('sin errores de pista, culpa al reparto sin un único culpable', () => {
@@ -69,5 +81,11 @@ describe('caso resuelto', () => {
   it('distingue haber pedido la solución de haberla deducido', () => {
     renderBanner('win', { solved: true, revealed: true, killer: 'Alba', room: 'Cocina' })
     expect(screen.getByText('Solución revelada')).toBeInTheDocument()
+  })
+
+  it('ofrece un caso nuevo, y no "seguir intentando" (ya terminó)', () => {
+    renderBanner('win', { solved: true, complete: true, killer: 'Alba', room: 'Cocina' })
+    expect(screen.getByRole('button', { name: /Nuevo caso/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Seguir intentando/ })).not.toBeInTheDocument()
   })
 })

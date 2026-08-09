@@ -152,6 +152,7 @@ export default function GameScreen({ game }) {
                 placements={placements}
                 selectedToken={selectedToken}
                 onTokenClick={handleTokenClick}
+                onCheck={check}
               />
               <Board
                 puzzle={puzzle}
