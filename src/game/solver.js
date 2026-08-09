@@ -131,12 +131,6 @@ export function hasUniqueSolution(map, characters, clues, roomLookup) {
   return solve(map, characters, clues, { limit: 2, roomLookup }).length === 1
 }
 
-// Detecta si una pista es redundante (la solución sigue siendo única sin ella).
-export function isRedundant(map, characters, clues, clue, roomLookup) {
-  const without = clues.filter((c) => c !== clue)
-  return hasUniqueSolution(map, characters, without, roomLookup)
-}
-
 // Valida la colocación del jugador (sección 9, condición de victoria).
 // Devuelve { solved, killer, errors } sin revelar la solución correcta.
 export function validatePlayerSolution(map, characters, clues, placements, roomLookup) {

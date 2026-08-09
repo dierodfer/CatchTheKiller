@@ -88,6 +88,3 @@ export const elementPhrase = (el, id) => `${el[id].article} ${el[id].label}`
 // ("1 cama", "2 plantas"). Para las pistas de cantidad por habitación.
 export const elementCountPhrase = (el, id, n) =>
   `${n} ${n === 1 ? el[id].label : el[id].plural}`
-
-// ¿Este id se considera un "mueble"? (alfombra/planta → false).
-export const isMueble = (id) => !!ELEMENTS[id]?.mueble
