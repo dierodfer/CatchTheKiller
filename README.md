@@ -114,11 +114,26 @@ ni en el lint. Si se quisiera migrar a TypeScript más adelante, el código de
 
 ```bash
 npm install
-npm run dev        # desarrollo (http://localhost:5173)
-npm run build      # build de producción en dist/
-npm run preview    # sirve el build
-npm run test:logic # smoke test de la lógica de generación (sin UI)
+npm run dev           # desarrollo (http://localhost:5173)
+npm run build         # build de producción en dist/
+npm run preview       # sirve el build
+npm test              # tests unitarios (Vitest)
+npm run test:watch    # los mismos, en modo watch
+npm run test:coverage # cobertura
+npm run test:logic    # smoke test de la generación sobre decenas de semillas
 ```
+
+Las pruebas van en dos capas, y las dos corren en CI:
+
+- **`npm test`** (Vitest) cubre la máquina de estados de la partida, la
+  validación de datos que llegan de fuera (código compartido, partida guardada)
+  y el render de la celda. Los tests de `src/game/` corren en `node`; los de
+  componentes declaran `// @vitest-environment jsdom` en su primera línea, así
+  que solo se paga el coste del DOM donde hace falta.
+- **`npm run test:logic`** es un banco de pruebas sobre decenas de semillas
+  reales: comprueba que cada puzzle generado tiene solución única, exactamente
+  un asesino y pistas coherentes. Es lento por naturaleza (genera puzzles de
+  verdad), de ahí que viva aparte del suite unitario.
 
 ## Despliegue a GitHub Pages
 

@@ -24,7 +24,10 @@ export const STATUS = {
   ERROR: 'error',
 }
 
-const initialState = {
+// Exportados (además de usarse aquí) para poder probar la máquina de estados
+// como lo que es —una función pura— sin montar React ni simular clics:
+// `reducer(estado, acción)` es la unidad de test natural de un `useReducer`.
+export const initialState = {
   status: STATUS.IDLE,
   difficulty: 'facil',
   irregular: true, // toggle "mapa irregular" de la pantalla de inicio (activo por defecto)
@@ -37,7 +40,7 @@ const initialState = {
   error: null,
 }
 
-function reducer(state, action) {
+export function reducer(state, action) {
   switch (action.type) {
     case 'SELECT_DIFFICULTY':
       return { ...state, difficulty: action.difficulty }
