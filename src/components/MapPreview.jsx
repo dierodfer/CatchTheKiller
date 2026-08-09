@@ -49,8 +49,8 @@ export default function MapPreview({ difficulty, irregular = false }) {
   const rugBounds = useMemo(() => rugBoundsOf(map), [map])
   const rugTint = rugTintOf(zone, roomLookup, rugBounds)
 
-  const rows = cells.map((row, r) => (
-    <div key={r} className="flex">
+  const rows = cells.map((row) => (
+    <div key={row[0].r} className="flex">
       {row.map((cell) => {
         const key = cellKey(cell.r, cell.c)
         // Celda void (mapa irregular): hueco transparente, se ve el marco.
