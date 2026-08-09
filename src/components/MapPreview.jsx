@@ -5,14 +5,13 @@ import { generateMap, buildRoomLookup, rugBoundsOf } from '@/game/mapGenerator.j
 import { makeRng, randomSeed } from '@/game/random.js'
 import { cellKey } from '@/game/constants.js'
 import { themeForSeed } from './zones.js'
-import { roomIndexByName } from './floorMaterials.js'
+import { buildCellGeometry, rugTintOf } from './cellGeometry.js'
 import { FurnitureIcon } from './Furniture.jsx'
 import {
   WINDOW_BORDER_SIDE,
   windowBorder,
   windowGlassStyle,
   floorPatternStyle,
-  makeBordersFor,
 } from './boardCell.js'
 import { Rug } from './Rug.jsx'
 
@@ -34,90 +33,72 @@ export default function MapPreview({ difficulty, irregular = false }) {
   const cellSize = PREVIEW_CELL_SIZE[size] || 32
   const zone = themeForSeed(seed)
 
-  // Mismos muros que el tablero, con el trazo adelgazado para que 5/3 px no se
-  // coman una celda de 32. Se reutiliza la fábrica en vez del hook completo:
-  // `useBoardGeometry` deriva el tamaño de celda de un listener de resize y
-  // exige fichas, solución y asesino, nada de lo cual existe en la miniatura.
-  const bordersFor = useMemo(
-    () => makeBordersFor(map, roomLookup, size, zone, 0.6),
-    [map, roomLookup, size, zone],
+  // La MISMA geometría que el tablero real (ver cellGeometry.js), no una copia:
+  // así un cambio de muros, suelo o tintes sale a la vez en los dos sitios. Se
+  // usa la función y no `useBoardGeometry` porque el hook deriva el tamaño de
+  // celda de un listener de resize y exige fichas, solución y asesino, nada de
+  // lo cual existe en la miniatura. `borderScale: 0.6` adelgaza el trazo para
+  // que 5 px de muro no se coman una celda de 32.
+  const cells = useMemo(
+    () => buildCellGeometry({ map, roomLookup, zone, cellSize, borderScale: 0.6 }),
+    [map, roomLookup, zone, cellSize],
   )
-
-  const windowByCell = useMemo(() => {
-    const m = {}
-    for (const w of map.windows) m[cellKey(w.row, w.col)] = w.wall
-    return m
-  }, [map])
 
   // Misma alfombra que el tablero: una sola capa, no una por celda (ver
   // rugBounds en useBoardGeometry.js y Rug.jsx).
   const rugBounds = useMemo(() => rugBoundsOf(map), [map])
+  const rugTint = rugTintOf(zone, roomLookup, rugBounds)
 
-  // Tinte de la sala en la que cae la alfombra (ver Rug.jsx): el mismo que
-  // usa su celda, calculado aquí porque la capa se pinta fuera del bucle.
-  const rugTint = rugBounds
-    ? zone.tints[roomIndexByName(roomLookup[cellKey(rugBounds.r0, rugBounds.c0)]) % zone.tints.length]
-    : null
-
-  const rows = []
-  for (let r = 0; r < size; r++) {
-    const cells = []
-    for (let c = 0; c < size; c++) {
-      const key = cellKey(r, c)
-      // Celda void (mapa irregular): hueco transparente, se ve el marco.
-      if (map.voidCells?.has(key)) {
-        cells.push(<div key={key} style={{ width: cellSize, height: cellSize }} aria-hidden />)
-        continue
-      }
-      const furniture = map.grid[r][c]
-      const wall = windowByCell[key]
-      const borders = bordersFor(r, c)
-      const roomName = roomLookup[key]
-      const isRug = furniture === 'alfombra'
-      cells.push(
-        <div
-          key={key}
-          className="relative"
-          style={{
-            width: cellSize,
-            height: cellSize,
-            // Transparente bajo la alfombra: la cubre la capa de más abajo.
-            background: isRug ? 'transparent' : zone.tints[roomIndexByName(roomName) % zone.tints.length],
-            borderTop: borders.top,
-            borderRight: borders.right,
-            borderBottom: borders.bottom,
-            borderLeft: borders.left,
-            ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(zone, WINDOW_FRAME_PX) } : null),
-          }}
-        >
-          {/* Suelo: el material lo pone la habitación, el color la zona. Se
-              omite bajo la alfombra, que la cubre por completo. */}
-          {!isRug && (
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={floorPatternStyle(zone, roomName, cellSize)}
-            />
-          )}
-          {furniture && !isRug && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-70">
-              <FurnitureIcon type={furniture} zone={zone} size={Math.round(cellSize * 0.5)} />
-            </div>
-          )}
-          {wall && (
-            <div
-              className="pointer-events-none absolute"
-              style={windowGlassStyle(zone, wall, GLASS_INSET)}
-            />
-          )}
-        </div>,
-      )
-    }
-    rows.push(
-      <div key={r} className="flex">
-        {cells}
-      </div>,
-    )
-  }
+  const rows = cells.map((row, r) => (
+    <div key={r} className="flex">
+      {row.map((cell) => {
+        const key = cellKey(cell.r, cell.c)
+        // Celda void (mapa irregular): hueco transparente, se ve el marco.
+        if (cell.isVoid) {
+          return <div key={key} style={{ width: cellSize, height: cellSize }} aria-hidden />
+        }
+        const { roomName, furniture, wall, borders } = cell
+        const isRug = furniture === 'alfombra'
+        return (
+          <div
+            key={key}
+            className="relative"
+            style={{
+              width: cellSize,
+              height: cellSize,
+              // Transparente bajo la alfombra: la cubre la capa de más abajo.
+              background: isRug ? 'transparent' : cell.tint,
+              borderTop: borders.top,
+              borderRight: borders.right,
+              borderBottom: borders.bottom,
+              borderLeft: borders.left,
+              ...(wall ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(zone, WINDOW_FRAME_PX) } : null),
+            }}
+          >
+            {/* Suelo: el material lo pone la habitación, el color la zona. Se
+                omite bajo la alfombra, que la cubre por completo. */}
+            {!isRug && (
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={floorPatternStyle(zone, roomName, cellSize)}
+              />
+            )}
+            {furniture && !isRug && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-70">
+                <FurnitureIcon type={furniture} zone={zone} size={Math.round(cellSize * 0.5)} />
+              </div>
+            )}
+            {wall && (
+              <div
+                className="pointer-events-none absolute"
+                style={windowGlassStyle(zone, wall, GLASS_INSET)}
+              />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  ))
 
   return (
     <div className="flex flex-col items-center gap-3">

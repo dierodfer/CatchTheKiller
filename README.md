@@ -230,7 +230,10 @@ adicional para él (sección 6.4) y luego se minimizan las redundantes.
   cerrar para inspeccionar el tablero); FAIL indica que hay errores **sin revelar
   la solución**.
 - `MapPreview` — previsualización de solo lectura del tipo de mapa que generará
-  la dificultad seleccionada, visible en la pantalla de inicio.
+  la dificultad seleccionada, visible en la pantalla de inicio. Comparte con el
+  tablero el cálculo por celda (`cellGeometry.js`: muros, tintes, ventanas,
+  suelo y rótulos); lo único que cambia entre ambos es el tamaño de celda y el
+  grosor del muro, así que un retoque visual sale a la vez en los dos sitios.
 
 Colocación por **arrastre** (dnd-kit) o **click-to-place** (seleccionar ficha y
 pulsar la celda).
