@@ -105,10 +105,8 @@ export function useBoardGeometry({
     return m
   }, [placements])
 
-  // Rectángulo (en celdas) de la alfombra, o `null` si el mapa no tiene. Se
-  // dibuja como UNA sola capa a nivel de tablero (ver Board.jsx), no por
-  // celda: es lo que permite que el marco se conserve sin deformarse sea cual
-  // sea la forma (de 1×2 a 6×1, pasando por bloques de 3×2).
+  // Rectángulo (en celdas) de la alfombra, o `null` si el mapa no tiene una.
+  // Se dibuja como una sola capa a nivel de tablero, no por celda (ver Rug.jsx).
   const rugBounds = useMemo(() => rugBoundsOf(map), [map])
 
   return { size, cellSize, cellGeometry, controlled, revealRoom, occupantAt, rugBounds }

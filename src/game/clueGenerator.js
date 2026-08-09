@@ -18,22 +18,15 @@ import { solve } from './solver.js'
 import { freeCells } from './mapGenerator.js'
 import { shuffle, pick, weightedPick } from './random.js'
 
-// Peso de cada tipo de pista al SEMBRAR la pista inicial de un sujeto. La
-// siembra elige primero un *tipo* (al azar ponderado entre los disponibles) y
-// luego una instancia concreta de ese tipo: así las pistas específicas e
-// interesantes dominan sin que un único tipo (antes siempre `inRoom`) acapare
-// la mayoría de las pistas.
+// Peso de cada tipo al SEMBRAR la pista inicial de un sujeto (elige un tipo al
+// azar ponderado, luego una instancia de ese tipo): así ningún tipo abundante
+// —antes siempre `inRoom`— acapara las semillas por pura cantidad.
 //
-// Las semillas son pistas UNARIAS y específicas (acotan la celda del propio
-// sujeto). Esto es clave para el rendimiento: el Solver solo poda el dominio
-// inicial de cada personaje con pistas unarias, así que sembrar con pistas
-// relacionales (withInRoom, direccionales…) dejaría el dominio sin acotar y
-// dispararía el coste de generación en mapas grandes.
-//
-// Las pistas relacionales/direccionales y las débiles/negativas valen 0 aquí
-// (no se siembran), pero SÍ aparecen luego como refuerzo en addUntilUnique
-// cuando ayudan a la unicidad — de ahí que sigan saliendo en el puzzle final.
-// Los tipos no listados usan peso 1.
+// Peso 0 = nunca como semilla, solo como refuerzo en `addUntilUnique`. Es el
+// caso de toda pista relacional/direccional: el Solver solo poda el dominio
+// inicial con pistas UNARIAS, así que sembrar con una relacional lo dejaría
+// sin acotar y dispararía el coste en mapas grandes. Los tipos no listados
+// usan peso 1.
 const SEED_WEIGHT = {
   // Unarias específicas y muy informativas
   inRoom: 5,
@@ -140,15 +133,12 @@ function isObviousClue(clue, ctx) {
   return true
 }
 
-// Todas las pistas verdaderas para un sospechoso, según la solución.
 function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   const pos = solution[subject]
   const out = []
   const allowed = (kind) => allowedTiers.includes(CLUE_TYPES[kind].tier)
-  // Las pistas de un sospechoso NUNCA referencian a la víctima: la relación
-  // espacial con la víctima es justo lo que define al asesino, así que nombrarla
-  // sería un spoiler de la solución. La víctima, a su vez, solo recibe pistas
-  // unarias (sobre su propia celda): no se relaciona con ningún sospechoso.
+  // Un sospechoso nunca referencia a la víctima —sería spoiler de quién es el
+  // asesino— y la víctima solo recibe pistas unarias, sobre su propia celda.
   const isVictim = subject === characters.victim
   const others = isVictim ? [] : characters.suspects.filter((n) => n !== subject)
   const myRoom = ctx.roomAt(pos.row, pos.col)
@@ -167,7 +157,6 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
     out.push(clue)
   }
 
-  // Habitación
   if (isVictim || myRoom !== victimRoom) add('inRoom', { room: myRoom })
   for (const room of shuffle(rng, ctx.rooms).slice(0, 2)) {
     if (room !== myRoom) add('notInRoom', { room })
@@ -178,19 +167,15 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
     add('notWithInRoom', { other: o })
   }
 
-  // Proximidad a elementos del mapa
   for (const id of PROXIMITY_ELEMENTS) add('nextToElement', { element: id })
   add('notNextToMueble', {})
   add('nextToWindow', {})
   for (const id of ON_ELEMENTS) add('onElement', { element: id })
 
-  // Propiedades de la habitación
   add('roomSize', { size: 'grande' })
   add('roomSize', { size: 'pequeña' })
-  // Conteo ambiguo por elemento ("más de 1 cama", "menos de 2 plantas"). La
-  // alfombra se excluye: ocupa varias celdas pero es UNA sola, así que contar
-  // celdas daría cifras engañosas. add()/isObviousClue descartan las cotas que
-  // no discriminan (verdaderas en toda sala).
+  // "Más de 1 cama", "menos de 2 plantas". Sin alfombra: ocupa varias celdas
+  // pero es UNA sola, y contar celdas daría una cifra falsa.
   for (const id of ELEMENT_IDS) {
     if (id === 'alfombra') continue
     add('roomElementCount', { element: id, op: 'masDe', value: 1 })
@@ -200,7 +185,6 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   }
   add('roomWindowCount', { count: ctx.roomWindows(myRoom) })
 
-  // Absolutas
   add('inRow', { row: pos.row })
   add('inColumn', { col: pos.col })
   for (let r = 0; r < size; r++) if (r !== pos.row) add('notInRow', { row: r })
@@ -210,8 +194,8 @@ function candidatesFor(subject, solution, characters, ctx, allowedTiers, rng) {
   add('inBorder', {})
   add('notInBorder', {})
 
-  // Relativas. Nadie comparte fila ni columna con nadie (regla del asesino),
-  // así que las cuatro direcciones cardinales son comparaciones válidas.
+  // Nadie comparte fila ni columna con nadie (regla del asesino), así que las
+  // cuatro direcciones cardinales son comparaciones válidas.
   for (const o of others) {
     add('rowAbove', { other: o })
     add('rowBelow', { other: o })
@@ -239,11 +223,10 @@ function isEligible(cand, { chosen, chosenIds, limit, rowColCapped, countForSubj
 function bestReinforcement(state) {
   const { rng, all, chosen, count, kindUsage } = state
   let bestCount = Infinity
-  let ties = [] // candidatas que empatan en bestCount (no dan unicidad ya)
+  let ties = []
 
   for (const cand of shuffle(rng, all).slice(0, GENERATION.CANDIDATE_SAMPLE)) {
     if (!isEligible(cand, state)) continue
-    // Probar la candidata: contar soluciones con ella dentro y sacarla.
     chosen.push(cand)
     const c = count(chosen, GENERATION.SOLUTION_PROBE_CAP)
     chosen.pop()
@@ -331,12 +314,7 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
     chosenIds.add(clueId(seed))
   }
 
-  // 3. Añadir pistas hasta lograr unicidad. El máximo es de 2 pistas por
-  // sujeto: si no se logra unicidad dentro de ese límite, se descarta este
-  // mapa/solución y el orquestador reintenta con otro.
   const countForSubject = (subject) => chosen.filter((c) => c.subject === subject).length
-
-  // Cuántas pistas de cada tipo se han elegido ya (para diversificar el refuerzo).
   const kindUsage = (cand) => chosen.reduce((n, c) => n + (c.kind === cand.kind ? 1 : 0), 0)
 
   const state = {
@@ -351,6 +329,9 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
     maxAdds: characters.suspects.length * 2 + 4,
   }
 
+  // 3. Añadir pistas hasta lograr unicidad, máximo 2 por sujeto: si no se
+  // logra dentro de ese límite, se descarta este mapa/solución y el
+  // orquestador reintenta con otro.
   addUntilUnique([GENERATION.MAX_CLUES_PER_SUBJECT], state)
 
   if (count(chosen, 2) !== 1) return null
@@ -369,20 +350,12 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
 
   const clues = sortAlpha(minimized)
 
-  // 5. Pool de pistas extra de reserva: verdaderas y no incluidas en el set
-  // principal, que el jugador puede solicitar a petición. No afectan a la
-  // unicidad (son redundantes), pero aportan información adicional.
-  //
-  // Se recorre SUJETO A SUJETO, no el pool global: la pista que se concede se
-  // elige al pedirla, en función de qué personajes lleva el jugador sin
-  // colocar o mal colocados (ver `hints.js`), así que el pool debe tener algo
-  // que ofrecer sobre cualquiera de ellos. Cuántas puede desbloquear es otra
-  // cosa — ese presupuesto es `difficulty.extraClues` (`extraClueBudget`).
-  //
+  // 5. Pool de pistas extra: verdaderas, redundantes con las principales, que
+  // el jugador puede solicitar a petición (presupuesto en `difficulty.extraClues`).
+  // Sujeto a sujeto y no como pool global, porque `hints.js` elige la pista
+  // según qué personaje concreto lleva el jugador sin colocar o mal colocado.
   // Cada candidata se comprueba contra las principales Y contra las extras ya
-  // elegidas: si no, dos extras podrían ser recíprocas entre sí ("A a la
-  // izquierda de B" + "B a la derecha de A") o mezclar eje absoluto y relativo
-  // para el mismo sujeto.
+  // elegidas, o dos extras podrían acabar siendo recíprocas entre sí.
   const chosenFinalIds = new Set(clues.map(clueId))
   const extras = []
   for (const s of subjects) {

@@ -118,14 +118,13 @@ export function generateMap(rng, config, { irregular = false } = {}) {
       }
     }
 
-    // Mobiliario bloqueante.
     const numBlocking = randInt(rng, blockingRange[0], blockingRange[1])
     const blockingCells = shuffle(rng, interiorCells).slice(0, numBlocking)
     for (const [r, c] of blockingCells) {
       grid[r][c] = pick(rng, BLOCKING_ELEMENTS)
     }
 
-    // Mobiliario libre (silla, cama) sobre celdas aún libres.
+    // Silla y cama sobre celdas que quedaron libres.
     const stillFree = []
     for (let r = 0; r < size; r++)
       for (let c = 0; c < size; c++)
@@ -158,12 +157,12 @@ export function generateMap(rng, config, { irregular = false } = {}) {
 
     const map = { gridSize: size, rooms, grid, windows, voidCells, irregular: !!irregular, shape: kind }
 
-    // Validación: celdas ocupables >= numCharacters con holgura. En irregular,
-    // además, matching perfecto filas→columnas sobre las ocupables — el
-    // solutionGenerator exige una permutación (nadie comparte fila ni columna)
-    // y comprobarlo aquí evita quemar sus 3000 intentos en mapas sin
-    // transversal. En clásico NO se aplica: alteraría el flujo de reintentos
-    // de seeds existentes (el determinismo clásico debe quedar intacto).
+    // Validación: celdas ocupables >= numCharacters con holgura y, solo en
+    // irregular, matching perfecto filas→columnas — el solutionGenerator exige
+    // una permutación (nadie comparte fila ni columna), y comprobarlo aquí
+    // evita quemar sus 3000 intentos en un mapa sin transversal. No se aplica
+    // en clásico: alteraría el flujo de reintentos y rompería el determinismo
+    // de las seeds existentes.
     const free = freeCells(map)
     if (free.length >= numCharacters + 2 && (!irregular || hasPerfectMatching(free, size))) {
       return map
@@ -185,8 +184,7 @@ export function freeCells(map) {
 }
 
 // ¿Forma la celda parte del tablero? Falso fuera de rango y en celdas void de
-// mapas irregulares. (voidCells es un Set no serializable a JSON; irrelevante
-// hoy: el mapa se regenera siempre desde la seed.)
+// mapas irregulares.
 export function cellExists(map, r, c) {
   if (r < 0 || c < 0 || r >= map.gridSize || c >= map.gridSize) return false
   return !map.voidCells?.has(cellKey(r, c))
@@ -255,10 +253,8 @@ export function buildRoomLookup(map) {
 }
 
 // Rectángulo (inclusive) que ocupa la alfombra, o `null` si `placeRug` no
-// encontró hueco para ninguna (el mapa se queda sin alfombra ese caso — no
-// es un error). Válido porque `placeRug` solo escribe rectángulos sólidos:
-// basta con el min/max de las celdas 'alfombra', no hace falta comprobar
-// contigüidad.
+// encontró hueco (el mapa se queda sin alfombra, no es un error). El min/max
+// basta porque `placeRug` solo escribe rectángulos sólidos.
 export function rugBoundsOf(map) {
   const rows = []
   const cols = []

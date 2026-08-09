@@ -1,24 +1,17 @@
-// Zonas: la parte de la ambientación que la LÓGICA necesita conocer.
-//
-// Aquí vive solo eso: qué zonas hay, cuál le toca a una semilla y cómo se
-// llaman los elementos del mapa en cada una. El aspecto (colores, materiales,
-// sprites) vive en `src/components/zones.js`, indexado por estos mismos ids.
-// La separación no es cosmética: el texto de las pistas se redacta durante la
-// generación del puzzle (ver `clueGenerator.makeClue`), así que los nombres por
-// zona tienen que estar disponibles aquí, y `src/game/` no puede depender de
-// los componentes.
+// Zonas: la parte de la ambientación que la LÓGICA necesita conocer — qué
+// zonas hay, cuál le toca a una semilla y cómo se llama cada elemento del
+// mapa en cada una. El aspecto (colores, materiales, sprites) vive aparte, en
+// `src/components/zones.js`, indexado por los mismos ids: la separación existe
+// porque el texto de las pistas se redacta durante la generación del puzzle
+// (`clueGenerator.makeClue`), y `src/game/` no puede depender de componentes.
 //
 // LÍMITE de la superposición: solo puede redefinir cómo se NOMBRA un elemento
-// (`label`, `plural`, `article`, `onText`). Nunca `blocking` ni `mueble`, que
-// son lógica de puzzle: `blocking` decide qué celdas son ocupables y `mueble`
-// alimenta la pista "no estaba junto a ningún mueble". Tampoco cambia el
-// conjunto de ids, que son las claves guardadas en `map.grid`.
+// (`label`, `plural`, `article`, `onText`). Nunca `blocking` ni `mueble` —son
+// lógica de puzzle— ni el conjunto de ids, que son las claves de `map.grid`.
 //
 // Las HABITACIONES se superponen con el mismo principio, más abajo
-// (ZONE_ROOMS/resolveRooms): el nombre CANÓNICO (el de `ROOM_NAMES`) sigue
-// siendo la identidad real de la sala — la clave de `roomLookup`, la que
-// indexa su tinte y su material de suelo — y lo único que cambia por zona es
-// cómo se llama en pantalla y en el texto de las pistas.
+// (ZONE_ROOMS/resolveRooms): el nombre CANÓNICO sigue indexando tinte y
+// material; la zona solo cambia cómo se llama en pantalla y en las pistas.
 
 import { ELEMENTS, ELEMENT_IDS } from './elements.js'
 import { ROOM_NAMES, ROOM_ARTICLE } from './constants.js'
@@ -161,12 +154,6 @@ const BASE_ROOMS = Object.fromEntries(
   ROOM_NAMES.map((room) => [room, { label: room, article: ROOM_ARTICLE[room] }]),
 )
 
-// Coherencia de las superposiciones, comprobada una vez al cargar el módulo
-// (igual que `assertZoneElements`): una zona mal definida falla al arrancar,
-// no a mitad de una partida. Dos invariantes:
-//   - la sala existe en `ROOM_NAMES` y el artículo es 'el' o 'la';
-//   - dentro de una misma zona, dos salas nunca terminan con el MISMO nombre
-//     en pantalla (eso confundiría al jugador sobre cuál es cuál).
 function assertRoomOverlay(zoneId, room, over) {
   if (!ROOM_NAMES.includes(room)) throw new Error(`Zona ${zoneId}: habitación desconocida "${room}"`)
   if (!over.label) throw new Error(`Zona ${zoneId}: "${room}" no define label`)

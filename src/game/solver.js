@@ -22,7 +22,6 @@ function participants(clue) {
 }
 
 function isUnarySatisfiable(clue, cell, ctx) {
-  // Solo aplicable a pistas unarias (un único participante).
   const pos = { row: cell[0], col: cell[1] }
   const placements = { [clue.subject]: pos }
   return evalClue(clue, placements, ctx)
@@ -55,10 +54,9 @@ export function solve(map, characters, clues, opts = {}) {
     domains[name] = cells.filter((cell) => unary.every((c) => isUnarySatisfiable(c, cell, ctx)))
   }
 
-  // Orden de asignación: por dominio creciente. En toda solución válida nadie
-  // comparte fila ni columna con otro personaje, así que cada asignación poda
-  // de inmediato a cualquier actor pendiente que caiga en esa línea (clave
-  // para el rendimiento).
+  // Orden de asignación: por dominio creciente. Nadie comparte fila ni columna
+  // con otro (regla del asesino), así que cada asignación poda de inmediato a
+  // cualquier actor pendiente que caiga en esa línea — clave para el rendimiento.
   const byDomain = (a, b) => domains[a].length - domains[b].length
   const order = [...names].sort(byDomain)
 

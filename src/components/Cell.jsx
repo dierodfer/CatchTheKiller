@@ -184,25 +184,20 @@ function Cell({
         />
       )}
 
-      {/* Etiqueta de habitación (una vez por habitación). */}
       {label && (
         <span className="pointer-events-none absolute left-1 top-0.5 font-pixel text-[12px] font-semibold uppercase tracking-[0.08em] text-plum-700/80">
           {label}
         </span>
       )}
 
-      {/* La alfombra no se dibuja aquí: es una única capa a nivel de tablero
-          (ver Board.jsx) para que su marco no se deforme sea cual sea la
-          forma — esta celda solo le deja hueco (fondo transparente arriba). */}
-
-      {/* Mobiliario (excepto alfombra), oculto si hay una ficha encima. */}
+      {/* La alfombra no se dibuja aquí, es una capa única a nivel de tablero
+          (ver Board.jsx); esta celda solo le deja el hueco. */}
       {!occupantName && furniture && !isRug && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-75">
           <FurnitureIcon type={furniture} zone={zone} size={Math.round(size * 0.42)} />
         </div>
       )}
 
-      {/* Ventana: cristal claro junto al tramo de pared marcado en azul. */}
       {isWindow && wall && (
         <div
           className="pointer-events-none absolute"
@@ -217,7 +212,6 @@ function Cell({
 
       <CandidateMarks names={cellMarks} characters={characters} size={size} />
 
-      {/* Ficha colocada. */}
       {occupantName && (
         <motion.div layoutId={`token-${occupantName}`} className="absolute">
           {revealMode ? (
@@ -242,7 +236,6 @@ function Cell({
         </motion.div>
       )}
 
-      {/* Popup de marcado. */}
       {isMarkingThis && (
         <CellMarkPopup
           r={r}

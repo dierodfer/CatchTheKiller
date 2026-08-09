@@ -106,7 +106,6 @@ export default function MapPreview({ difficulty, irregular = false }) {
         className="pixel-frame relative inline-block overflow-hidden rounded-lg p-2.5 shadow-2xl"
         style={{ background: zone.frame.background }}
       >
-        {/* Textura sutil propia de la zona. */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ ...zone.ambient, opacity: zone.ambientOpacity, mixBlendMode: 'multiply' }}

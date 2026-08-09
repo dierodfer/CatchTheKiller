@@ -1,8 +1,8 @@
 // Sprites de mobiliario — recortados de "Roguelike/RPG pack" (Kenney, CC0 1.0).
 //
 // Cada valor es un tile de 16×16 px, en PNG, como data URI: mismo tratamiento
-// que `floorSprites.js` y `rugSprite.js`, y por el mismo motivo — la app es
-// una PWA offline y no puede depender de una descarga en tiempo de ejecución.
+// que `floorSprites.js`, y por el mismo motivo — la app es una PWA offline y
+// no puede depender de una descarga en tiempo de ejecución.
 // Licencia CC0: texto de cortesía en
 // `LICENSES/kenney-roguelike-rpg-pack-CC0.txt` (la CC0 no exige atribución).
 //
