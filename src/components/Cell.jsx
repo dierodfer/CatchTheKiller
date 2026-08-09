@@ -18,6 +18,7 @@ import {
   REVEAL_TINT,
   REVEAL_HIGHLIGHT,
   DROP_OUTLINE,
+  SELECTED_OUTLINE,
   windowBorder,
   windowGlassStyle,
   floorPatternStyle,
@@ -121,6 +122,14 @@ function Cell({
   if (revealCell) background = REVEAL_TINT
   else if (isRug) background = 'transparent'
 
+  // Contorno de interacción: `canDrop` gana si coincide con `isMarkingThis`
+  // (no debería pasar en la práctica, son dos modos de interacción distintos,
+  // pero un gesto en curso —arrastrar una ficha— es más urgente que "esta es
+  // la casilla que estoy anotando").
+  let outline = 'none'
+  if (canDrop) outline = DROP_OUTLINE
+  else if (isMarkingThis) outline = SELECTED_OUTLINE
+
   // Solo se invoca desde la diana de interacción, que únicamente se renderiza
   // cuando `clickable`; no hace falta volver a comprobarlo aquí.
   const handleClick = () => {
@@ -150,7 +159,7 @@ function Cell({
           ? { [WINDOW_BORDER_SIDE[wall]]: windowBorder(zone, WINDOW_FRAME_PX) }
           : null),
         cursor: clickable ? 'pointer' : 'default',
-        outline: canDrop ? DROP_OUTLINE : 'none',
+        outline,
         outlineOffset: -2,
       }}
     >

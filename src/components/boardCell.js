@@ -10,13 +10,19 @@
 import { MATERIALS, ROOM_MATERIAL } from './floorMaterials.js'
 import { RUG_TEXTURES } from './rugTextures.js'
 
-// Tinte dorado y contornos del tablero (resaltado de revelado, soltar ficha).
-// NO se tematizan: son señales de interacción, no decorado. Que el destino de
-// soltado o la habitación revelada cambien de color según la zona debilitaría
-// el feedback sin aportar ambientación.
+// Tinte dorado y contornos del tablero (resaltado de revelado, soltar ficha,
+// casilla seleccionada). NO se tematizan: son señales de interacción, no
+// decorado. Que el destino de soltado o la habitación revelada cambien de
+// color según la zona debilitaría el feedback sin aportar ambientación.
 export const REVEAL_TINT = 'rgba(203,163,92,0.30)'
 export const REVEAL_HIGHLIGHT = '#a07d3c'
 export const DROP_OUTLINE = '2px solid rgba(255,255,255,0.7)'
+// Casilla con el popup de marcado abierto: mismo dorado de foco que usa el
+// resto de la app (ver README, "foco visible en dorado"). Un trazo más
+// grueso que DROP_OUTLINE porque aquí es la única señal de qué casilla se
+// está editando —el popup flota aparte y puede no tocar la celda—, así que
+// tiene que sostenerse por sí solo, no solo reforzar un gesto en curso.
+export const SELECTED_OUTLINE = '3px solid #cba35c'
 
 // Lado del borde de la celda que ocupa la ventana, según su pared.
 export const WINDOW_BORDER_SIDE = {
@@ -145,10 +151,13 @@ export function rugLayerStyles(zone, cellSize) {
 }
 
 // Fábrica de bordes de celda: muro exterior del tablero, muro entre
-// habitaciones y línea interior de rejilla, con los colores y grosores de la
-// zona. `scale` adelgaza los trazos en la miniatura (el tablero usa 1). Un
-// grosor de 0 px produce 'none', que es como el apartamento prescinde de la
-// rejilla interior — allí la junta de la baldosa ya hace ese papel.
+// habitaciones y —opcional— línea interior de rejilla, con los colores y
+// grosores de la zona. `scale` adelgaza los trazos en la miniatura (el
+// tablero usa 1). Un grosor de 0 px produce 'none': las tres zonas
+// prescinden de la rejilla interior, porque el propio suelo (veta, damero,
+// junta de baldosa) ya separa una celda de la siguiente sin necesidad de una
+// línea CSS encima que partiera el sprite en dos. Solo quedan las fronteras
+// que SÍ son información — muro exterior y muro entre habitaciones.
 export function makeBordersFor(map, roomLookup, size, zone, scale = 1) {
   const px = (n) => Math.max(1, Math.round(n * scale))
   const OUTER = `${px(zone.wall.outerPx)}px solid ${zone.wall.color}`

@@ -80,7 +80,10 @@ export const ZONES = {
       insetFrac: 0.1,
     },
 
-    wall: { color: '#5c3a1e', outerPx: 5, roomPx: 3, thinColor: 'rgba(60,38,20,0.20)', thinPx: 1 },
+    // `thinPx: 0`: sin rejilla interior. El sprite de tarima ya tiene su propia
+    // veta, y una línea CSS encima de dos celdas contiguas del mismo suelo
+    // partía la tabla en dos en vez de leerse como una sola pieza continua.
+    wall: { color: '#5c3a1e', outerPx: 5, roomPx: 3, thinColor: 'transparent', thinPx: 0 },
     // El cristal tira a cielo, no a crema: una ventana tiene que leerse como un
     // hueco de luz contra el tablero claro, y un tono cálido se disolvería.
     window: { frame: '#8a5a2b', frameScale: 1, glass: '#c4dbdd', glassRadius: 999 },
@@ -211,7 +214,9 @@ export const ZONES = {
       insetFrac: 0.1,
     },
 
-    wall: { color: '#a07d3c', outerPx: 5, roomPx: 3, thinColor: 'rgba(39,24,41,0.16)', thinPx: 1 },
+    // `thinPx: 0`: el propio damero ya alterna de casilla en casilla, así que
+    // una línea CSS encima solo repetía esa función y partía el patrón en dos.
+    wall: { color: '#a07d3c', outerPx: 5, roomPx: 3, thinColor: 'transparent', thinPx: 0 },
     window: { frame: '#6f9bc9', frameScale: 1, glass: '#eaf3fb', glassRadius: 999 },
   },
 }
