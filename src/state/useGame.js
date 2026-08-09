@@ -1,7 +1,7 @@
 // Máquina de estados de la aplicación (sección 13 del documento), con useReducer.
 
-import { useCallback, useEffect, useReducer } from 'react'
-import { generatePuzzle } from '@/game/puzzleGenerator.js'
+import { useCallback, useEffect, useReducer, useRef } from 'react'
+import { createPuzzleRunner, PuzzleRequestSuperseded } from '@/workers/puzzleClient.js'
 import { decodeShareCode, indicesToPlacements } from '@/game/shareCode.js'
 import {
   filterValidMarks,
@@ -187,74 +187,112 @@ export function useGame() {
     [],
   )
 
+  // El worker se crea en la primera generación, no al montar: si la partida se
+  // reanuda o llega por enlace, hay una sola generación y da igual; y en una
+  // sesión que nunca genera nada no se levanta un hilo para nada.
+  const runnerRef = useRef(null)
+
+  // Tronco común de generate/loadFromCode/resumeGame: los tres hacen
+  // START -> pedir el puzzle -> post-procesar -> despachar, y solo difieren en
+  // `prepare` (qué se le pide al worker) y `onPuzzle` (qué se hace con él).
+  const runGeneration = useCallback(async ({ prepare, onPuzzle, onError }) => {
+    dispatch({ type: 'GENERATE_START' })
+    try {
+      // `prepare` puede lanzar (un código compartido malformado): ese fallo
+      // llega a GENERATE_ERROR con su propio mensaje, sin molestar al worker.
+      const { request, context } = prepare()
+      const runner = (runnerRef.current ??= createPuzzleRunner())
+      onPuzzle(await runner.generate(request), context)
+    } catch (e) {
+      // Otra petición tomó el relevo: el estado es suyo, aquí no se toca nada.
+      if (e instanceof PuzzleRequestSuperseded) return
+      onError?.()
+      dispatch({ type: 'GENERATE_ERROR', error: e.message })
+    }
+  }, [])
+
   // Genera una partida. Sin opciones usa la dificultad y el toggle del estado;
   // con `seed` (partida compartida) reproduce el puzzle exacto, y
   // `initialPlacements` precoloca fichas ({ nombre: { row, col } }, validadas).
   const generate = useCallback(
-    ({ difficulty, seed, irregular, initialPlacements } = {}) => {
-      const diff = difficulty || state.difficulty
-      const irr = irregular ?? state.irregular
-      dispatch({ type: 'GENERATE_START' })
-      // Diferido para que el spinner se pinte antes del trabajo síncrono.
-      setTimeout(() => {
-        try {
-          const puzzle = generatePuzzle(diff, seed ?? undefined, { irregular: irr })
-          dispatch({ type: 'GENERATE_SUCCESS', puzzle, initialPlacements })
-        } catch (e) {
-          dispatch({ type: 'GENERATE_ERROR', error: e.message })
-        }
-      }, 30)
-    },
-    [state.difficulty, state.irregular],
+    ({ difficulty, seed, irregular, initialPlacements } = {}) =>
+      runGeneration({
+        prepare: () => ({
+          request: {
+            difficultyId: difficulty || state.difficulty,
+            seed,
+            irregular: irregular ?? state.irregular,
+          },
+        }),
+        onPuzzle: (puzzle) => dispatch({ type: 'GENERATE_SUCCESS', puzzle, initialPlacements }),
+      }),
+    [runGeneration, state.difficulty, state.irregular],
   )
 
   // Carga una partida desde un código compartido. Un código malformado pasa el
   // estado a ERROR con mensaje amable (se muestra en la pantalla de inicio).
   // Las fichas recibidas se validan contra el mapa regenerado: fuera de rango,
   // no ocupables o duplicadas se descartan sin romper la partida.
-  const loadFromCode = useCallback((codeString) => {
-    dispatch({ type: 'GENERATE_START' })
-    setTimeout(() => {
-      try {
-        const { difficultyId, seed, irregular, placementIndices } = decodeShareCode(codeString)
-        const puzzle = generatePuzzle(difficultyId, seed, { irregular })
-        let initialPlacements
-        if (placementIndices) {
-          const raw = indicesToPlacements(placementIndices, puzzle.characters, puzzle.map.gridSize)
-          initialPlacements = filterValidPlacements(raw, puzzle)
-        }
-        dispatch({ type: 'GENERATE_SUCCESS', puzzle, initialPlacements })
-      } catch (e) {
-        dispatch({ type: 'GENERATE_ERROR', error: e.message })
-      }
-    }, 30)
-  }, [])
+  const loadFromCode = useCallback(
+    (codeString) =>
+      runGeneration({
+        // Decodificar es barato: se queda en el hilo principal, y así un código
+        // inválido falla de inmediato en vez de tras esperar al worker.
+        prepare: () => {
+          const { difficultyId, seed, irregular, placementIndices } = decodeShareCode(codeString)
+          return { request: { difficultyId, seed, irregular }, context: placementIndices }
+        },
+        onPuzzle: (puzzle, placementIndices) => {
+          let initialPlacements
+          if (placementIndices) {
+            const raw = indicesToPlacements(placementIndices, puzzle.characters, puzzle.map.gridSize)
+            initialPlacements = filterValidPlacements(raw, puzzle)
+          }
+          dispatch({ type: 'GENERATE_SUCCESS', puzzle, initialPlacements })
+        },
+      }),
+    [runGeneration],
+  )
 
   // Reanuda una partida guardada en localStorage (ver gameStorage.js). Regenera
   // el puzzle desde (difficulty, seed, irregular) y valida las fichas contra
   // el mapa recién generado, igual que loadFromCode, por si el guardado quedó
   // desactualizado o corrupto.
-  const resumeGame = useCallback((saved) => {
-    dispatch({ type: 'GENERATE_START' })
-    setTimeout(() => {
-      try {
-        const puzzle = generatePuzzle(saved.difficulty, saved.seed, { irregular: saved.irregular })
-        const placements = filterValidPlacements(saved.placements, puzzle)
-        dispatch({
-          type: 'RESTORE_GAME',
-          puzzle,
-          placements,
-          marks: filterValidMarks(saved.marks, puzzle),
-          struckClues: filterValidStruckClues(saved.struckClues, puzzle),
-          revealedExtraIds: filterValidRevealedExtras(saved.revealedExtraIds, puzzle),
-          status: saved.status === STATUS.FAIL ? STATUS.FAIL : STATUS.PLAYING,
-        })
-      } catch (e) {
-        clearSavedGame()
-        dispatch({ type: 'GENERATE_ERROR', error: e.message })
-      }
-    }, 30)
-  }, [])
+  const resumeGame = useCallback(
+    (saved) =>
+      runGeneration({
+        prepare: () => ({
+          request: {
+            difficultyId: saved.difficulty,
+            seed: saved.seed,
+            irregular: saved.irregular,
+          },
+        }),
+        onPuzzle: (puzzle) =>
+          dispatch({
+            type: 'RESTORE_GAME',
+            puzzle,
+            placements: filterValidPlacements(saved.placements, puzzle),
+            marks: filterValidMarks(saved.marks, puzzle),
+            struckClues: filterValidStruckClues(saved.struckClues, puzzle),
+            revealedExtraIds: filterValidRevealedExtras(saved.revealedExtraIds, puzzle),
+            status: saved.status === STATUS.FAIL ? STATUS.FAIL : STATUS.PLAYING,
+          }),
+        // Un guardado que ya no reconstruye no se vuelve a ofrecer.
+        onError: clearSavedGame,
+      }),
+    [runGeneration],
+  )
+
+  // Solo se libera el worker ocioso: si hay una generación en vuelo, el
+  // desmontaje simulado de StrictMode mataría un trabajo que el remontaje sigue
+  // esperando.
+  useEffect(
+    () => () => {
+      if (runnerRef.current && !runnerRef.current.isBusy()) runnerRef.current.dispose()
+    },
+    [],
+  )
 
   // Guarda la partida en curso (playing/fail) tras cada cambio relevante, y la
   // borra al ganar. IDLE nunca dispara el borrado aquí (evitaría una carrera

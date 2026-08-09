@@ -92,14 +92,18 @@ export default function StartScreen({
                   </div>
                 </div>
 
+                {/* Los ajustes se bloquean mientras se genera: el caso en curso
+                    ya salió con los valores de antes, y tocarlos daría a
+                    entender que aún lo cambian. */}
                 <input
                   type="range"
                   min={0}
                   max={LEVELS.length - 1}
                   step={1}
                   value={levelIndex}
+                  disabled={generating}
                   onChange={(e) => onSelect(LEVELS[Number(e.target.value)].id)}
-                  className="h-2 w-full cursor-pointer appearance-none rounded-full bg-cream-300 accent-gold-deep"
+                  className="h-2 w-full cursor-pointer appearance-none rounded-full bg-cream-300 accent-gold-deep disabled:cursor-not-allowed"
                   aria-label="Dificultad"
                 />
 
@@ -109,10 +113,11 @@ export default function StartScreen({
                       type="button"
                       key={lvl.id}
                       onClick={() => onSelect(lvl.id)}
+                      disabled={generating}
                       className={`-mx-1 px-1 text-[11px] transition-colors ${
                         i === levelIndex
                           ? 'font-semibold text-gold-deep'
-                          : 'font-medium text-plum-500 hover:text-plum-700'
+                          : 'font-medium text-plum-500 enabled:hover:text-plum-700'
                       }`}
                       aria-pressed={i === levelIndex}
                     >
@@ -138,8 +143,9 @@ export default function StartScreen({
                     role="switch"
                     aria-checked={!!irregular}
                     aria-label="Mapa irregular"
+                    disabled={generating}
                     onClick={() => onToggleIrregular(!irregular)}
-                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed ${
                       irregular ? 'bg-gold-deep' : 'bg-cream-300'
                     }`}
                   >
@@ -166,6 +172,7 @@ export default function StartScreen({
         <motion.button
           onClick={() => onStart(difficulty)}
           disabled={generating}
+          aria-busy={generating}
           whileHover={reduce || generating ? undefined : { scale: 1.02 }}
           whileTap={reduce || generating ? undefined : { scale: 0.98 }}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gold px-9 py-3.5 text-base font-semibold text-plum-950 shadow-[0_10px_30px_-8px_rgba(203,163,92,0.6)] transition enabled:hover:bg-gold-soft disabled:opacity-60"
@@ -213,7 +220,14 @@ export default function StartScreen({
           </button>
         </form>
 
-        {error && <p className="mt-4 text-sm text-rose-deep">Error: {error}</p>}
+        {/* `role="alert"` y no `aria-live` a secas: el párrafo se inserta en el
+            momento del fallo, y solo una región assertive se anuncia al
+            aparecer de nuevas. */}
+        {error && (
+          <p role="alert" className="mt-4 text-sm text-rose-deep">
+            Error: {error}
+          </p>
+        )}
       </motion.div>
     </div>
   )
