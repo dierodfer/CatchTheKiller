@@ -1,5 +1,5 @@
-// Resultado de la partida (sección 9): WIN revela asesino y víctima; FAIL solo
-// indica que hay errores, sin revelar la solución.
+// Resultado de la partida (sección 9): WIN revela asesino y víctima; FAIL dice
+// cuántos testimonios contradice la escena, sin revelar la solución.
 //
 // Al resolver el caso de verdad, el cierre es una celebración elaborada: la
 // escena se ilumina (en el tablero) y aquí florecen pétalos dorados antes de
@@ -55,21 +55,35 @@ function WinBody({ result, characters, revealed, reduce, delay }) {
   )
 }
 
-// Desenlace fallido: se avisa de que hay errores, sin revelar la solución.
-function FailBody() {
+// Desenlace fallido: la escena está completa pero no es la solución. Se dice
+// CUÁNTOS testimonios contradice, nunca cuáles ni dónde — el jugador tiene que
+// seguir deduciendo, y por eso el caso no se revela. Una sola frase: el título
+// ya deja claro que es un error, no hace falta explicarlo dos veces.
+function FailBody({ result }) {
+  const errors = result?.errorCount ?? 0
   return (
     <>
       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose/15 ring-1 ring-rose/30">
         <AlertTriangle size={28} className="text-rose-deep" />
       </div>
       <p className="eyebrow mb-1.5" style={{ color: 'rgba(185,122,128,0.9)' }}>
-        Aún no encaja
+        Veredicto rechazado
       </p>
       <h2 className="font-serif text-3xl font-semibold leading-tight text-plum-900">
-        La reconstrucción no cuadra
+        El caso no está resuelto correctamente
       </h2>
       <p className="mt-3 text-[15px] leading-relaxed text-plum-800">
-        Hay posiciones que no encajan con las pistas. Revisa la escena: la solución no se revela.
+        {errors > 0 ? (
+          <>
+            Tu reconstrucción contradice{' '}
+            <span className="font-semibold text-rose-deep">
+              {errors === 1 ? '1 testimonio' : `${errors} testimonios`}
+            </span>
+            .
+          </>
+        ) : (
+          <>Tu reconstrucción no señala a un único culpable.</>
+        )}
       </p>
     </>
   )
@@ -156,26 +170,31 @@ export default function ResultBanner({
               delay={delay}
             />
           ) : (
-            <FailBody />
+            <FailBody result={result} />
           )}
 
+          {/* En fallo la única salida es seguir deduciendo sobre este mismo
+              caso: no se ofrece "Nuevo caso", que sería una vía de escape sin
+              corregir el error. Empezar de cero sigue disponible desde la
+              barra de herramientas si el jugador de verdad quiere abandonar. */}
           <div className="mt-6 flex justify-center gap-2">
-            {fail && (
+            {fail ? (
               <button
                 type="button"
                 onClick={onBackToPlay}
-                className="flex items-center gap-2 rounded-full border border-gold/20 bg-cream-200/70 px-5 py-2.5 text-sm font-medium text-plum-900 hover:bg-cream-300/70"
+                className="flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-plum-950 transition hover:bg-gold-soft"
               >
                 <ArrowLeft size={16} /> Seguir intentando
               </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onNewGame}
+                className="flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-plum-950 transition hover:bg-gold-soft"
+              >
+                <RotateCcw size={16} /> Nuevo caso
+              </button>
             )}
-            <button
-              type="button"
-              onClick={onNewGame}
-              className="flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-plum-950 transition hover:bg-gold-soft"
-            >
-              <RotateCcw size={16} /> Nuevo caso
-            </button>
           </div>
         </motion.div>
       </motion.div>

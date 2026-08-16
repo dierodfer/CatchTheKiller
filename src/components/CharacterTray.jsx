@@ -1,13 +1,18 @@
 // Reparto del caso: personajes aún sin situar en la escena. También es la zona
 // de "descolocado" (soltar aquí una ficha la retira del tablero). Muestra el
 // progreso de cuántos personajes están ya situados.
+//
+// Al completarse, el hueco donde estaban las últimas fichas por colocar pasa a
+// ofrecer "Resolver el caso": es donde cae la vista justo después de soltar al
+// último personaje, sin tener que ir a buscar el botón a la barra de
+// herramientas (que en móvil queda más abajo, tras el tablero).
 
 import { useDroppable } from '@dnd-kit/core'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Check } from 'lucide-react'
+import { Users, Gavel } from 'lucide-react'
 import { DraggableToken } from './CharacterToken.jsx'
 
-export default function CharacterTray({ characters, placements, selectedToken, onTokenClick }) {
+export default function CharacterTray({ characters, placements, selectedToken, onTokenClick, onCheck }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'tray' })
   // Sospechosos y víctima, en orden alfabético.
   const all = [...characters.suspects, characters.victim].sort((a, b) => a.localeCompare(b, 'es'))
@@ -58,9 +63,13 @@ export default function CharacterTray({ characters, placements, selectedToken, o
           ))}
         </AnimatePresence>
         {done && (
-          <p className="flex items-center gap-1.5 font-serif text-base italic text-sage-deep">
-            <Check size={16} /> Todo el reparto está en la escena.
-          </p>
+          <button
+            type="button"
+            onClick={onCheck}
+            className="flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-plum-950 shadow-[0_8px_22px_-8px_rgba(203,163,92,0.7)] transition hover:bg-gold-soft"
+          >
+            <Gavel size={16} /> Resolver el caso
+          </button>
         )}
       </div>
     </div>
