@@ -10,17 +10,18 @@
 sospechoso en el mapa siguiendo las pistas, sin repetir fila ni columna con
 nadie más. Cuando el tablero encaja, **el asesino se delata solo**: es quien
 se queda a solas con la víctima en su habitación. Sin azar, sin trampas —
-pura deducción, con cuatro dificultades y mapas irregulares para rejugar.
+pura deducción, con seis rangos de investigador y mapas irregulares para
+rejugar.
 
 > Implementación **100% local**: la generación del mapa, la solución, las pistas
 > y el Solver son lógica interna en JavaScript puro. No se llama a ninguna IA ni
 > servicio externo.
 
 <p align="center">
-  <img src="docs/screenshots/tablero-dificil.png" width="720" alt="Tablero de un caso en dificultad Difícil (6×6), con mapa irregular tipo donut" />
+  <img src="docs/screenshots/tablero-dificil.png" width="720" alt="Tablero de un caso en rango Detective (6×6), con mapa irregular tipo donut" />
 </p>
 
-<p align="center"><sub>Caso en dificultad <strong>Difícil</strong> (6×6) con mapa irregular (forma "donut", con patio interior).</sub></p>
+<p align="center"><sub>Caso en rango <strong>Detective</strong> (6×6) con mapa irregular (forma "donut", con patio interior).</sub></p>
 
 ## Stack
 
@@ -151,6 +152,24 @@ Source: "GitHub Actions"**. La app quedará disponible en
 `vite.config.js` hace que las rutas de los assets sean relativas, por lo que
 funciona en cualquier subruta sin tocar configuración adicional.
 
+## Rangos de investigador
+
+Seis niveles, cada uno con su tablero, su reparto y sus **lupas** (las pistas
+adicionales que se pueden pedir durante el caso). El número de lupas se ve en la
+pantalla de inicio, sobre el propio botón de cada rango.
+
+| Rango           | Tablero | Personajes            | Lupas |
+|-----------------|---------|-----------------------|-------|
+| Novato          | 4×4     | 3 sospechosos + 1 víctima | 2 |
+| Aspirante       | 5×5     | 4 sospechosos + 1 víctima | 2 |
+| Detective       | 6×6     | 5 sospechosos + 1 víctima | 3 |
+| Investigador    | 7×7     | 6 sospechosos + 1 víctima | 3 |
+| Experto         | 8×8     | 7 sospechosos + 1 víctima | 4 |
+| Sherlock        | 9×9     | 8 sospechosos + 1 víctima | 4 |
+
+La configuración completa (mobiliario bloqueante, tipos de pista permitidos)
+está en `DIFFICULTIES`, en `src/game/constants.js`.
+
 ## Arquitectura
 
 La lógica del juego vive en `src/game/` y es independiente de la UI:
@@ -209,6 +228,14 @@ el Solver confirme que produce exactamente una reconstrucción válida (con
 exactamente un asesino). Si un sospechoso queda ambiguo, se añade una pista
 adicional para él (sección 6.4) y luego se minimizan las redundantes.
 
+Su búsqueda es un backtracking con **comprobación hacia delante** y **orden
+dinámico**: el dominio de cada personaje se guarda como una máscara de columnas
+por fila, cada asignación tacha una fila y una columna enteras (regla del
+asesino) y en cada paso se ramifica por el personaje con menos celdas viables,
+podando en cuanto alguien se queda sin ninguna o una fila libre se queda sin
+candidatos. Es lo que hace que **Experto** y **Sherlock** se generen en menos
+de un segundo en vez de en decenas.
+
 ### UI (`src/components/`)
 
 - `Board` / `Cell` — cuadrícula con **filas y columnas numeradas**, habitaciones,
@@ -244,8 +271,8 @@ pulsar la celda).
 
 ## Estado del proyecto
 
-Primer hito jugable de extremo a extremo para las cuatro dificultades
-(4×4 / 5×5 / 6×6 / 7×7). La capa de generación es local; si en el futuro se
+Primer hito jugable de extremo a extremo para los seis rangos
+(4×4 a 9×9). La capa de generación es local; si en el futuro se
 quiere delegar la generación de solución/pistas a un modelo, basta con
 sustituir `solutionGenerator` + `clueGenerator` respetando el contrato de
 datos (sección 10 del diseño), manteniendo el Solver como autoridad final.

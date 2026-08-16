@@ -42,7 +42,7 @@ function setup() {
   return { runner, workers }
 }
 
-const request = { difficultyId: 'facil', seed: 7, irregular: true }
+const request = { difficultyId: 'novato', seed: 7, irregular: true }
 
 describe('petición y respuesta', () => {
   it('envía la petición con la dificultad, la semilla y el modo irregular', async () => {

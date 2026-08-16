@@ -221,11 +221,11 @@ function isEligible(cand, { chosen, chosenIds, limit, rowColCapped, countForSubj
 // si ninguna la logra, la que deja menos soluciones vivas. Devuelve `null` si
 // ninguna candidata elegible aporta nada.
 function bestReinforcement(state) {
-  const { rng, all, chosen, count, kindUsage } = state
+  const { rng, all, chosen, count, kindUsage, candidateSample } = state
   let bestCount = Infinity
   let ties = []
 
-  for (const cand of shuffle(rng, all).slice(0, GENERATION.CANDIDATE_SAMPLE)) {
+  for (const cand of shuffle(rng, all).slice(0, candidateSample)) {
     if (!isEligible(cand, state)) continue
     chosen.push(cand)
     const c = count(chosen, GENERATION.SOLUTION_PROBE_CAP)
@@ -327,12 +327,21 @@ export function generateClues(rng, map, characters, solution, roomLookup, diffic
     kindUsage,
     rowColCount,
     maxAdds: characters.suspects.length * 2 + 4,
+    candidateSample: difficulty.candidateSample || GENERATION.CANDIDATE_SAMPLE,
   }
 
-  // 3. Añadir pistas hasta lograr unicidad, máximo 2 por sujeto: si no se
-  // logra dentro de ese límite, se descarta este mapa/solución y el
-  // orquestador reintenta con otro.
-  addUntilUnique([GENERATION.MAX_CLUES_PER_SUBJECT], state)
+  // 3. Añadir pistas hasta lograr unicidad, con un tope de pistas por sujeto:
+  // si no se logra dentro de él, se descarta este mapa/solución y el
+  // orquestador reintenta con otro. Los tableros grandes pueden subir el tope
+  // (`difficulty.maxCluesPerSubject`); el escalón se recorre de menor a mayor,
+  // así que la pista de más solo entra cuando con menos no hay ninguna que
+  // valga y el conjunto sigue siendo el mínimo que la unicidad permite.
+  const base = GENERATION.MAX_CLUES_PER_SUBJECT
+  const cap = Math.max(difficulty.maxCluesPerSubject || 0, base)
+  addUntilUnique(
+    Array.from({ length: cap - base + 1 }, (_, i) => base + i),
+    state,
+  )
 
   if (count(chosen, 2) !== 1) return null
 

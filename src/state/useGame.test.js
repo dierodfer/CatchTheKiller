@@ -13,7 +13,7 @@ import { reducer, initialState, STATUS } from './useGame.js'
 // Puzzle mínimo: el reducer solo lee de él lo que se declara abajo, así que un
 // objeto real de `generatePuzzle` (que tarda cientos de ms) no aporta nada.
 const puzzle = {
-  difficulty: 'facil',
+  difficulty: 'novato',
   irregular: false,
   seed: 1234,
   characters: { suspects: ['Alba', 'Carla'], victim: 'Sergio' },

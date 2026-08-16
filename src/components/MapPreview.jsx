@@ -15,7 +15,7 @@ import {
 } from './boardCell.js'
 import { Rug } from './Rug.jsx'
 
-const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32 }
+const PREVIEW_CELL_SIZE = { 4: 46, 5: 40, 6: 36, 7: 32, 8: 28, 9: 25 }
 
 // Grosor del marco de ventana (px) e inset del cristal en la miniatura.
 const WINDOW_FRAME_PX = 3

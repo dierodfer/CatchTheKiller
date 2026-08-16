@@ -11,7 +11,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
-import { encodeShareCode } from '@/game/shareCode.js'
+import { encodeShareCode, UNPLACED } from '@/game/shareCode.js'
 
 const runner = vi.hoisted(() => ({
   requests: [],
@@ -49,7 +49,7 @@ const GRID = 4
 // `isOccupiable`, así que la rejilla tiene que existir de verdad.
 const makePuzzle = (over = {}) => ({
   seed: 7,
-  difficulty: 'facil',
+  difficulty: 'novato',
   irregular: false,
   map: {
     gridSize: GRID,
@@ -117,9 +117,9 @@ describe('generate', () => {
   it('las opciones explícitas ganan a las del estado', () => {
     const { result } = renderHook(() => useGame())
     act(() => {
-      result.current.generate({ difficulty: 'media', seed: 42, irregular: true })
+      result.current.generate({ difficulty: 'aspirante', seed: 42, irregular: true })
     })
-    expect(runner.requests[0]).toEqual({ difficultyId: 'media', seed: 42, irregular: true })
+    expect(runner.requests[0]).toEqual({ difficultyId: 'aspirante', seed: 42, irregular: true })
   })
 
   it('pasa a jugar con el puzzle recibido', async () => {
@@ -148,7 +148,7 @@ describe('generate', () => {
 
 describe('loadFromCode', () => {
   const codeFor = (over = {}) =>
-    encodeShareCode({ difficultyId: 'facil', seed: 7, irregular: false, ...over })
+    encodeShareCode({ difficultyId: 'novato', seed: 7, irregular: false, ...over })
 
   it('decodifica en el hilo principal: un código inválido no llega al worker', async () => {
     const { result } = renderHook(() => useGame())
@@ -164,10 +164,10 @@ describe('loadFromCode', () => {
   it('pide el puzzle con lo que trae el código', () => {
     const { result } = renderHook(() => useGame())
     act(() => {
-      result.current.loadFromCode(codeFor({ difficultyId: 'media', seed: 1234, irregular: true }))
+      result.current.loadFromCode(codeFor({ difficultyId: 'aspirante', seed: 1234, irregular: true }))
     })
     expect(runner.requests[0]).toEqual({
-      difficultyId: 'media',
+      difficultyId: 'aspirante',
       seed: 1234,
       irregular: true,
     })
@@ -176,9 +176,9 @@ describe('loadFromCode', () => {
   it('precoloca las fichas del código, validadas contra el mapa regenerado', async () => {
     const { result } = renderHook(() => useGame())
     // Orden canónico: sospechosos alfabéticos + víctima. Alba a (0,1), Carla
-    // sin colocar (63) y Sergio a (2,2).
+    // sin colocar (sentinel) y Sergio a (2,2).
     act(() => {
-      result.current.loadFromCode(codeFor({ placementIndices: [1, 63, 2 * GRID + 2, 63] }))
+      result.current.loadFromCode(codeFor({ placementIndices: [1, UNPLACED, 2 * GRID + 2, UNPLACED] }))
     })
     await resolveNext(makePuzzle())
 
@@ -192,7 +192,7 @@ describe('loadFromCode', () => {
   it('descarta las fichas que el mapa regenerado ya no admite', async () => {
     const { result } = renderHook(() => useGame())
     act(() => {
-      result.current.loadFromCode(codeFor({ placementIndices: [1, 63, 63, 63] }))
+      result.current.loadFromCode(codeFor({ placementIndices: [1, UNPLACED, UNPLACED, UNPLACED] }))
     })
     // La celda (0,1) pasó a estar ocupada por mobiliario: la ficha se cae, pero
     // la partida arranca igual en vez de romperse.
@@ -208,7 +208,7 @@ describe('loadFromCode', () => {
 describe('resumeGame', () => {
   const saved = {
     status: STATUS.PLAYING,
-    difficulty: 'facil',
+    difficulty: 'novato',
     irregular: false,
     seed: 7,
     placements: { Alba: { row: 1, col: 1 } },
@@ -222,7 +222,7 @@ describe('resumeGame', () => {
     act(() => {
       result.current.resumeGame(saved)
     })
-    expect(runner.requests[0]).toEqual({ difficultyId: 'facil', seed: 7, irregular: false })
+    expect(runner.requests[0]).toEqual({ difficultyId: 'novato', seed: 7, irregular: false })
 
     await resolveNext(makePuzzle())
 
@@ -257,7 +257,7 @@ describe('peticiones solapadas', () => {
   it('la última manda y la reemplazada no toca el estado', async () => {
     const { result } = renderHook(() => useGame())
     act(() => {
-      result.current.generate({ difficulty: 'facil' })
+      result.current.generate({ difficulty: 'novato' })
     })
     act(() => {
       result.current.loadFromCode(encodeShareCode({ difficultyId: 'experto', seed: 99 }))

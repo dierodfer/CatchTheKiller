@@ -326,6 +326,18 @@ export function buildClueContext(map, roomLookup, characters, zoneId) {
   const isBorderCell = (r, c) =>
     sideExterior(r - 1, c) || sideExterior(r + 1, c) || sideExterior(r, c - 1) || sideExterior(r, c + 1)
 
+  // `roomAt` es la consulta más caliente de todo el juego: el Solver la llama
+  // varias veces por hoja de su búsqueda. Se aplana `roomLookup` a un array
+  // indexado por fila*tamaño+columna para no construir la clave "r,c" (ni pasar
+  // por la tabla hash) en cada consulta. Fuera del tablero sigue devolviendo
+  // `undefined`, igual que la búsqueda por clave.
+  const roomByCell = new Array(size * size)
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) roomByCell[r * size + c] = roomLookup[cellKey(r, c)]
+  }
+  const roomAt = (r, c) =>
+    r >= 0 && c >= 0 && r < size && c < size ? roomByCell[r * size + c] : undefined
+
   // ESQUINA sí es por índices: los cuatro vértices del tablero y solo esos. Un
   // recorte puede quitar un vértice, pero nunca asciende a esquina a la celda
   // vecina — para quien mira el tablero, las esquinas son las del marco.
@@ -353,7 +365,7 @@ export function buildClueContext(map, roomLookup, characters, zoneId) {
     isBorderCell,
     isCornerCell,
     cornerCount,
-    roomAt: (r, c) => roomLookup[cellKey(r, c)],
+    roomAt,
     furnitureAt: (r, c) =>
       r >= 0 && c >= 0 && r < map.gridSize && c < map.gridSize ? map.grid[r][c] : null,
     isWindow: (r, c) => windowSet.has(cellKey(r, c)),
