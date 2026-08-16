@@ -155,8 +155,8 @@ funciona en cualquier subruta sin tocar configuración adicional.
 ## Rangos de investigador
 
 Seis niveles, cada uno con su tablero, su reparto y sus **lupas** (las pistas
-adicionales que se pueden pedir durante el caso). El número de lupas se ve en la
-pantalla de inicio, sobre el propio botón de cada rango.
+adicionales que se pueden pedir durante el caso). La pantalla de inicio dibuja
+las del rango elegido en su propio apartado, junto al del mapa irregular.
 
 | Rango           | Tablero | Personajes            | Lupas |
 |-----------------|---------|-----------------------|-------|

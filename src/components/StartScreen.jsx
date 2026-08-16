@@ -9,20 +9,32 @@ import MapPreview from './MapPreview.jsx'
 
 const LEVELS = Object.values(DIFFICULTIES)
 
-// Las pistas adicionales de un nivel, con la MISMA lupa que las representa en
-// el expediente (ver CluePanel): quien ve dos lupas aquí sabe exactamente qué
-// va a poder pedir durante el caso.
-function LupaCount({ count, size = 13 }) {
+// Las pistas del nivel, con la MISMA lupa que las representa en el expediente
+// (ver CluePanel): quien ve dos lupas aquí sabe exactamente qué va a poder
+// pedir durante el caso. Al cambiar de rango entran y salen animadas, igual
+// que los retratos de los sospechosos.
+function LupaCount({ count, reduce = false, size = 24 }) {
   return (
     <span
-      className="flex items-center gap-0.5"
+      className="flex shrink-0 items-center gap-1"
       // Una sola etiqueta para el grupo: leer "lupa" N veces no aporta nada.
       role="img"
-      aria-label={`${count} pistas adicionales`}
+      aria-label={`${count} pistas`}
     >
-      {Array.from({ length: count }, (_, i) => (
-        <PixelLupa key={i} size={size} />
-      ))}
+      <AnimatePresence initial={false}>
+        {Array.from({ length: count }, (_, i) => (
+          <motion.span
+            key={i}
+            className="block"
+            initial={reduce ? false : { opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={reduce ? undefined : { opacity: 0, scale: 0.4 }}
+            transition={{ duration: 0.2 }}
+          >
+            <PixelLupa size={size} />
+          </motion.span>
+        ))}
+      </AnimatePresence>
     </span>
   )
 }
@@ -85,7 +97,7 @@ export default function StartScreen({
                     {diff.label}
                   </span>
                   <span className="text-[11px] font-medium text-plum-600">
-                    {diff.numCharacters - 1} posibles asesinos · 1 muerto ·{' '}
+                    {diff.numCharacters - 1} posibles asesinos · 1 asesinado ·{' '}
                     {diff.gridSize}×{diff.gridSize}
                   </span>
                 </div>
@@ -126,39 +138,38 @@ export default function StartScreen({
                   aria-label="Dificultad"
                 />
 
-                {/* Seis rangos ya no caben en una fila de etiquetas bajo el
-                    deslizador, así que cada uno tiene su propia pastilla — y
-                    ahí es donde se ven las lupas que reparte el nivel. */}
-                <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+                {/* Seis rangos ya no caben en una sola fila de etiquetas bajo
+                    el deslizador: van en dos filas de tres. */}
+                <div className="mt-2.5 grid grid-cols-3 gap-x-2 gap-y-1">
                   {LEVELS.map((lvl, i) => (
                     <button
                       type="button"
                       key={lvl.id}
                       onClick={() => onSelect(lvl.id)}
                       disabled={generating}
-                      className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-1.5 transition-colors ${
+                      className={`px-1 py-0.5 text-[11px] transition-colors ${
                         i === levelIndex
-                          ? 'border-gold/45 bg-gold/12 text-gold-deep'
-                          : 'border-gold/10 bg-cream-100/50 text-plum-500 enabled:hover:border-gold/25 enabled:hover:text-plum-700'
+                          ? 'font-semibold text-gold-deep'
+                          : 'font-medium text-plum-500 enabled:hover:text-plum-700'
                       }`}
                       aria-pressed={i === levelIndex}
                     >
-                      <span
-                        className={`text-[11px] leading-none ${
-                          i === levelIndex ? 'font-semibold' : 'font-medium'
-                        }`}
-                      >
-                        {lvl.label}
-                      </span>
-                      <LupaCount count={lvl.extraClues} />
+                      {lvl.label}
                     </button>
                   ))}
                 </div>
 
-                <p className="mt-2 text-center text-[11px] leading-snug text-plum-500">
-                  Cada <PixelLupa size={12} className="inline-block align-[-0.15em]" /> es una pista
-                  adicional que podrás pedir durante el caso.
-                </p>
+                {/* Las pistas del nivel, con la misma cara que en el expediente:
+                    una lupa por pista, y cambian al cambiar de rango. */}
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-gold/15 bg-cream-100/70 px-3.5 py-2.5">
+                  <span className="text-left">
+                    <span className="block text-[13px] font-semibold text-plum-800">Pistas</span>
+                    <span className="block text-[11px] text-plum-500">
+                      Lupas que podrás gastar durante el caso
+                    </span>
+                  </span>
+                  <LupaCount count={diff.extraClues} reduce={reduce} />
+                </div>
 
                 {/* No es un <label>: el control es un botón con role="switch",
                     que no es un elemento etiquetable (lleva su propio
