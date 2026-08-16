@@ -112,19 +112,25 @@ export default function MapPreview({ difficulty, irregular = false }) {
           aria-hidden
         />
         {/* Alfombra: la misma capa única que en el tablero real (ver Rug.jsx),
-            posicionada antes que `rows` para pintar por detrás. */}
-        {rugBounds && (
-          <div className="pointer-events-none absolute inset-0" aria-hidden>
-            <Rug
-              zone={zone}
-              cellSize={cellSize}
-              bounds={rugBounds}
-              roomName={roomLookup[cellKey(rugBounds.r0, rugBounds.c0)]}
-              tint={rugTint}
-            />
-          </div>
-        )}
-        <div className="relative">{rows}</div>
+            posicionada antes que `rows` para pintar por detrás. Va DENTRO del
+            envoltorio relativo de la rejilla, no suelta en el marco: `inset-0`
+            se resuelve contra la caja de relleno del ancestro posicionado, así
+            que colgándola del marco la alfombra salía desplazada los 10 px del
+            `p-2.5` y se comía el canto de la miniatura. */}
+        <div className="relative">
+          {rugBounds && (
+            <div className="pointer-events-none absolute inset-0" aria-hidden>
+              <Rug
+                zone={zone}
+                cellSize={cellSize}
+                bounds={rugBounds}
+                roomName={roomLookup[cellKey(rugBounds.r0, rugBounds.c0)]}
+                tint={rugTint}
+              />
+            </div>
+          )}
+          {rows}
+        </div>
         <span
           className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-plum-950/55 px-2 py-0.5 font-pixel text-[13px] font-medium text-cream-100 backdrop-blur-sm"
           style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}

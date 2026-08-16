@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Loader2, Skull, Ticket } from 'lucide-react'
 import { DIFFICULTIES } from '@/game/constants.js'
+import { APP_VERSION } from '@/version.js'
 import { SUSPECT_COLORS } from './palette.js'
 import { PixelAvatar, PixelLupa } from './pixelArt.jsx'
 import { ZONE_LIST } from './zones.js'
@@ -273,6 +274,8 @@ export default function StartScreen({
             Error: {error}
           </p>
         )}
+
+        <p className="mt-6 text-[11px] text-plum-400">v{APP_VERSION}</p>
       </motion.div>
     </div>
   )
