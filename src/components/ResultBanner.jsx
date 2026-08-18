@@ -79,7 +79,7 @@ function FailBody({ result }) {
             <span className="font-semibold text-rose-deep">
               {errors === 1 ? '1 testimonio' : `${errors} testimonios`}
             </span>
-            .
+            {'.'}
           </>
         ) : (
           <>Tu reconstrucción no señala a un único culpable.</>
