@@ -6,8 +6,11 @@
 // v2: `revealedExtras` (contador sobre un array fijo) pasó a `revealedExtraIds`
 // (ids concretos), porque la pista concedida ya no se elige por orden sino
 // según el tablero. Los guardados v1 no son convertibles y se descartan.
-export const STORAGE_KEY = 'ctk:savedGame:v2'
-export const STORAGE_VERSION = 2
+// v3: los identificadores de dificultad cambiaron con los seis rangos
+// (`facil` → `novato`, etc.). Un guardado v2 nombra un nivel que ya no existe,
+// así que tampoco es reanudable y se descarta.
+export const STORAGE_KEY = 'ctk:savedGame:v3'
+export const STORAGE_VERSION = 3
 
 export function saveGame({
   status,

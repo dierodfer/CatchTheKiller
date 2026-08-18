@@ -29,7 +29,7 @@ function pickDistinctNames(rng, count) {
 const byName = (a, b) => a.localeCompare(b, 'es')
 const byInitial = (a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase(), 'es')
 
-export function generatePuzzle(difficultyId = 'facil', seed = randomSeed(), { irregular = false } = {}) {
+export function generatePuzzle(difficultyId = 'novato', seed = randomSeed(), { irregular = false } = {}) {
   const difficulty = DIFFICULTIES[difficultyId]
   if (!difficulty) throw new Error(`Dificultad desconocida: ${difficultyId}`)
 

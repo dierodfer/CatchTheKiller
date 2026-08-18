@@ -2,12 +2,43 @@ import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Loader2, Skull, Ticket } from 'lucide-react'
 import { DIFFICULTIES } from '@/game/constants.js'
+import { APP_VERSION } from '@/version.js'
 import { SUSPECT_COLORS } from './palette.js'
-import { PixelAvatar } from './pixelArt.jsx'
+import { PixelAvatar, PixelLupa } from './pixelArt.jsx'
 import { ZONE_LIST } from './zones.js'
 import MapPreview from './MapPreview.jsx'
 
 const LEVELS = Object.values(DIFFICULTIES)
+
+// Las pistas del nivel, con la MISMA lupa que las representa en el expediente
+// (ver CluePanel): quien ve dos lupas aquí sabe exactamente qué va a poder
+// pedir durante el caso. Al cambiar de rango entran y salen animadas, igual
+// que los retratos de los sospechosos.
+function LupaCount({ count, reduce = false, size = 24 }) {
+  return (
+    <span
+      className="flex shrink-0 items-center gap-1"
+      // Una sola etiqueta para el grupo: leer "lupa" N veces no aporta nada.
+      role="img"
+      aria-label={`${count} pistas`}
+    >
+      <AnimatePresence initial={false}>
+        {Array.from({ length: count }, (_, i) => (
+          <motion.span
+            key={i}
+            className="block"
+            initial={reduce ? false : { opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={reduce ? undefined : { opacity: 0, scale: 0.4 }}
+            transition={{ duration: 0.2 }}
+          >
+            <PixelLupa size={size} />
+          </motion.span>
+        ))}
+      </AnimatePresence>
+    </span>
+  )
+}
 
 export default function StartScreen({
   difficulty,
@@ -67,7 +98,8 @@ export default function StartScreen({
                     {diff.label}
                   </span>
                   <span className="text-[11px] font-medium text-plum-600">
-                    {diff.numCharacters - 1} posibles asesinos · 1 muerto
+                    {diff.numCharacters - 1} posibles asesinos · 1 asesinado ·{' '}
+                    {diff.gridSize}×{diff.gridSize}
                   </span>
                 </div>
 
@@ -107,14 +139,16 @@ export default function StartScreen({
                   aria-label="Dificultad"
                 />
 
-                <div className="mt-2.5 flex justify-between">
+                {/* Seis rangos ya no caben en una sola fila de etiquetas bajo
+                    el deslizador: van en dos filas de tres. */}
+                <div className="mt-2.5 grid grid-cols-3 gap-x-2 gap-y-1">
                   {LEVELS.map((lvl, i) => (
                     <button
                       type="button"
                       key={lvl.id}
                       onClick={() => onSelect(lvl.id)}
                       disabled={generating}
-                      className={`-mx-1 px-1 text-[11px] transition-colors ${
+                      className={`px-1 py-0.5 text-[11px] transition-colors ${
                         i === levelIndex
                           ? 'font-semibold text-gold-deep'
                           : 'font-medium text-plum-500 enabled:hover:text-plum-700'
@@ -124,6 +158,18 @@ export default function StartScreen({
                       {lvl.label}
                     </button>
                   ))}
+                </div>
+
+                {/* Las pistas del nivel, con la misma cara que en el expediente:
+                    una lupa por pista, y cambian al cambiar de rango. */}
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-gold/15 bg-cream-100/70 px-3.5 py-2.5">
+                  <span className="text-left">
+                    <span className="block text-[13px] font-semibold text-plum-800">Pistas</span>
+                    <span className="block text-[11px] text-plum-500">
+                      Lupas que podrás gastar durante el caso
+                    </span>
+                  </span>
+                  <LupaCount count={diff.extraClues} reduce={reduce} />
                 </div>
 
                 {/* No es un <label>: el control es un botón con role="switch",
@@ -228,6 +274,8 @@ export default function StartScreen({
             Error: {error}
           </p>
         )}
+
+        <p className="mt-6 text-[11px] text-plum-400">v{APP_VERSION}</p>
       </motion.div>
     </div>
   )

@@ -15,9 +15,10 @@ import {
   placementsToIndices,
   indicesToPlacements,
   ShareCodeError,
+  UNPLACED,
 } from '../src/game/shareCode.js'
 
-const difficulties = ['facil', 'media', 'dificil', 'experto']
+const difficulties = ['novato', 'aspirante', 'detective', 'investigador', 'experto', 'sherlock']
 const perDifficulty = 8
 let failures = 0
 
@@ -354,7 +355,18 @@ for (const diff of difficulties) {
 // mismo caso. Si esto falla, un cambio ha alterado el consumo de rng en modo
 // clásico y TODAS las partidas/códigos compartidos previos cambiarían.
 {
-  const FIXED = { facil: [7, 'Sofía'], media: [12345, 'Bruno'], dificil: [999999, 'Carla'], experto: [3000, 'Rubén'] }
+  // Los cuatro primeros rangos son los cuatro niveles de siempre renombrados
+  // (misma cuadrícula, mismo reparto, mismo consumo de rng), así que sus seeds
+  // fijadas siguen dando el mismo asesino que antes del renombrado: es lo que
+  // permite que un código compartido v1 reconstruya exactamente su caso.
+  const FIXED = {
+    novato: [7, 'Sofía'],
+    aspirante: [12345, 'Bruno'],
+    detective: [999999, 'Carla'],
+    investigador: [3000, 'Rubén'],
+    experto: [4242, 'Hugo'],
+    sherlock: [808, 'Iván'],
+  }
   for (const [diff, [seed, expected]] of Object.entries(FIXED)) {
     const got = generatePuzzle(diff, seed).killer
     assert(got === expected, `determinismo clásico ${diff}:${seed} — asesino ${got}, esperado ${expected}`)
@@ -416,12 +428,57 @@ for (const difficultyId of difficulties) {
 
 // Tolerancia de entrada: guiones, minúsculas y caracteres ambiguos (O/I/L).
 {
-  const code = encodeShareCode({ difficultyId: 'media', seed: 987654321, irregular: true })
+  const code = encodeShareCode({ difficultyId: 'aspirante', seed: 987654321, irregular: true })
   const messy = code.toLowerCase().replaceAll('0', 'o').replaceAll('1', 'i')
   const dec = decodeShareCode(messy)
   assert(
-    dec.seed === 987654321 && dec.difficultyId === 'media' && dec.irregular === true,
+    dec.seed === 987654321 && dec.difficultyId === 'aspirante' && dec.irregular === true,
     'sharecode: tolera minúsculas, guiones y O/I/L',
+  )
+}
+
+// Compatibilidad con el formato v1: los códigos que ya circulan por ahí (2 bits
+// de dificultad, 6 por celda) siguen abriendo su caso. Se generan a mano porque
+// el codificador solo emite v2.
+{
+  const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+  const encodeV1 = ({ diffIdx, seed, irregular = false, placementIndices = null }) => {
+    const toBits = (v, w) => v.toString(2).padStart(w, '0')
+    let bits =
+      toBits(diffIdx, 2) +
+      (irregular ? '1' : '0') +
+      (placementIndices ? '1' : '0') +
+      toBits(seed >>> 0, 32)
+    if (placementIndices) for (const idx of placementIndices) bits += toBits(idx, 6)
+    let body = '1'
+    for (let i = 0; i < bits.length; i += 5) {
+      body += ALPHABET[Number.parseInt(bits.slice(i, i + 5).padEnd(5, '0'), 2)]
+    }
+    const sum = [...body].reduce((acc, ch) => acc + ALPHABET.indexOf(ch), 0)
+    return body + ALPHABET[sum % 32]
+  }
+
+  const V1_ORDER = ['novato', 'aspirante', 'detective', 'investigador']
+  V1_ORDER.forEach((difficultyId, diffIdx) => {
+    const dec = decodeShareCode(encodeV1({ diffIdx, seed: 123456, irregular: true }))
+    assert(
+      dec.difficultyId === difficultyId && dec.seed === 123456 && dec.irregular === true,
+      `sharecode v1: ${difficultyId} se lee igual que antes del renombrado`,
+    )
+  })
+
+  // Fichas de un v1: el sentinel de 6 bits (63) se traduce al de 7 (127), y las
+  // celdas reales llegan intactas.
+  const p = generatePuzzle('novato', 7)
+  const dec = decodeShareCode(encodeV1({ diffIdx: 0, seed: 7, placementIndices: [5, 63, 10, 63] }))
+  assert(
+    JSON.stringify(dec.placementIndices) === JSON.stringify([5, UNPLACED, 10, UNPLACED]),
+    'sharecode v1: fichas y sentinel traducidos al formato nuevo',
+  )
+  const back = indicesToPlacements(dec.placementIndices, p.characters, p.map.gridSize)
+  assert(
+    Object.keys(back).length === 2 && back[p.characters.suspects[0]].row === 1,
+    'sharecode v1: los índices heredados dan las mismas casillas',
   )
 }
 
@@ -431,7 +488,7 @@ for (const difficultyId of difficulties) {
   const mutate = (s, i) => s.slice(0, i) + (s[i] === 'A' ? 'B' : 'A') + s.slice(i + 1)
   const bad = [
     '',
-    '2AAAAAAAAA', // versión desconocida
+    '9AAAAAAAAA', // versión desconocida
     good.slice(0, 5), // truncado
     mutate(good, 3), // checksum corrupto
     good + 'AAAA', // longitud incorrecta

@@ -5,6 +5,10 @@
 // tintes suaves de las habitaciones.
 
 // Colores distintos por sospechoso (índice estable dentro de la partida).
+// Deben ser al menos tantos como sospechosos tenga la dificultad mayor
+// (Sherlock: 8), o `colorForCharacter` empezaría a repetir tono entre dos
+// personajes distintos. Los tonos se reparten el círculo cromático dejando
+// hueco entre hues contiguos: se distinguen de un vistazo en el tablero.
 export const SUSPECT_COLORS = [
   { bg: '#cf93ab', ring: '#e6b6c8', name: 'rosa malva' },
   { bg: '#a98bc9', ring: '#c8b1e2', name: 'amatista' },
@@ -12,6 +16,8 @@ export const SUSPECT_COLORS = [
   { bg: '#9fc08a', ring: '#c1dcae', name: 'sage' },
   { bg: '#cbb487', ring: '#e2d0a9', name: 'arena' },
   { bg: '#cf9d87', ring: '#e6c0ae', name: 'terracota' },
+  { bg: '#79b7b0', ring: '#a5d3ce', name: 'verde agua' },
+  { bg: '#8f9ad0', ring: '#b4bce4', name: 'índigo suave' },
 ]
 
 // La víctima no entra en la rotación de colores: va en ceniza apagada, a juego

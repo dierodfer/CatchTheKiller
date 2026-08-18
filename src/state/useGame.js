@@ -29,7 +29,7 @@ export const STATUS = {
 // `reducer(estado, acción)` es la unidad de test natural de un `useReducer`.
 export const initialState = {
   status: STATUS.IDLE,
-  difficulty: 'facil',
+  difficulty: 'novato',
   irregular: true, // toggle "mapa irregular" de la pantalla de inicio (activo por defecto)
   puzzle: null,
   placements: {}, // { nombre: { row, col } } colocados por el jugador
