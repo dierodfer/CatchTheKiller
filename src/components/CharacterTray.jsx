@@ -2,10 +2,8 @@
 // de "descolocado" (soltar aquí una ficha la retira del tablero). Muestra el
 // progreso de cuántos personajes están ya situados.
 //
-// Al completarse, el hueco donde estaban las últimas fichas por colocar pasa a
-// ofrecer "Resolver el caso": es donde cae la vista justo después de soltar al
-// último personaje, sin tener que ir a buscar el botón a la barra de
-// herramientas (que en móvil queda más abajo, tras el tablero).
+// Al completarse, ese hueco pasa a ofrecer "Resolver el caso": es donde cae
+// la vista justo después de colocar la última ficha.
 
 import { useDroppable } from '@dnd-kit/core'
 import { motion, AnimatePresence } from 'framer-motion'
