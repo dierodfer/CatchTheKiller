@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 //
-// El botón principal ocupa un único hueco y cambia de significado según si la
-// escena está completa. Eso lo hace la parte más fácil de romper de la barra:
-// un descuido y el jugador acaba revelando la solución cuando quería dictar
-// veredicto, que es justo el clic que no tiene vuelta atrás.
+// El botón principal cambia de significado según el estado: un descuido y el
+// jugador acaba revelando la solución cuando quería dictar veredicto, un clic
+// sin vuelta atrás.
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'

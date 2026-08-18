@@ -1,9 +1,7 @@
 // @vitest-environment jsdom
 //
-// El desenlace fallido es el único sitio donde el juego le da información al
-// jugador sobre lo que ha hecho mal, y la regla es estricta: cuántos
-// testimonios contradice, jamás cuáles. Si eso se relaja, el caso se resuelve
-// probando en vez de deduciendo.
+// La regla del desenlace fallido es estricta: cuántos testimonios contradice,
+// jamás cuáles — si eso se relaja, el caso se resuelve probando, no deduciendo.
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -44,26 +42,21 @@ describe('caso no resuelto correctamente', () => {
   })
 
   it('deja seguir intentándolo, y no ofrece empezar un caso nuevo', () => {
-    // Sin "Nuevo caso": esa es una vía de escape que evita corregir el error,
-    // y el punto de un FAIL es forzar a seguir deduciendo sobre este caso.
     renderBanner('fail', { solved: false, complete: true, errorCount: 2 })
     expect(screen.getByRole('button', { name: /Seguir intentando/ })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Nuevo caso/ })).not.toBeInTheDocument()
   })
 
   it('no explica qué hacer a continuación: el número basta', () => {
-    // La frase "cuáles son y dónde está el fallo tendrás que deducirlo tú" se
-    // quitó por larga; el título ya dice que es un error y el recuento ya
-    // dice cuánto de mal, no hace falta una tercera frase.
     renderBanner('fail', { solved: false, complete: true, errorCount: 2 })
     expect(screen.queryByText(/deducirlo tú/)).not.toBeInTheDocument()
     expect(screen.queryByText(/solución no se revela/)).not.toBeInTheDocument()
   })
 
   it('sin errores de pista, culpa al reparto sin un único culpable', () => {
-    // Camino defensivo: hoy el generador garantiza solución única, así que
-    // errorCount 0 implicaría ganar. Si esa invariante cayera, el jugador
-    // seguiría leyendo algo cierto en vez de "contradice 0 testimonios".
+    // Camino defensivo: el generador garantiza solución única, así que
+    // errorCount 0 con fail no debería darse — pero si pasara, no diga
+    // "contradice 0 testimonios".
     renderBanner('fail', { solved: false, complete: true, errorCount: 0 })
     expect(screen.getByText(/no señala a un único culpable/)).toBeInTheDocument()
   })

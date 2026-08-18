@@ -2,11 +2,10 @@
 // Encabeza una píldora de estado que guía al jugador (cuántos faltan por
 // situar) o confirma que la escena está lista para resolverse.
 //
-// El botón principal es uno solo y cambia con el estado del tablero: mientras
-// falte alguien por situar no hay veredicto que dictar, así que ese hueco lo
-// ocupa la salida de emergencia (ver la solución). Van en el mismo sitio pero
-// no se disfrazan: distinto texto, distinto icono y distinto peso visual, para
-// que rendirse nunca sea el clic por inercia.
+// El botón principal es uno solo y cambia con el estado: sin todo el reparto
+// colocado no hay veredicto que dictar, así que ese hueco ofrece ver la
+// solución en su lugar — con texto, icono y peso distintos para que rendirse
+// no sea el mismo clic que resolver.
 
 import { BookOpen, CheckCircle2, Eye, Gavel, MapPin, RotateCcw, Share2 } from 'lucide-react'
 

@@ -55,10 +55,8 @@ function WinBody({ result, characters, revealed, reduce, delay }) {
   )
 }
 
-// Desenlace fallido: la escena está completa pero no es la solución. Se dice
-// CUÁNTOS testimonios contradice, nunca cuáles ni dónde — el jugador tiene que
-// seguir deduciendo, y por eso el caso no se revela. Una sola frase: el título
-// ya deja claro que es un error, no hace falta explicarlo dos veces.
+// Desenlace fallido: dice CUÁNTOS testimonios contradice la escena, nunca
+// cuáles ni dónde — eso lo sigue teniendo que deducir el jugador.
 function FailBody({ result }) {
   const errors = result?.errorCount ?? 0
   return (
@@ -173,10 +171,8 @@ export default function ResultBanner({
             <FailBody result={result} />
           )}
 
-          {/* En fallo la única salida es seguir deduciendo sobre este mismo
-              caso: no se ofrece "Nuevo caso", que sería una vía de escape sin
-              corregir el error. Empezar de cero sigue disponible desde la
-              barra de herramientas si el jugador de verdad quiere abandonar. */}
+          {/* En fallo no se ofrece "Nuevo caso": la salida es seguir con este,
+              no escapar de él. Empezar de cero sigue en la barra de herramientas. */}
           <div className="mt-6 flex justify-center gap-2">
             {fail ? (
               <button

@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 //
-// El reparto pasa de mostrar un aviso pasivo ("todo el reparto está en la
-// escena") a ofrecer la acción en el mismo sitio en cuanto se completa: es
+// El aviso pasivo de reparto completo pasa a ser la propia acción de resolver,
 // justo donde cae la vista al soltar la última ficha.
 
 import { describe, it, expect, vi } from 'vitest'
