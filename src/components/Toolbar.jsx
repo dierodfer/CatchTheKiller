@@ -1,8 +1,18 @@
-// Controles de partida: resolver, ver la solución, nuevo puzzle, reglas.
-// Encabeza una píldora de estado que guía al jugador (cuántos faltan por
-// situar) o confirma que la escena está lista para resolverse.
+// Controles de partida: resolver, ver la solución, nuevo puzzle, reglas y la
+// leyenda de elementos del tablero. Encabeza una píldora de estado que guía al
+// jugador (cuántos faltan por situar) o confirma que la escena está lista para
+// resolverse.
 
-import { BookOpen, CheckCircle2, Eye, Gavel, MapPin, RotateCcw, Share2 } from 'lucide-react'
+import {
+  Armchair,
+  BookOpen,
+  CheckCircle2,
+  Eye,
+  Gavel,
+  MapPin,
+  RotateCcw,
+  Share2,
+} from 'lucide-react'
 
 export default function Toolbar({
   allPlaced,
@@ -12,6 +22,7 @@ export default function Toolbar({
   onReveal,
   onNewGame,
   onShowRules,
+  onShowLegend,
   onShare,
 }) {
   const remaining = Math.max(totalCount - placedCount, 0)
@@ -71,6 +82,19 @@ export default function Toolbar({
           className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
           <BookOpen size={15} /> Reglas
+        </button>
+        {/* Junto a "Reglas" a propósito: las dos responden a la misma pregunta
+            ("¿cómo funciona esto?"), una sobre el juego y otra sobre lo que hay
+            dibujado en el tablero. El mismo modal se abre también desde la
+            chapa de ambientación de la cabecera, que está pegada al tablero
+            (ver GameScreen). */}
+        <button
+          type="button"
+          onClick={onShowLegend}
+          title="Qué casillas se pueden ocupar y qué es cada dibujo del tablero"
+          className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
+        >
+          <Armchair size={15} /> Leyenda
         </button>
         <button
           type="button"

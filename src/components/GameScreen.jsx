@@ -9,6 +9,7 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core'
+import { HelpCircle } from 'lucide-react'
 import Board from './Board.jsx'
 import CharacterTray from './CharacterTray.jsx'
 import CluePanel from './CluePanel.jsx'
@@ -16,6 +17,7 @@ import Toolbar from './Toolbar.jsx'
 import ResultBanner from './ResultBanner.jsx'
 import RevealConfirmModal from './RevealConfirmModal.jsx'
 import RulesModal from './RulesModal.jsx'
+import LegendModal from './LegendModal.jsx'
 import ShareModal from './ShareModal.jsx'
 import { TokenChip } from './CharacterToken.jsx'
 import { themeForSeed } from './zones.js'
@@ -39,6 +41,7 @@ export default function GameScreen({ game }) {
   const [activeId, setActiveId] = useState(null)
   const [confirmReveal, setConfirmReveal] = useState(false)
   const [showRules, setShowRules] = useState(false)
+  const [showLegend, setShowLegend] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [dismissedResult, setDismissedResult] = useState(null)
   // Qué casilla tiene abierto el popup de marcado: estado efímero de UI, al
@@ -128,13 +131,22 @@ export default function GameScreen({ game }) {
           <span className="rounded-full border border-gold/15 bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800">
             {diff.label} · {puzzle.map.gridSize}×{puzzle.map.gridSize}
           </span>
-          <span
-            className="inline-flex items-center gap-1 rounded-full bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800"
+          {/* La chapa de ambientación abre la leyenda: es el sitio donde el
+              jugador ya mira para saber en qué escenario está, y la leyenda es
+              justo el resto de esa respuesta (cómo se llama y qué hace cada
+              cosa en ESTA ambientación). Duplica el botón de la Toolbar a
+              propósito — allí se busca ayuda, aquí se está mirando el tablero. */}
+          <button
+            type="button"
+            onClick={() => setShowLegend(true)}
+            aria-label={`Ambientación ${zone.label}. Ver la leyenda de elementos del tablero`}
+            className="inline-flex items-center gap-1 rounded-full bg-cream-100/70 px-2 py-0.5 text-[11px] font-medium text-plum-800 transition hover:bg-cream-200/80 hover:text-plum-900"
             style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
           >
             <zone.icon size={11} style={{ color: zone.accent }} />
             {zone.label}
-          </span>
+            <HelpCircle size={11} className="text-gold-deep" aria-hidden="true" />
+          </button>
         </div>
       </header>
 
@@ -188,6 +200,7 @@ export default function GameScreen({ game }) {
               onReveal={() => setConfirmReveal(true)}
               onNewGame={newGame}
               onShowRules={() => setShowRules(true)}
+              onShowLegend={() => setShowLegend(true)}
               onShare={() => setShowShare(true)}
             />
           </div>
@@ -211,6 +224,8 @@ export default function GameScreen({ game }) {
       )}
 
       <RulesModal open={showRules} onClose={() => setShowRules(false)} />
+
+      <LegendModal open={showLegend} onClose={() => setShowLegend(false)} zone={zone} />
 
       <ShareModal
         open={showShare}

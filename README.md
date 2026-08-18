@@ -256,7 +256,19 @@ de un segundo en vez de en decenas.
   que se concede depende *del tablero*, no del azar: primero sobre los
   personajes que el jugador aún no ha colocado y después sobre los que están
   mal colocados (`src/game/hints.js`).
-- `Toolbar` — Resolver, Resolución (revela la solución tras un aviso), Nuevo.
+- `Toolbar` — Resolver, Resolución (revela la solución tras un aviso), Nuevo,
+  Reglas, Leyenda y Compartir.
+- `LegendModal` — leyenda del tablero: qué casillas **se pueden ocupar** (silla,
+  cama, alfombra) y cuáles **no** (mesa, TV, planta, estantería), más las
+  señales que no son elementos del mapa (ventana, línea de control y las
+  anotaciones del jugador). Cada entrada lleva la misma miniatura que se pinta
+  en la casilla —suelo, tinte y sprite de la zona— y el nombre que la
+  **ambientación activa** da al elemento, así que en la casa de montaña se lee
+  "chimenea" y "cómoda" donde en el apartamento se lee "planta" y "TV". Ni la
+  lista ni los nombres se escriben en el componente: salen de
+  `FREE_ELEMENTS`/`BLOCKING_ELEMENTS` y de `resolveElements(zona)`, de modo que
+  un elemento nuevo aparece solo y del lado correcto. Se abre desde la Toolbar y
+  desde la chapa de ambientación de la cabecera, que está pegada al tablero.
 - `ResultBanner` — WIN revela al asesino y la habitación del crimen (se puede
   cerrar para inspeccionar el tablero); FAIL indica que hay errores **sin revelar
   la solución**.
