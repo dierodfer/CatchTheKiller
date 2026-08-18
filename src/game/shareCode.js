@@ -1,4 +1,4 @@
-// Código compartible de partida (v1). Puro, sin dependencias de React.
+// Código compartible de partida (v2). Puro, sin dependencias de React.
 //
 // La generación es 100% determinista (mulberry32): basta transportar
 // (dificultad, irregular, seed) para que el receptor reconstruya tablero,
@@ -6,16 +6,21 @@
 // fichas colocadas por el emisor, como índice de celda por personaje.
 //
 // Formato (bitstream MSB-first, relleno con ceros a múltiplo de 5):
-//   char 0      : versión, literal '1'
-//   bits 0-1    : dificultad (0=facil, 1=media, 2=dificil, 3=experto)
-//   bit  2      : irregular
-//   bit  3      : hasPlacements
-//   bits 4-35   : seed (uint32)
-//   [N × 6 bits]: si hasPlacements, celda de cada personaje en orden canónico
+//   char 0      : versión, literal '2'
+//   bits 0-2    : dificultad (índice en DIFF_ORDER)
+//   bit  3      : irregular
+//   bit  4      : hasPlacements
+//   bits 5-36   : seed (uint32)
+//   [N × 7 bits]: si hasPlacements, celda de cada personaje en orden canónico
 //                 (sospechosos en orden alfabético + víctima al final);
-//                 valor = fila*gridSize+columna, 63 = sin colocar.
+//                 valor = fila*gridSize+columna, 127 = sin colocar.
 //   último char : checksum — valor base32 de la suma de los valores de todos
 //                 los chars anteriores (incluida la versión) mod 32.
+//
+// v1 (2 bits de dificultad, 6 por celda) se sigue LEYENDO: sus cuatro niveles
+// son los cuatro primeros de hoy con otro nombre y la misma configuración, así
+// que un código antiguo reconstruye exactamente el mismo caso. Ya no se emite:
+// 6 niveles no caben en 2 bits, ni una celda de un 9×9 (hasta 80) en 6.
 //
 // Alfabeto Base32 Crockford (sin I, L, O, U): apto para dictarse en voz alta;
 // el decodificador acepta minúsculas y corrige O→0, I/L→1.
@@ -23,10 +28,26 @@
 import { DIFFICULTIES } from './constants.js'
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
-const VERSION_CHAR = '1'
-// El orden es parte del FORMATO: no cambiarlo aunque cambie constants.js.
-const DIFF_ORDER = ['facil', 'media', 'dificil', 'experto']
-const UNPLACED = 63 // sentinel de "sin colocar" (6 bits)
+const VERSION_CHAR = '2'
+// El orden es parte del FORMATO: no cambiarlo aunque cambie constants.js. Los
+// niveles nuevos se añaden AL FINAL, aunque en la UI vayan por en medio.
+const DIFF_ORDER = ['novato', 'aspirante', 'detective', 'investigador', 'experto', 'sherlock']
+const DIFF_BITS = 3
+const CELL_BITS = 7
+// Sentinel de "sin colocar" (todos los bits de la celda a 1). Se exporta
+// porque es parte del contrato de `placementIndices`, no un detalle interno.
+export const UNPLACED = (1 << CELL_BITS) - 1
+const HEADER_BITS = DIFF_BITS + 2 + 32
+
+// Formato heredado: mismos cuatro casos, otros nombres y campos más estrechos.
+const LEGACY = {
+  1: {
+    order: ['novato', 'aspirante', 'detective', 'investigador'],
+    diffBits: 2,
+    cellBits: 6,
+    headerBits: 36,
+  },
+}
 
 // Error de decodificación con mensaje apto para mostrar al jugador.
 export class ShareCodeError extends Error {}
@@ -55,10 +76,10 @@ export function encodeShareCode({ difficultyId, seed, irregular = false, placeme
   const diffIdx = DIFF_ORDER.indexOf(difficultyId)
   if (diffIdx < 0) throw new Error(`Dificultad desconocida: ${difficultyId}`)
 
-  let bits = toBits(diffIdx, 2) + (irregular ? '1' : '0') + (placementIndices ? '1' : '0')
+  let bits = toBits(diffIdx, DIFF_BITS) + (irregular ? '1' : '0') + (placementIndices ? '1' : '0')
   bits += toBits(seed >>> 0, 32)
   if (placementIndices) {
-    for (const idx of placementIndices) bits += toBits(idx, 6)
+    for (const idx of placementIndices) bits += toBits(idx, CELL_BITS)
   }
 
   const body = VERSION_CHAR + bitsToChars(bits)
@@ -91,9 +112,11 @@ function normalize(str) {
 export function decodeShareCode(str) {
   const code = normalize(String(str ?? ''))
   if (code.length === 0) throw new ShareCodeError('El código está vacío')
-  if (code[0] !== VERSION_CHAR) {
-    throw new ShareCodeError('Código de una versión no compatible')
-  }
+  const layout =
+    code[0] === VERSION_CHAR
+      ? { order: DIFF_ORDER, diffBits: DIFF_BITS, cellBits: CELL_BITS, headerBits: HEADER_BITS }
+      : LEGACY[code[0]]
+  if (!layout) throw new ShareCodeError('Código de una versión no compatible')
   if (code.length < 3 || [...code].some((ch) => charValue(ch) < 0)) {
     throw new ShareCodeError('El código contiene caracteres no válidos o está incompleto')
   }
@@ -106,15 +129,18 @@ export function decodeShareCode(str) {
 
   const bits = Array.from(body.slice(1), (ch) => toBits(charValue(ch), 5)).join('')
   const read = (from, width) => Number.parseInt(bits.slice(from, from + width), 2)
+  const { order, diffBits, cellBits, headerBits } = layout
 
-  if (bits.length < 36) throw new ShareCodeError('El código está incompleto')
-  const difficultyId = DIFF_ORDER[read(0, 2)]
-  const irregular = read(2, 1) === 1
-  const hasPlacements = read(3, 1) === 1
-  const seed = read(4, 32) >>> 0
+  if (bits.length < headerBits) throw new ShareCodeError('El código está incompleto')
+  const difficultyId = order[read(0, diffBits)]
+  const irregular = read(diffBits, 1) === 1
+  const hasPlacements = read(diffBits + 1, 1) === 1
+  const seed = read(diffBits + 2, 32) >>> 0
+  // En v2 sobran combinaciones de 3 bits: las dos últimas no son ningún nivel.
+  if (!difficultyId) throw new ShareCodeError('El código apunta a una dificultad que no existe')
 
-  const gridSize = DIFFICULTIES[difficultyId].gridSize
-  const expectedBits = 36 + (hasPlacements ? gridSize * 6 : 0)
+  const { gridSize, numCharacters } = DIFFICULTIES[difficultyId]
+  const expectedBits = headerBits + (hasPlacements ? numCharacters * cellBits : 0)
   const expectedChars = 1 + Math.ceil(expectedBits / 5) + 1
   if (code.length !== expectedChars) {
     throw new ShareCodeError('El código no tiene la longitud esperada')
@@ -122,13 +148,14 @@ export function decodeShareCode(str) {
 
   let placementIndices = null
   if (hasPlacements) {
+    const unplaced = (1 << cellBits) - 1
     placementIndices = []
-    for (let i = 0; i < gridSize; i++) {
-      const idx = read(36 + i * 6, 6)
-      if (idx !== UNPLACED && idx >= gridSize * gridSize) {
+    for (let i = 0; i < numCharacters; i++) {
+      const idx = read(headerBits + i * cellBits, cellBits)
+      if (idx !== unplaced && idx >= gridSize * gridSize) {
         throw new ShareCodeError('El código contiene una posición fuera del tablero')
       }
-      placementIndices.push(idx)
+      placementIndices.push(idx === unplaced ? UNPLACED : idx)
     }
   }
 

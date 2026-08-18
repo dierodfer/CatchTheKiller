@@ -16,10 +16,12 @@ import { rugBoundsOf } from '@/game/mapGenerator.js'
 export const GUTTER = 18
 
 // Tamaño de celda en pantallas amplias, donde no hay restricción de ancho.
-const MAX_CELL_SIZE = { 4: 112, 5: 94, 6: 78, 7: 66 }
+const MAX_CELL_SIZE = { 4: 112, 5: 94, 6: 78, 7: 66, 8: 58, 9: 52 }
 // Por debajo de este tamaño la cuadrícula deja de ser legible: a partir de
-// aquí se prefiere un desbordamiento mínimo a celdas ilegibles.
-const MIN_CELL_SIZE = 36
+// aquí se prefiere un desbordamiento mínimo a celdas ilegibles. Los tableros
+// grandes (8×8, 9×9) bajan un poco el listón: con 36 px se salen de cualquier
+// móvil, y la ficha se sigue leyendo a 30.
+const MIN_CELL_SIZE = (size) => (size >= 8 ? 30 : 36)
 
 // Ancho fuera del tablero que compite por el viewport: relleno horizontal de
 // la página (`px-3`/`sm:px-4` en GameScreen) más el relleno del marco del
@@ -60,7 +62,7 @@ export function useBoardGeometry({
   const available = viewportWidth - pagePadding - BOARD_PADDING - GUTTER
   const cellSize = Math.min(
     MAX_CELL_SIZE[size] || 80,
-    Math.max(MIN_CELL_SIZE, Math.floor(available / size)),
+    Math.max(MIN_CELL_SIZE(size), Math.floor(available / size)),
   )
 
   // El cálculo lo comparte con la miniatura de la pantalla de inicio (ver
