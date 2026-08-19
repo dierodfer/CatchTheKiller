@@ -21,15 +21,8 @@
 // con iconos aparte: la leyenda tiene que enseñar exactamente lo que el
 // jugador va a ver en la casilla, suelo y tinte incluidos.
 
-import { useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Ban, Footprints, Sparkles, X } from 'lucide-react'
-import {
-  BLOCKING_ELEMENTS,
-  FREE_ELEMENTS,
-  ELEMENT_IDS,
-  elementPhrase,
-} from '@/game/elements.js'
+import { Ban, Footprints, Sparkles } from 'lucide-react'
+import { BLOCKING_ELEMENTS, FREE_ELEMENTS, ELEMENT_IDS, elementPhrase } from '@/game/elements.js'
 import { resolveElements } from '@/game/zones.js'
 import {
   WINDOW_BORDER_SIDE,
@@ -42,6 +35,7 @@ import { roomIndexByName } from './floorMaterials.js'
 import { FurnitureIcon } from './Furniture.jsx'
 import { ControlMark } from './ControlMark.jsx'
 import { SUSPECT_COLORS } from './palette.js'
+import ModalShell from './ModalShell.jsx'
 
 // Lado de la miniatura, en px. Es holgado a propósito: por debajo de ~50 px los
 // sprites de 16×16 escalados dejan de leerse y la leyenda deja de servir para
@@ -142,15 +136,6 @@ function Section({ icon: Icon, tone, title, hint, children, footnote }) {
 }
 
 export default function LegendModal({ open, onClose, zone }) {
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
-
   // Nombres de la zona activa: los mismos que leerá en las pistas.
   const el = resolveElements(zone.id)
   // Los que NO cuentan como mueble, nombrados por la zona (en la casa de
@@ -159,154 +144,127 @@ export default function LegendModal({ open, onClose, zone }) {
   const noMueble = ELEMENT_IDS.filter((id) => !el[id].mueble).map((id) => el[id].label)
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
+    <ModalShell
+      open={open}
+      onClose={onClose}
+      labelledBy="legend-title"
+      closeOnEscape
+      showCloseButton
+      // Alto acotado y scroll DENTRO del cuerpo, no en la página: la leyenda
+      // crece con el número de elementos y en móvil apaisado ya no cabe
+      // entera. La cabecera se queda fija para no perder de vista de qué
+      // ambientación se está hablando mientras se baja.
+      panelClassName="flex max-h-[85vh] w-full max-w-lg flex-col"
+    >
+      <header className="shrink-0 px-7 pb-3 pt-7">
+        <h2 id="legend-title" className="pr-10 font-serif text-2xl font-semibold text-plum-900">
+          Elementos del tablero
+        </h2>
+        <p
+          className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-cream-200/70 px-2.5 py-1 text-[12px] font-medium text-plum-800"
+          style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
         >
-          <motion.div
-            initial={{ scale: 0.85, y: 20, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.85, y: 20, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="legend-title"
-            // Alto acotado y scroll DENTRO del cuerpo, no en la página: la
-            // leyenda crece con el número de elementos y en móvil apaisado ya
-            // no cabe entera. La cabecera se queda fija para no perder de vista
-            // de qué ambientación se está hablando mientras se baja.
-            className="relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-3xl border border-gold/20 bg-cream-100 shadow-2xl ring-botanica"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-gold/20 bg-cream-200/70 text-plum-700 hover:bg-cream-300/70"
-              aria-label="Cerrar"
-            >
-              <X size={16} />
-            </button>
+          <zone.icon size={12} style={{ color: zone.accent }} />
+          {zone.label}
+        </p>
+        <p className="mt-2 text-[13px] leading-snug text-plum-700">
+          Cada ambientación cambia el nombre y el dibujo de los elementos, pero no lo que
+          hacen: esto es lo que ves en <span className="font-medium">esta</span> partida.
+        </p>
+      </header>
 
-            <header className="shrink-0 px-7 pb-3 pt-7">
-              <h2 id="legend-title" className="pr-10 font-serif text-2xl font-semibold text-plum-900">
-                Elementos del tablero
-              </h2>
-              <p
-                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-cream-200/70 px-2.5 py-1 text-[12px] font-medium text-plum-800"
-                style={{ boxShadow: `inset 0 0 0 1px ${zone.accentSoft}` }}
-              >
-                <zone.icon size={12} style={{ color: zone.accent }} />
-                {zone.label}
-              </p>
-              <p className="mt-2 text-[13px] leading-snug text-plum-700">
-                Cada ambientación cambia el nombre y el dibujo de los elementos, pero no lo que
-                hacen: esto es lo que ves en <span className="font-medium">esta</span> partida.
-              </p>
-            </header>
+      <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7">
+        <Section
+          icon={Footprints}
+          tone="text-sage-deep"
+          title="Sí se pueden ocupar"
+          hint="Puedes soltar una ficha encima. Las pistas los nombran así:"
+        >
+          {FREE_ELEMENTS.map((id) => (
+            <LegendItem
+              key={id}
+              tile={<ElementTile zone={zone} id={id} />}
+              name={el[id].label}
+              note={`«${el[id].onText}»`}
+              tag={el[id].mueble ? 'mueble' : undefined}
+            />
+          ))}
+        </Section>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7">
-              <Section
-                icon={Footprints}
-                tone="text-sage-deep"
-                title="Sí se pueden ocupar"
-                hint="Puedes soltar una ficha encima. Las pistas los nombran así:"
-              >
-                {FREE_ELEMENTS.map((id) => (
-                  <LegendItem
-                    key={id}
-                    tile={<ElementTile zone={zone} id={id} />}
-                    name={el[id].label}
-                    note={`«${el[id].onText}»`}
-                    tag={el[id].mueble ? 'mueble' : undefined}
-                  />
-                ))}
-              </Section>
+        <Section
+          icon={Ban}
+          tone="text-rose-deep"
+          title="No se pueden ocupar"
+          hint={`Ocupan la casilla entera y ninguna ficha cabe encima. Las pistas sí los nombran: «Estaba junto a ${elementPhrase(el, BLOCKING_ELEMENTS[0])}».`}
+          footnote={
+            noMueble.length > 0
+              ? `«Mueble» importa para la pista «No estaba junto a ningún mueble»: ${noMueble.join(' y ')} no cuentan como tal.`
+              : undefined
+          }
+        >
+          {BLOCKING_ELEMENTS.map((id) => (
+            <LegendItem
+              key={id}
+              tile={<ElementTile zone={zone} id={id} />}
+              name={el[id].label}
+              tag={el[id].mueble ? 'mueble' : undefined}
+            />
+          ))}
+        </Section>
 
-              <Section
-                icon={Ban}
-                tone="text-rose-deep"
-                title="No se pueden ocupar"
-                hint={`Ocupan la casilla entera y ninguna ficha cabe encima. Las pistas sí los nombran: «Estaba junto a ${elementPhrase(el, BLOCKING_ELEMENTS[0])}».`}
-                footnote={
-                  noMueble.length > 0
-                    ? `«Mueble» importa para la pista «No estaba junto a ningún mueble»: ${noMueble.join(' y ')} no cuentan como tal.`
-                    : undefined
-                }
-              >
-                {BLOCKING_ELEMENTS.map((id) => (
-                  <LegendItem
-                    key={id}
-                    tile={<ElementTile zone={zone} id={id} />}
-                    name={el[id].label}
-                    tag={el[id].mueble ? 'mueble' : undefined}
-                  />
-                ))}
-              </Section>
-
-              <Section
-                icon={Sparkles}
-                tone="text-gold-deep"
-                title="Otras señales"
-                hint="No son elementos del mapa, pero se dibujan sobre él."
-              >
-                <LegendItem
-                  tile={
-                    <Tile
-                      zone={zone}
-                      style={{ [WINDOW_BORDER_SIDE[PREVIEW_WALL]]: windowBorder(zone, 5) }}
+        <Section
+          icon={Sparkles}
+          tone="text-gold-deep"
+          title="Otras señales"
+          hint="No son elementos del mapa, pero se dibujan sobre él."
+        >
+          <LegendItem
+            tile={
+              <Tile zone={zone} style={{ [WINDOW_BORDER_SIDE[PREVIEW_WALL]]: windowBorder(zone, 5) }}>
+                <div className="absolute" style={windowGlassStyle(zone, PREVIEW_WALL, 8)} />
+              </Tile>
+            }
+            name="Ventana"
+            capitalized
+            note="Va en la pared, no en el suelo: su casilla sí es ocupable."
+          />
+          <LegendItem
+            tile={
+              <Tile zone={zone}>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ControlMark size={Math.round(TILE * 0.5)} />
+                </div>
+              </Tile>
+            }
+            name="Línea de control"
+            capitalized
+            note="Fila y columna de una ficha ya colocada: ahí no va nadie más."
+          />
+          <LegendItem
+            tile={
+              <Tile zone={zone}>
+                <div className="absolute inset-0 flex items-end justify-center gap-px p-1">
+                  {['A', 'C'].map((initial, i) => (
+                    <span
+                      key={initial}
+                      className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold leading-none text-white"
+                      style={{
+                        background: SUSPECT_COLORS[i].bg,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+                      }}
                     >
-                      <div className="absolute" style={windowGlassStyle(zone, PREVIEW_WALL, 8)} />
-                    </Tile>
-                  }
-                  name="Ventana"
-                  capitalized
-                  note="Va en la pared, no en el suelo: su casilla sí es ocupable."
-                />
-                <LegendItem
-                  tile={
-                    <Tile zone={zone}>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <ControlMark size={Math.round(TILE * 0.5)} />
-                      </div>
-                    </Tile>
-                  }
-                  name="Línea de control"
-                  capitalized
-                  note="Fila y columna de una ficha ya colocada: ahí no va nadie más."
-                />
-                <LegendItem
-                  tile={
-                    <Tile zone={zone}>
-                      <div className="absolute inset-0 flex items-end justify-center gap-px p-1">
-                        {['A', 'C'].map((initial, i) => (
-                          <span
-                            key={initial}
-                            className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold leading-none text-white"
-                            style={{
-                              background: SUSPECT_COLORS[i].bg,
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
-                            }}
-                          >
-                            {initial}
-                          </span>
-                        ))}
-                      </div>
-                    </Tile>
-                  }
-                  name="Tus anotaciones"
-                  capitalized
-                  note="Iniciales de los sospechosos que has marcado como candidatos."
-                />
-              </Section>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+                      {initial}
+                    </span>
+                  ))}
+                </div>
+              </Tile>
+            }
+            name="Tus anotaciones"
+            capitalized
+            note="Iniciales de los sospechosos que has marcado como candidatos."
+          />
+        </Section>
+      </div>
+    </ModalShell>
   )
 }
