@@ -1,6 +1,11 @@
-// Controles de partida: resolver, ver la solución, nuevo puzzle, reglas.
+// Controles de partida: nuevo puzzle, reglas, compartir y el botón principal.
 // Encabeza una píldora de estado que guía al jugador (cuántos faltan por
 // situar) o confirma que la escena está lista para resolverse.
+//
+// El botón principal es uno solo y cambia con el estado: sin todo el reparto
+// colocado no hay veredicto que dictar, así que ese hueco ofrece ver la
+// solución en su lugar — con texto, icono y peso distintos para que rendirse
+// no sea el mismo clic que resolver.
 
 import { BookOpen, CheckCircle2, Eye, Gavel, MapPin, RotateCcw, Share2 } from 'lucide-react'
 
@@ -41,23 +46,25 @@ export default function Toolbar({
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={onCheck}
-        disabled={!allPlaced}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-gold px-4 py-3 text-sm font-semibold text-plum-950 shadow-[0_8px_22px_-8px_rgba(203,163,92,0.7)] transition enabled:hover:bg-gold-soft disabled:cursor-not-allowed disabled:opacity-35"
-      >
-        <Gavel size={16} /> Resolver el caso
-      </button>
-
-      <div className="mt-2 flex flex-wrap gap-2">
+      {allPlaced ? (
+        <button
+          type="button"
+          onClick={onCheck}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-gold px-4 py-3 text-sm font-semibold text-plum-950 shadow-[0_8px_22px_-8px_rgba(203,163,92,0.7)] transition hover:bg-gold-soft"
+        >
+          <Gavel size={16} /> Resolver el caso
+        </button>
+      ) : (
         <button
           type="button"
           onClick={onReveal}
-          className="flex flex-1 basis-24 items-center justify-center gap-1.5 rounded-full border border-gold/20 bg-cream-200/70 px-3 py-2 text-[13px] font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-gold/25 bg-cream-200/60 px-4 py-3 text-sm font-medium text-plum-800 transition hover:bg-cream-300/70 hover:text-plum-900"
         >
-          <Eye size={15} /> Resolución
+          <Eye size={16} /> Ver la solución
         </button>
+      )}
+
+      <div className="mt-2 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onNewGame}
